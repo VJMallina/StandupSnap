@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: standupsnap-db
+    environment:
+      POSTGRES_DB: standupsnap
+      POSTGRES_USER: standupsnap_user
+      POSTGRES_PASSWORD: standupsnap_pass
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - standupsnap-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: standupsnap-api
+    environment:
+      - NODE_ENV=development
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=standupsnap_user
+      - DATABASE_PASSWORD=standupsnap_pass
+      - DATABASE_NAME=standupsnap
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    ports:
+      - '3001:3000'
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - standupsnap-network
+    command: npm run start:dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: standupsnap-web
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - standupsnap-network
+    command: npm run dev -- --host
+
+networks:
+  standupsnap-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
