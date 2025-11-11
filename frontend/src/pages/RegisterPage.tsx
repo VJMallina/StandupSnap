@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { RoleName, ROLE_LABELS, ROLE_DESCRIPTIONS } from '../constants/roles';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [roleName, setRoleName] = useState<RoleName>(RoleName.SCRUM_MASTER);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -18,7 +20,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await register({ email, password, firstName, lastName });
+      await register({ email, password, firstName, lastName, roleName });
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -115,6 +117,28 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+            </div>
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                Select Your Role
+              </label>
+              <select
+                id="role"
+                name="role"
+                required
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                value={roleName}
+                onChange={(e) => setRoleName(e.target.value as RoleName)}
+              >
+                {Object.values(RoleName).map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-gray-500">
+                {ROLE_DESCRIPTIONS[roleName]}
+              </p>
             </div>
           </div>
 

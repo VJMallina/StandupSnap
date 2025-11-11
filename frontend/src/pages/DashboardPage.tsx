@@ -1,63 +1,55 @@
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import StandupGenerator from '../components/StandupGenerator';
 import { usePermissions } from '../hooks/usePermissions';
-import { Permission, ROLE_LABELS, RoleName } from '../constants/roles';
+import { Permission, RoleName } from '../constants/roles';
+import AppLayout from '../components/AppLayout';
+import { useAuth } from '../context/AuthContext';
+import { projectsApi } from '../services/api/projects';
+import { Project } from '../types/project';
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { hasPermission, hasRole, getRoleLabels } = usePermissions();
+  const { hasPermission, hasRole } = usePermissions();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      if (hasPermission(Permission.VIEW_PROJECT)) {
+        const projectsData = await projectsApi.getAll();
+        setProjects(projectsData.slice(0, 5)); // Show only first 5
+      }
+    } catch (err) {
+      console.error('Error loading dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">StandupSnap</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex flex-col items-end">
-                <span className="text-sm font-medium text-gray-900">
-                  {user?.firstName} {user?.lastName}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {getRoleLabels().map(role => ROLE_LABELS[role as RoleName]).join(', ')}
-                </span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+    <AppLayout>
+      <div className="p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back, {user?.firstName}!
-          </h2>
+          </h1>
           <p className="text-lg text-gray-600">
-            Transform your work updates into structured standup notes
+            Here's what's happening with your projects
           </p>
         </div>
 
-        {/* Role-based quick actions */}
+        {/* Quick Actions */}
         {hasPermission(Permission.CREATE_PROJECT) && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Quick Actions
-            </h3>
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {hasPermission(Permission.CREATE_PROJECT) && (
                 <button
@@ -119,7 +111,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* PMO-specific view message */}
+        {/* PMO View Message */}
         {hasRole(RoleName.PMO) && !hasPermission(Permission.CREATE_PROJECT) && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
             <div className="flex items-start">
@@ -135,8 +127,127 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <StandupGenerator />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Projects Section */}
+          {hasPermission(Permission.VIEW_PROJECT) && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Projects</h2>
+                <button
+                  onClick={() => navigate('/projects')}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  View All →
+                </button>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-8 text-gray-500">Loading...</div>
+              ) : projects.length > 0 ? (
+                <div className="space-y-3">
+                  {projects.map((project) => (
+                    <div
+                      key={project.id}
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{project.name}</h3>
+                          <p className="text-sm text-gray-500 mt-1">{project.description || 'No description'}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded text-xs ${project.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {project.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-xs text-gray-500">
+                        Started: {new Date(project.startDate).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  <p className="font-medium">No projects yet</p>
+                  <p className="text-sm mt-1">Create your first project to get started</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sprints Section */}
+          {hasPermission(Permission.VIEW_SPRINT) && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Active Sprints</h2>
+                <button
+                  onClick={() => navigate('/sprints')}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  View All →
+                </button>
+              </div>
+
+              <div className="text-center py-12 text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <p className="font-medium">No active sprints</p>
+                <p className="text-sm mt-1">Create a sprint to start tracking work</p>
+              </div>
+            </div>
+          )}
+
+          {/* Team Section */}
+          {hasPermission(Permission.VIEW_TEAM_MEMBER) && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Team</h2>
+                <button
+                  onClick={() => navigate('/team')}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  View All →
+                </button>
+              </div>
+
+              <div className="text-center py-12 text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <p className="font-medium">No team members</p>
+                <p className="text-sm mt-1">Invite team members to collaborate</p>
+              </div>
+            </div>
+          )}
+
+          {/* Recent Standups Section */}
+          {hasPermission(Permission.VIEW_STANDUP) && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Recent Standups</h2>
+                <button
+                  onClick={() => navigate('/standups')}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  View All →
+                </button>
+              </div>
+
+              <div className="text-center py-12 text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="font-medium">No standup updates</p>
+                <p className="text-sm mt-1">Start creating daily standups</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }

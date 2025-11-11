@@ -31,7 +31,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
-    const { email, password, firstName, lastName } = registerDto;
+    const { email, password, firstName, lastName, roleName } = registerDto;
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
@@ -45,13 +45,14 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Get default 'scrum_master' role (default role for new users)
+    // Get the specified role or default to 'scrum_master' role
+    const selectedRoleName = roleName || RoleName.SCRUM_MASTER;
     const userRole = await this.roleRepository.findOne({
-      where: { name: RoleName.SCRUM_MASTER },
+      where: { name: selectedRoleName },
     });
 
     if (!userRole) {
-      throw new Error('Default role not found. Please run database seeders.');
+      throw new Error('Role not found. Please run database seeders.');
     }
 
     // Create user

@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { StandupModule } from './standup/standup.module';
 import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './project/project.module';
+import { SprintModule } from './sprint/sprint.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ProjectModule } from './project/project.module';
     AuthModule,
     StandupModule,
     ProjectModule,
+    SprintModule,
   ],
   controllers: [AppController],
   providers: [AppService],
