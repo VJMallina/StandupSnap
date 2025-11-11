@@ -63,10 +63,16 @@ export class AuthService {
       roles: [userRole],
     });
 
-    await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // Reload user with roles relation
+    const userWithRoles = await this.userRepository.findOne({
+      where: { id: savedUser.id },
+      relations: ['roles'],
+    });
 
     // Generate tokens
-    return this.generateTokens(user);
+    return this.generateTokens(userWithRoles);
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
@@ -177,7 +183,12 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        roles: user.roles.map((role) => role.name),
+        roles: user.roles.map((role) => ({
+          id: role.id,
+          name: role.name,
+          description: role.description,
+          permissions: role.permissions,
+        })),
       },
     };
   }

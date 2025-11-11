@@ -1,3 +1,5 @@
+import { RoleName, Permission } from '../../entities/role.entity';
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
@@ -6,6 +8,11 @@ export interface AuthResponse {
     email: string;
     firstName: string;
     lastName: string;
-    roles: string[];
+    roles: {
+      id: string;
+      name: RoleName;
+      description: string;
+      permissions: Permission[];
+    }[];
   };
 }

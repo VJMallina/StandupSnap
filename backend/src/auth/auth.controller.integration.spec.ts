@@ -25,6 +25,7 @@ describe('AuthController Integration Tests (RBAC)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -35,7 +36,7 @@ describe('AuthController Integration Tests (RBAC)', () => {
 
     await app.init();
     dataSource = app.get(DataSource);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await dataSource.destroy();
