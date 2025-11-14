@@ -50,7 +50,7 @@ export class AuthController {
     @Body('refreshToken') refreshToken: string,
   ): Promise<{ message: string }> {
     await this.authService.logout(user.id, refreshToken);
-    return { message: 'Logged out successfully' };
+    return { message: 'Successfully logged out' };
   }
 
   @UseGuards(JwtAuthGuard)

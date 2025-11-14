@@ -37,17 +37,6 @@ export class InvitationService {
   ): Promise<Invitation> {
     const { email, assignedRole, projectId } = createInvitationDto;
 
-    // Check if user already exists
-    const existingUser = await this.userRepository.findOne({
-      where: { email },
-    });
-
-    if (existingUser) {
-      throw new BadRequestException(
-        'User with this email already exists. Add them directly to the project.',
-      );
-    }
-
     // Check if there's already a pending invitation for this email
     const existingInvitation = await this.invitationRepository.findOne({
       where: {

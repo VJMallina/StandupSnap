@@ -10,10 +10,11 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { User } from '../entities/user.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { Role } from '../entities/role.entity';
+import { Invitation } from '../entities/invitation.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RefreshToken, Role]),
+    TypeOrmModule.forFeature([User, RefreshToken, Role, Invitation]),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

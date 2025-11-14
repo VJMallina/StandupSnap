@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { Role, RoleName } from '../entities/role.entity';
+import { Invitation, InvitationStatus } from '../entities/invitation.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponse } from './interfaces/auth-response.interface';
@@ -26,45 +28,94 @@ export class AuthService {
     private refreshTokenRepository: Repository<RefreshToken>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
+    @InjectRepository(Invitation)
+    private invitationRepository: Repository<Invitation>,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
-    const { email, password, firstName, lastName, roleName } = registerDto;
+    const { username, email, password, name, roleName, invitationToken } = registerDto;
 
-    // Check if user already exists
-    const existingUser = await this.userRepository.findOne({
+    // Check if username already exists
+    const existingUsername = await this.userRepository.findOne({
+      where: { username },
+    });
+
+    if (existingUsername) {
+      throw new ConflictException('Username already registered');
+    }
+
+    // Check if email already exists
+    const existingEmail = await this.userRepository.findOne({
       where: { email },
     });
 
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+    if (existingEmail) {
+      throw new ConflictException('Email already registered');
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let selectedRole = roleName;
+    let invitation: Invitation | null = null;
 
-    // Get the specified role or default to 'scrum_master' role
-    const selectedRoleName = roleName || RoleName.SCRUM_MASTER;
+    // Handle invitation-based registration
+    if (invitationToken) {
+      invitation = await this.invitationRepository.findOne({
+        where: { token: invitationToken },
+        relations: ['project'],
+      });
+
+      if (!invitation) {
+        throw new BadRequestException('Invalid invitation token');
+      }
+
+      if (invitation.status !== InvitationStatus.PENDING) {
+        throw new BadRequestException('This invitation has already been used');
+      }
+
+      if (invitation.expiresAt && invitation.expiresAt < new Date()) {
+        invitation.status = InvitationStatus.EXPIRED;
+        await this.invitationRepository.save(invitation);
+        throw new BadRequestException('This invitation has expired');
+      }
+
+      // Override role with invitation's assigned role (role-locked)
+      selectedRole = invitation.assignedRole as RoleName;
+    }
+
+    // Validate role - Team Member cannot self-register
+    if (selectedRole && !Object.values(RoleName).includes(selectedRole)) {
+      throw new BadRequestException('Invalid role selected');
+    }
+
+    // Get the role from database
     const userRole = await this.roleRepository.findOne({
-      where: { name: selectedRoleName },
+      where: { name: selectedRole },
     });
 
     if (!userRole) {
       throw new Error('Role not found. Please run database seeders.');
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Create user
     const user = this.userRepository.create({
+      username,
       email,
       password: hashedPassword,
-      firstName,
-      lastName,
+      name,
       roles: [userRole],
     });
 
     const savedUser = await this.userRepository.save(user);
+
+    // Mark invitation as accepted if it exists
+    if (invitation) {
+      invitation.status = InvitationStatus.ACCEPTED;
+      await this.invitationRepository.save(invitation);
+    }
 
     // Reload user with roles relation
     const userWithRoles = await this.userRepository.findOne({
@@ -77,7 +128,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+    const user = await this.validateUser(loginDto.usernameOrEmail, loginDto.password);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -86,14 +137,22 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(usernameOrEmail: string, password: string): Promise<User | null> {
+    // Try to find user by username or email
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: [
+        { username: usernameOrEmail },
+        { email: usernameOrEmail }
+      ],
       relations: ['roles'],
     });
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return null;
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Your account is disabled. Contact admin.');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -154,7 +213,7 @@ export class AuthService {
   private async generateTokens(user: User): Promise<AuthResponse> {
     const payload: JwtPayload = {
       sub: user.id,
-      email: user.email,
+      username: user.username,
       roles: user.roles.map((role) => role.name),
     };
 
@@ -181,9 +240,9 @@ export class AuthService {
       refreshToken: refreshTokenValue,
       user: {
         id: user.id,
+        username: user.username,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         roles: user.roles.map((role) => ({
           id: role.id,
           name: role.name,

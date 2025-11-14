@@ -37,7 +37,7 @@ export default function DashboardPage() {
       <div className="p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user?.firstName}!
+            Welcome back, {user?.name}!
           </h1>
           <p className="text-lg text-gray-600">
             Here's what's happening with your projects

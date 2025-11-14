@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectsApi } from '../../services/api/projects';
+import { usersApi, User } from '../../services/api/users';
 import AppLayout from '../../components/AppLayout';
 
 export default function CreateProjectPage() {
@@ -11,26 +12,90 @@ export default function CreateProjectPage() {
     startDate: '',
     endDate: '',
     isActive: true,
+    productOwnerId: '',
+    pmoId: '',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [productOwners, setProductOwners] = useState<User[]>([]);
+  const [pmos, setPmos] = useState<User[]>([]);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      const [poUsers, pmoUsers] = await Promise.all([
+        usersApi.getByRole('PRODUCT_OWNER'),
+        usersApi.getByRole('PMO')
+      ]);
+      setProductOwners(poUsers);
+      setPmos(pmoUsers);
+    } catch (err) {
+      console.error('Failed to load users:', err);
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    // Name validation
+    if (!formData.name.trim()) {
+      newErrors.name = 'Project name is required';
+    } else if (formData.name.length < 3) {
+      newErrors.name = 'Project name must be at least 3 characters';
+    } else if (formData.name.length > 100) {
+      newErrors.name = 'Project name must not exceed 100 characters';
+    }
+
+    // Start date validation
+    if (!formData.startDate) {
+      newErrors.startDate = 'Start date is required';
+    }
+
+    // End date validation (mandatory)
+    if (!formData.endDate) {
+      newErrors.endDate = 'End date is required';
+    } else if (formData.startDate) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+      if (end <= start) {
+        newErrors.endDate = 'End date must be after start date';
+      }
+    }
+
+    // Description validation (optional but with limit)
+    if (formData.description && formData.description.length > 500) {
+      newErrors.description = 'Description must not exceed 500 characters';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
 
     try {
       await projectsApi.create({
-        name: formData.name,
-        description: formData.description || undefined,
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
         startDate: formData.startDate,
         endDate: formData.endDate || undefined,
         isActive: formData.isActive,
       });
       navigate('/projects');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to create project');
     } finally {
       setLoading(false);
     }
@@ -47,71 +112,153 @@ export default function CreateProjectPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white shadow rounded p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-xl p-8 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-1">Project Name *</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Project Name *</label>
           <input
             type="text"
-            required
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full border rounded px-3 py-2"
+            onChange={(e) => {
+              setFormData({ ...formData, name: e.target.value });
+              if (errors.name) setErrors({ ...errors, name: '' });
+            }}
+            className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              errors.name ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Enter project name"
           />
+          {errors.name && (
+            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+          )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
           <textarea
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full border rounded px-3 py-2"
-            rows={3}
+            onChange={(e) => {
+              setFormData({ ...formData, description: e.target.value });
+              if (errors.description) setErrors({ ...errors, description: '' });
+            }}
+            className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              errors.description ? 'border-red-500' : 'border-gray-300'
+            }`}
+            rows={4}
+            placeholder="Describe your project (optional)"
           />
+          <div className="mt-1 flex justify-between text-sm text-gray-500">
+            <span>{errors.description && <span className="text-red-600">{errors.description}</span>}</span>
+            <span>{formData.description.length}/500</span>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Start Date *</label>
-          <input
-            type="date"
-            required
-            value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            className="w-full border rounded px-3 py-2"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date *</label>
+            <input
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => {
+                setFormData({ ...formData, startDate: e.target.value });
+                if (errors.startDate) setErrors({ ...errors, startDate: '' });
+              }}
+              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.startDate ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {errors.startDate && (
+              <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">End Date *</label>
+            <input
+              type="date"
+              value={formData.endDate}
+              onChange={(e) => {
+                setFormData({ ...formData, endDate: e.target.value });
+                if (errors.endDate) setErrors({ ...errors, endDate: '' });
+              }}
+              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors.endDate ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+            {errors.endDate && (
+              <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>
+            )}
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">End Date</label>
-          <input
-            type="date"
-            value={formData.endDate}
-            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            className="w-full border rounded px-3 py-2"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Product Owner</label>
+            <select
+              value={formData.productOwnerId}
+              onChange={(e) => setFormData({ ...formData, productOwnerId: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Not assigned</option>
+              {productOwners.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.firstName} {user.lastName} ({user.email})
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">Optional - Assign a Product Owner to this project</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">PMO</label>
+            <select
+              value={formData.pmoId}
+              onChange={(e) => setFormData({ ...formData, pmoId: e.target.value })}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Not assigned</option>
+              {pmos.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.firstName} {user.lastName} ({user.email})
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">Optional - Assign a PMO to this project</p>
+          </div>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center space-x-2 p-4 bg-gray-50 rounded-lg">
           <input
             type="checkbox"
+            id="isActive"
             checked={formData.isActive}
             onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            className="mr-2"
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
-          <label className="text-sm font-medium">Active Project</label>
+          <label htmlFor="isActive" className="text-sm font-medium text-gray-700">Mark project as active</label>
         </div>
 
-        <div className="flex gap-3 pt-4">
+        <div className="flex gap-4 pt-6 border-t">
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
-            {loading ? 'Creating...' : 'Create Project'}
+            {loading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating Project...
+              </span>
+            ) : (
+              'Create Project'
+            )}
           </button>
           <button
             type="button"
             onClick={() => navigate('/projects')}
-            className="bg-gray-200 px-6 py-2 rounded hover:bg-gray-300"
+            className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>

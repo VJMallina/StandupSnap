@@ -34,9 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userData = await response.json();
             setUser({
               id: userData.id,
+              username: userData.username,
               email: userData.email,
-              firstName: userData.firstName,
-              lastName: userData.lastName,
+              name: userData.name,
               roles: userData.roles?.map((r: any) => r.name) || [],
             });
           } else {

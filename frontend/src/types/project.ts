@@ -5,6 +5,19 @@ export interface Project {
   startDate: string;
   endDate?: string;
   isActive: boolean;
+  isArchived: boolean;
+  productOwner?: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+  pmo?: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
   members?: ProjectMember[];
   sprints?: any[];
   createdAt: string;

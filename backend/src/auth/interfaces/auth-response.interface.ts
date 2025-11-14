@@ -5,9 +5,9 @@ export interface AuthResponse {
   refreshToken: string;
   user: {
     id: string;
+    username: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    name: string;
     roles: {
       id: string;
       name: RoleName;

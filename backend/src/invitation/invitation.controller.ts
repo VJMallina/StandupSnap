@@ -13,7 +13,8 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-import { RoleName } from '../entities/role.entity';
+import { Public } from '../auth/decorators/public.decorator';
+import { Permission } from '../entities/role.entity';
 
 @Controller('invitations')
 export class InvitationController {
@@ -24,7 +25,7 @@ export class InvitationController {
    */
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions(RoleName.SCRUM_MASTER)
+  @RequirePermissions(Permission.SEND_INVITE)
   async createInvitation(@Body() createInvitationDto: CreateInvitationDto) {
     const invitation = await this.invitationService.createInvitation(
       createInvitationDto,
@@ -51,6 +52,7 @@ export class InvitationController {
   /**
    * Validate an invitation token (public endpoint)
    */
+  @Public()
   @Get('validate/:token')
   async validateToken(@Param('token') token: string) {
     const invitation = await this.invitationService.validateToken(token);
@@ -70,7 +72,7 @@ export class InvitationController {
    */
   @Get()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions(RoleName.SCRUM_MASTER)
+  @RequirePermissions(Permission.SEND_INVITE)
   async getAllInvitations(@Query('projectId') projectId?: string) {
     const invitations = await this.invitationService.getAllInvitations(
       projectId,
@@ -100,7 +102,7 @@ export class InvitationController {
    */
   @Get(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions(RoleName.SCRUM_MASTER)
+  @RequirePermissions(Permission.SEND_INVITE)
   async getInvitationById(@Param('id') id: string) {
     const invitation = await this.invitationService.getInvitationById(id);
 
@@ -127,7 +129,7 @@ export class InvitationController {
    */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions(RoleName.SCRUM_MASTER)
+  @RequirePermissions(Permission.SEND_INVITE)
   async revokeInvitation(@Param('id') id: string) {
     await this.invitationService.revokeInvitation(id);
 
