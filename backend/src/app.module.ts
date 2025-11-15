@@ -9,7 +9,9 @@ import { ProjectModule } from './project/project.module';
 import { SprintModule } from './sprint/sprint.module';
 import { InvitationModule } from './invitation/invitation.module';
 import { UsersModule } from './users/users.module';
+import { TeamMemberModule } from './team-member/team-member.module';
 
+// Team Management Module for non-login team members
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -37,6 +39,7 @@ import { UsersModule } from './users/users.module';
     SprintModule,
     InvitationModule,
     UsersModule,
+    TeamMemberModule,
   ],
   controllers: [AppController],
   providers: [AppService],

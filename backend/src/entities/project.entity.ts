@@ -6,11 +6,14 @@ import {
   UpdateDateColumn,
   OneToMany,
   ManyToOne,
+  ManyToMany,
   JoinColumn,
+  JoinTable,
 } from 'typeorm';
 import { ProjectMember } from './project-member.entity';
 import { Sprint } from './sprint.entity';
 import { User } from './user.entity';
+import { TeamMember } from './team-member.entity';
 
 @Entity('projects')
 export class Project {
@@ -48,6 +51,14 @@ export class Project {
 
   @OneToMany(() => Sprint, (sprint) => sprint.project)
   sprints: Sprint[];
+
+  @ManyToMany(() => TeamMember, (teamMember) => teamMember.projects)
+  @JoinTable({
+    name: 'project_team_members',
+    joinColumn: { name: 'project_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'team_member_id', referencedColumnName: 'id' },
+  })
+  teamMembers: TeamMember[];
 
   @CreateDateColumn()
   createdAt: Date;

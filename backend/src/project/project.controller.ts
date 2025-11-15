@@ -19,11 +19,16 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { Permission } from '../entities/role.entity';
+import { TeamMemberService } from '../team-member/team-member.service';
+import { AddToProjectDto } from '../team-member/dto/add-to-project.dto';
 
 @Controller('projects')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class ProjectController {
-  constructor(private readonly projectService: ProjectService) {}
+  constructor(
+    private readonly projectService: ProjectService,
+    private readonly teamMemberService: TeamMemberService,
+  ) {}
 
   @Post()
   @RequirePermissions(Permission.CREATE_PROJECT)
@@ -34,9 +39,13 @@ export class ProjectController {
 
   @Get()
   @RequirePermissions(Permission.VIEW_PROJECT)
-  findAll(@Query('isActive') isActive?: string) {
+  findAll(
+    @Query('isActive') isActive?: string,
+    @Query('isArchived') isArchived?: string,
+  ) {
     const isActiveBool = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
-    return this.projectService.findAll(isActiveBool);
+    const isArchivedBool = isArchived === 'true' ? true : isArchived === 'false' ? false : undefined;
+    return this.projectService.findAll(isActiveBool, isArchivedBool);
   }
 
   @Get('check-name')
@@ -92,5 +101,32 @@ export class ProjectController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeMember(@Param('id') id: string, @Param('memberId') memberId: string) {
     await this.projectService.removeMember(id, memberId);
+  }
+
+  // Team Member endpoints
+  @Get(':id/team')
+  @RequirePermissions(Permission.VIEW_TEAM_MEMBER)
+  getProjectTeam(@Param('id') id: string) {
+    return this.teamMemberService.getProjectTeam(id);
+  }
+
+  @Get(':id/available-team')
+  @RequirePermissions(Permission.VIEW_TEAM_MEMBER)
+  getAvailableTeamMembers(@Param('id') id: string) {
+    return this.teamMemberService.getAvailableTeamMembers(id);
+  }
+
+  @Post(':id/team')
+  @RequirePermissions(Permission.ADD_TEAM_MEMBER)
+  @HttpCode(HttpStatus.CREATED)
+  addToTeam(@Param('id') id: string, @Body() addToProjectDto: AddToProjectDto) {
+    return this.teamMemberService.addToProject(id, addToProjectDto);
+  }
+
+  @Delete(':id/team/:teamMemberId')
+  @RequirePermissions(Permission.REMOVE_TEAM_MEMBER)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeFromTeam(@Param('id') id: string, @Param('teamMemberId') teamMemberId: string) {
+    await this.teamMemberService.removeFromProject(id, teamMemberId);
   }
 }

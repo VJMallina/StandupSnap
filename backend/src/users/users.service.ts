@@ -10,25 +10,28 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async findByRole(role: string): Promise<User[]> {
-    return this.usersRepository.find({
-      where: { role },
-      select: ['id', 'email', 'firstName', 'lastName', 'role'],
-      order: { firstName: 'ASC', lastName: 'ASC' },
-    });
+  async findByRole(roleName: string): Promise<User[]> {
+    return this.usersRepository
+      .createQueryBuilder('user')
+      .innerJoin('user.roles', 'role')
+      .where('role.name = :roleName', { roleName })
+      .select(['user.id', 'user.email', 'user.name', 'user.username'])
+      .orderBy('user.name', 'ASC')
+      .getMany();
   }
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find({
-      select: ['id', 'email', 'firstName', 'lastName', 'role'],
-      order: { firstName: 'ASC', lastName: 'ASC' },
+      select: ['id', 'email', 'name', 'username'],
+      where: { isActive: true },
+      order: { name: 'ASC' },
     });
   }
 
   async findOne(id: string): Promise<User> {
     return this.usersRepository.findOne({
       where: { id },
-      select: ['id', 'email', 'firstName', 'lastName', 'role'],
+      select: ['id', 'email', 'name', 'username'],
     });
   }
 }

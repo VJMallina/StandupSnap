@@ -61,12 +61,10 @@ export default function CreateProjectPage() {
 
   const loadUsers = async () => {
     try {
-      const [poUsers, pmoUsers] = await Promise.all([
-        usersApi.getByRole('PRODUCT_OWNER'),
-        usersApi.getByRole('PMO')
-      ]);
-      setProductOwners(poUsers);
-      setPmos(pmoUsers);
+      // For now, get all users until role filtering is properly implemented
+      const allUsers = await usersApi.getAll();
+      setProductOwners(allUsers);
+      setPmos(allUsers);
     } catch (err) {
       console.error('Failed to load users:', err);
     }
@@ -124,7 +122,9 @@ export default function CreateProjectPage() {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         startDate: formData.startDate,
-        endDate: formData.endDate || undefined,
+        endDate: formData.endDate,
+        productOwnerId: formData.productOwnerId || undefined,
+        pmoId: formData.pmoId || undefined,
         isActive: formData.isActive,
       });
       navigate('/projects');
@@ -245,7 +245,7 @@ export default function CreateProjectPage() {
               <option value="">Not assigned</option>
               {productOwners.map(user => (
                 <option key={user.id} value={user.id}>
-                  {user.firstName} {user.lastName} ({user.email})
+                  {user.name} ({user.email})
                 </option>
               ))}
             </select>
@@ -262,7 +262,7 @@ export default function CreateProjectPage() {
               <option value="">Not assigned</option>
               {pmos.map(user => (
                 <option key={user.id} value={user.id}>
-                  {user.firstName} {user.lastName} ({user.email})
+                  {user.name} ({user.email})
                 </option>
               ))}
             </select>

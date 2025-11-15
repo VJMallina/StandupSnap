@@ -9,8 +9,9 @@ const getAuthHeaders = () => {
 };
 
 export const projectsApi = {
-  getAll: async () => {
-    const response = await fetch(`${API_URL}/projects`, {
+  getAll: async (isArchived?: boolean) => {
+    const queryParams = isArchived !== undefined ? `?isArchived=${isArchived}` : '';
+    const response = await fetch(`${API_URL}/projects${queryParams}`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch projects');

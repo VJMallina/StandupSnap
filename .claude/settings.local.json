@@ -20,7 +20,13 @@
       "Bash(docker-compose down:*)",
       "Bash(docker-compose restart:*)",
       "Bash(python3:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(npm run start:dev:*)",
+      "Bash(npx nest build:*)",
+      "Bash(kill:*)",
+      "Bash(pkill:*)",
+      "Bash(node dist/main.js:*)",
+      "Bash(npm run start:prod:*)"
     ],
     "deny": [],
     "ask": []

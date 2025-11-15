@@ -25,19 +25,47 @@ export class ProjectService {
   ) {}
 
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
-    const project = this.projectRepository.create(createProjectDto);
+    const { productOwnerId, pmoId, ...projectData } = createProjectDto;
+
+    const project = this.projectRepository.create(projectData);
+
+    // Set Product Owner if provided
+    if (productOwnerId) {
+      const productOwner = await this.userRepository.findOne({
+        where: { id: productOwnerId },
+      });
+      if (!productOwner) {
+        throw new NotFoundException(`Product Owner with ID ${productOwnerId} not found`);
+      }
+      project.productOwner = productOwner;
+    }
+
+    // Set PMO if provided
+    if (pmoId) {
+      const pmo = await this.userRepository.findOne({
+        where: { id: pmoId },
+      });
+      if (!pmo) {
+        throw new NotFoundException(`PMO with ID ${pmoId} not found`);
+      }
+      project.pmo = pmo;
+    }
+
     return this.projectRepository.save(project);
   }
 
-  async findAll(isActive?: boolean): Promise<Project[]> {
+  async findAll(isActive?: boolean, isArchived?: boolean): Promise<Project[]> {
     const where: any = {};
     if (isActive !== undefined) {
       where.isActive = isActive;
     }
+    if (isArchived !== undefined) {
+      where.isArchived = isArchived;
+    }
 
     return this.projectRepository.find({
       where,
-      relations: ['members', 'members.user', 'sprints'],
+      relations: ['members', 'members.user', 'sprints', 'productOwner', 'pmo'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -45,7 +73,7 @@ export class ProjectService {
   async findOne(id: string): Promise<Project> {
     const project = await this.projectRepository.findOne({
       where: { id },
-      relations: ['members', 'members.user', 'sprints'],
+      relations: ['members', 'members.user', 'sprints', 'productOwner', 'pmo'],
     });
 
     if (!project) {
@@ -57,8 +85,40 @@ export class ProjectService {
 
   async update(id: string, updateProjectDto: UpdateProjectDto): Promise<Project> {
     const project = await this.findOne(id);
+    const { productOwnerId, pmoId, ...projectData } = updateProjectDto as any;
 
-    Object.assign(project, updateProjectDto);
+    Object.assign(project, projectData);
+
+    // Update Product Owner if provided
+    if (productOwnerId !== undefined) {
+      if (productOwnerId === null) {
+        project.productOwner = null;
+      } else {
+        const productOwner = await this.userRepository.findOne({
+          where: { id: productOwnerId },
+        });
+        if (!productOwner) {
+          throw new NotFoundException(`Product Owner with ID ${productOwnerId} not found`);
+        }
+        project.productOwner = productOwner;
+      }
+    }
+
+    // Update PMO if provided
+    if (pmoId !== undefined) {
+      if (pmoId === null) {
+        project.pmo = null;
+      } else {
+        const pmo = await this.userRepository.findOne({
+          where: { id: pmoId },
+        });
+        if (!pmo) {
+          throw new NotFoundException(`PMO with ID ${pmoId} not found`);
+        }
+        project.pmo = pmo;
+      }
+    }
+
     return this.projectRepository.save(project);
   }
 

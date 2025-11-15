@@ -29,6 +29,7 @@ export enum Permission {
 
   // Team member permissions
   ADD_TEAM_MEMBER = 'add_team_member',
+  EDIT_TEAM_MEMBER = 'edit_team_member',
   REMOVE_TEAM_MEMBER = 'remove_team_member',
   VIEW_TEAM_MEMBER = 'view_team_member',
 

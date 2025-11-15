@@ -24,19 +24,15 @@ export default function ProjectsListPage() {
   const canEdit = hasPermission(Permission.EDIT_PROJECT);
   const canDelete = hasPermission(Permission.DELETE_PROJECT);
 
-  // Filter projects based on active tab
-  const filteredProjects = projects.filter(project =>
-    activeTab === 'active' ? !project.isArchived : project.isArchived
-  );
-
   useEffect(() => {
     loadProjects();
-  }, []);
+  }, [activeTab]);
 
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const data = await projectsApi.getAll();
+      const isArchived = activeTab === 'archived';
+      const data = await projectsApi.getAll(isArchived);
       setProjects(data);
     } catch (err: any) {
       setError(err.message);
@@ -44,6 +40,9 @@ export default function ProjectsListPage() {
       setLoading(false);
     }
   };
+
+  // Use projects directly instead of filtering
+  const filteredProjects = projects;
 
   const handleDelete = async () => {
     try {

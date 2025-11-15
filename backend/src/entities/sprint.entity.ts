@@ -11,6 +11,18 @@ import {
 import { Project } from './project.entity';
 import { StandupUpdate } from './standup-update.entity';
 
+export enum SprintStatus {
+  UPCOMING = 'upcoming',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  CLOSED = 'closed',
+}
+
+export enum SprintCreationType {
+  MANUAL = 'manual',
+  AUTO_GENERATED = 'auto_generated',
+}
+
 @Entity('sprints')
 export class Sprint {
   @PrimaryGeneratedColumn('uuid')
@@ -26,7 +38,7 @@ export class Sprint {
   name: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  goal: string;
 
   @Column({ type: 'date' })
   startDate: Date;
@@ -34,8 +46,22 @@ export class Sprint {
   @Column({ type: 'date' })
   endDate: Date;
 
-  @Column({ default: 'planned' })
-  status: string;
+  @Column({
+    type: 'enum',
+    enum: SprintStatus,
+    default: SprintStatus.UPCOMING,
+  })
+  status: SprintStatus;
+
+  @Column({
+    type: 'enum',
+    enum: SprintCreationType,
+    default: SprintCreationType.MANUAL,
+  })
+  creationType: SprintCreationType;
+
+  @Column({ default: false })
+  isClosed: boolean;
 
   @OneToMany(() => StandupUpdate, (standupUpdate) => standupUpdate.sprint)
   standupUpdates: StandupUpdate[];

@@ -12,11 +12,12 @@ import {
 import { SprintService } from './sprint.service';
 import { CreateSprintDto } from './dto/create-sprint.dto';
 import { UpdateSprintDto } from './dto/update-sprint.dto';
-import { GenerateSprintsDto } from './dto/generate-sprints.dto';
+import { GenerateSprintsDto, PreviewSprintsDto } from './dto/generate-sprints.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { Permission } from '../entities/role.entity';
+import { SprintStatus } from '../entities/sprint.entity';
 
 @Controller('sprints')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -29,6 +30,12 @@ export class SprintController {
     return this.sprintService.create(createSprintDto);
   }
 
+  @Post('preview')
+  @RequirePermissions(Permission.VIEW_SPRINT)
+  previewSprints(@Body() previewDto: PreviewSprintsDto) {
+    return this.sprintService.previewSprints(previewDto);
+  }
+
   @Post('generate')
   @RequirePermissions(Permission.CREATE_SPRINT)
   generateSprints(@Body() generateSprintsDto: GenerateSprintsDto) {
@@ -37,8 +44,12 @@ export class SprintController {
 
   @Get()
   @RequirePermissions(Permission.VIEW_SPRINT)
-  findAll(@Query('projectId') projectId?: string) {
-    return this.sprintService.findAll(projectId);
+  findAll(
+    @Query('projectId') projectId: string,
+    @Query('status') status?: SprintStatus,
+    @Query('search') search?: string,
+  ) {
+    return this.sprintService.findAll(projectId, status, search);
   }
 
   @Get(':id')
@@ -51,6 +62,12 @@ export class SprintController {
   @RequirePermissions(Permission.EDIT_SPRINT)
   update(@Param('id') id: string, @Body() updateSprintDto: UpdateSprintDto) {
     return this.sprintService.update(id, updateSprintDto);
+  }
+
+  @Post(':id/close')
+  @RequirePermissions(Permission.EDIT_SPRINT)
+  closeSprint(@Param('id') id: string) {
+    return this.sprintService.closeSprint(id);
   }
 
   @Delete(':id')

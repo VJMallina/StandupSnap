@@ -12,6 +12,7 @@ import CreateSprintPage from './pages/sprints/CreateSprintPage';
 import SprintDetailsPage from './pages/sprints/SprintDetailsPage';
 import StandupsPage from './pages/StandupsPage';
 import TeamPage from './pages/TeamPage';
+import TeamManagementPage from './pages/TeamManagementPage';
 import ProfilePage from './pages/ProfilePage';
 import CardsPage from './pages/CardsPage';
 import SnapsPage from './pages/SnapsPage';
@@ -62,6 +63,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <EditProjectPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:projectId/team"
+            element={
+              <ProtectedRoute>
+                <TeamManagementPage />
               </ProtectedRoute>
             }
           />
