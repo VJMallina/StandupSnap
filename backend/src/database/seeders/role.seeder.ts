@@ -32,6 +32,12 @@ export async function seedRoles(dataSource: DataSource): Promise<void> {
       Permission.DELETE_ANY_STANDUP,
       Permission.VIEW_STANDUP,
 
+      // Full access to cards
+      Permission.CREATE_CARD,
+      Permission.EDIT_CARD,
+      Permission.DELETE_CARD,
+      Permission.VIEW_CARD,
+
       // Can send invites and manage roles
       Permission.SEND_INVITE,
       Permission.MANAGE_ROLES,
@@ -62,6 +68,12 @@ export async function seedRoles(dataSource: DataSource): Promise<void> {
       Permission.DELETE_ANY_STANDUP,
       Permission.VIEW_STANDUP,
 
+      // Full access to cards
+      Permission.CREATE_CARD,
+      Permission.EDIT_CARD,
+      Permission.DELETE_CARD,
+      Permission.VIEW_CARD,
+
       // Can send invites
       Permission.SEND_INVITE,
     ],
@@ -77,6 +89,9 @@ export async function seedRoles(dataSource: DataSource): Promise<void> {
 
       // View standups
       Permission.VIEW_STANDUP,
+
+      // View cards
+      Permission.VIEW_CARD,
     ],
   };
 

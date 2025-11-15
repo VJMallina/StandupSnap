@@ -41,6 +41,12 @@ export enum Permission {
   DELETE_ANY_STANDUP = 'delete_any_standup',
   VIEW_STANDUP = 'view_standup',
 
+  // Card permissions
+  CREATE_CARD = 'create_card',
+  EDIT_CARD = 'edit_card',
+  DELETE_CARD = 'delete_card',
+  VIEW_CARD = 'view_card',
+
   // Invite permissions
   SEND_INVITE = 'send_invite',
   MANAGE_ROLES = 'manage_roles',

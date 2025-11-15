@@ -10,13 +10,14 @@ import { SprintModule } from './sprint/sprint.module';
 import { InvitationModule } from './invitation/invitation.module';
 import { UsersModule } from './users/users.module';
 import { TeamMemberModule } from './team-member/team-member.module';
+import { CardModule } from './card/card.module';
 
 // Team Management Module for non-login team members
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '../.env',
+      envFilePath: '.env',
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -40,6 +41,7 @@ import { TeamMemberModule } from './team-member/team-member.module';
     InvitationModule,
     UsersModule,
     TeamMemberModule,
+    CardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

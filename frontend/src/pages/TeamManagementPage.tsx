@@ -64,9 +64,6 @@ export default function TeamManagementPage() {
   const handleRemoveConfirm = async () => {
     if (!selectedMember) return;
     await teamMembersApi.removeFromProject(projectId!, selectedMember.id);
-  };
-
-  const handleRemoveSuccess = () => {
     setSelectedMember(null);
     loadTeamMembers();
   };

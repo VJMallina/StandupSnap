@@ -3,6 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
@@ -11,8 +13,9 @@ import { Project } from '../entities/project.entity';
 import { CreateSprintDto } from './dto/create-sprint.dto';
 import { UpdateSprintDto } from './dto/update-sprint.dto';
 import { GenerateSprintsDto, PreviewSprintsDto } from './dto/generate-sprints.dto';
+import { CardService } from '../card/card.service';
 
-interface SprintPreview {
+export interface SprintPreview {
   name: string;
   startDate: Date;
   endDate: Date;
@@ -26,6 +29,8 @@ export class SprintService {
     private sprintRepository: Repository<Sprint>,
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
+    @Inject(forwardRef(() => CardService))
+    private cardService: CardService,
   ) {}
 
   /**
@@ -409,10 +414,17 @@ export class SprintService {
       throw new BadRequestException('Upcoming sprints cannot be closed');
     }
 
-    // TODO: Validate no active cards exist - will be implemented with Card module
+    // M7-UC06: Validate all cards are completed
+    const allCardsCompleted = await this.cardService.areAllCardsCompleted(id);
+    if (!allCardsCompleted) {
+      throw new BadRequestException('Sprint contains active cards. Complete or move all active cards before closing the sprint.');
+    }
 
     sprint.isClosed = true;
     sprint.status = SprintStatus.CLOSED;
+
+    // M7-UC06: Mark all completed cards as closed
+    await this.cardService.closeAllCardsInSprint(id);
 
     return this.sprintRepository.save(sprint);
   }

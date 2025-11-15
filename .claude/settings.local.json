@@ -26,7 +26,10 @@
       "Bash(kill:*)",
       "Bash(pkill:*)",
       "Bash(node dist/main.js:*)",
-      "Bash(npm run start:prod:*)"
+      "Bash(npm run start:prod:*)",
+      "Bash(xargs kill:*)",
+      "Bash(node:*)",
+      "Bash(ss:*)"
     ],
     "deny": [],
     "ask": []

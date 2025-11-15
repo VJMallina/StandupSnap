@@ -10,11 +10,12 @@ import EditProjectPage from './pages/projects/EditProjectPage';
 import SprintsListPage from './pages/sprints/SprintsListPage';
 import CreateSprintPage from './pages/sprints/CreateSprintPage';
 import SprintDetailsPage from './pages/sprints/SprintDetailsPage';
+import CardsListPage from './pages/cards/CardsListPage';
+import CardDetailsPage from './pages/cards/CardDetailsPage';
 import StandupsPage from './pages/StandupsPage';
 import TeamPage from './pages/TeamPage';
 import TeamManagementPage from './pages/TeamManagementPage';
 import ProfilePage from './pages/ProfilePage';
-import CardsPage from './pages/CardsPage';
 import SnapsPage from './pages/SnapsPage';
 import ReportsPage from './pages/ReportsPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -126,7 +127,15 @@ function App() {
             path="/cards"
             element={
               <ProtectedRoute>
-                <CardsPage />
+                <CardsListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cards/:id"
+            element={
+              <ProtectedRoute>
+                <CardDetailsPage />
               </ProtectedRoute>
             }
           />
