@@ -39,6 +39,16 @@ export class ProjectController {
     return this.projectService.findAll(isActiveBool);
   }
 
+  @Get('check-name')
+  @RequirePermissions(Permission.VIEW_PROJECT)
+  async checkNameUniqueness(
+    @Query('name') name: string,
+    @Query('excludeId') excludeId?: string,
+  ) {
+    const isUnique = await this.projectService.isNameUnique(name, excludeId);
+    return { isUnique };
+  }
+
   @Get(':id')
   @RequirePermissions(Permission.VIEW_PROJECT)
   findOne(@Param('id') id: string) {
@@ -49,6 +59,12 @@ export class ProjectController {
   @RequirePermissions(Permission.EDIT_PROJECT)
   update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
     return this.projectService.update(id, updateProjectDto);
+  }
+
+  @Patch(':id/archive')
+  @RequirePermissions(Permission.EDIT_PROJECT)
+  archive(@Param('id') id: string) {
+    return this.projectService.archive(id);
   }
 
   @Delete(':id')

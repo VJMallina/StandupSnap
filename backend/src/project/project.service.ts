@@ -127,4 +127,30 @@ export class ProjectService {
 
     await this.projectMemberRepository.remove(member);
   }
+
+  async isNameUnique(name: string, excludeId?: string): Promise<boolean> {
+    const where: any = { name };
+
+    const project = await this.projectRepository.findOne({ where });
+
+    if (!project) {
+      return true; // No project with this name exists
+    }
+
+    // If excludeId is provided and matches the found project, name is still unique for that project
+    if (excludeId && project.id === excludeId) {
+      return true;
+    }
+
+    return false; // Name is already taken by another project
+  }
+
+  async archive(id: string): Promise<Project> {
+    const project = await this.findOne(id);
+
+    project.isArchived = true;
+    project.isActive = false;
+
+    return this.projectRepository.save(project);
+  }
 }

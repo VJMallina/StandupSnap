@@ -50,12 +50,11 @@ export default function ProjectDetailsPage() {
 
   const handleArchive = async () => {
     try {
-      // Note: Backend API integration will be done in next session
-      // For now, we'll update the UI optimistically
       if (project) {
+        await projectsApi.archive(project.id);
         setProject({ ...project, isArchived: true, isActive: false });
         setShowArchiveModal(false);
-        // Show success message
+        // Navigate back to projects list after successful archive
         setTimeout(() => {
           navigate('/projects');
         }, 1000);

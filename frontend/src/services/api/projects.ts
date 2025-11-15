@@ -63,4 +63,23 @@ export const projectsApi = {
     if (!response.ok) throw new Error('Failed to fetch members');
     return response.json();
   },
+
+  // Check if project name is unique (excluding the current project in edit mode)
+  checkNameUniqueness: async (name: string, excludeId?: string) => {
+    const response = await fetch(`${API_URL}/projects/check-name?name=${encodeURIComponent(name)}${excludeId ? `&excludeId=${excludeId}` : ''}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to check name uniqueness');
+    return response.json();
+  },
+
+  // Archive a project
+  archive: async (id: string) => {
+    const response = await fetch(`${API_URL}/projects/${id}/archive`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to archive project');
+    return response.json();
+  },
 };

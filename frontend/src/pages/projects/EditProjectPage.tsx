@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectsApi } from '../../services/api/projects';
+import { usersApi, User } from '../../services/api/users';
 import { Project } from '../../types/project';
 import AppLayout from '../../components/AppLayout';
 
@@ -13,28 +14,85 @@ export default function EditProjectPage() {
     startDate: '',
     endDate: '',
     isActive: true,
+    productOwnerId: '',
+    pmoId: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [productOwners, setProductOwners] = useState<User[]>([]);
+  const [pmos, setPmos] = useState<User[]>([]);
+  const [checkingName, setCheckingName] = useState(false);
+  const [originalName, setOriginalName] = useState('');
 
   useEffect(() => {
     if (id) {
       loadProject();
     }
+    loadUsers();
   }, [id]);
+
+  // Debounced name uniqueness check (excluding current project)
+  useEffect(() => {
+    const checkNameUniqueness = async () => {
+      // Skip check if name hasn't changed or is invalid
+      if (!formData.name.trim() || formData.name.length < 3 || formData.name === originalName) {
+        return;
+      }
+
+      setCheckingName(true);
+      try {
+        const result = await projectsApi.checkNameUniqueness(formData.name.trim(), id);
+        if (!result.isUnique) {
+          setErrors(prev => ({ ...prev, name: 'A project with this name already exists' }));
+        } else {
+          setErrors(prev => {
+            const { name, ...rest } = prev;
+            return rest;
+          });
+        }
+      } catch (err) {
+        // If API fails, don't block the user - backend will handle it on submit
+        console.error('Failed to check name uniqueness:', err);
+      } finally {
+        setCheckingName(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      checkNameUniqueness();
+    }, 500); // Debounce for 500ms
+
+    return () => clearTimeout(timer);
+  }, [formData.name, originalName, id]);
+
+  const loadUsers = async () => {
+    try {
+      const [poUsers, pmoUsers] = await Promise.all([
+        usersApi.getByRole('PRODUCT_OWNER'),
+        usersApi.getByRole('PMO')
+      ]);
+      setProductOwners(poUsers);
+      setPmos(pmoUsers);
+    } catch (err) {
+      console.error('Failed to load users:', err);
+    }
+  };
 
   const loadProject = async () => {
     try {
       setInitialLoading(true);
       const project: Project = await projectsApi.getById(id!);
+      setOriginalName(project.name); // Store original name for comparison
       setFormData({
         name: project.name,
         description: project.description || '',
         startDate: project.startDate.split('T')[0],
         endDate: project.endDate ? project.endDate.split('T')[0] : '',
         isActive: project.isActive,
+        productOwnerId: project.productOwner?.id || '',
+        pmoId: project.pmo?.id || '',
       });
     } catch (err: any) {
       setError(err.message || 'Failed to load project');
@@ -152,18 +210,28 @@ export default function EditProjectPage() {
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-xl p-8 space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Project Name *</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.target.value });
-                if (errors.name) setErrors({ ...errors, name: '' });
-              }}
-              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Enter project name"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  if (errors.name) setErrors({ ...errors, name: '' });
+                }}
+                className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  errors.name ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Enter project name"
+              />
+              {checkingName && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              )}
+            </div>
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
             )}
@@ -224,6 +292,42 @@ export default function EditProjectPage() {
               {errors.endDate && (
                 <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>
               )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Product Owner</label>
+              <select
+                value={formData.productOwnerId}
+                onChange={(e) => setFormData({ ...formData, productOwnerId: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Not assigned</option>
+                {productOwners.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.firstName} {user.lastName} ({user.email})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">Optional - Assign a Product Owner to this project</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">PMO</label>
+              <select
+                value={formData.pmoId}
+                onChange={(e) => setFormData({ ...formData, pmoId: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Not assigned</option>
+                {pmos.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.firstName} {user.lastName} ({user.email})
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">Optional - Assign a PMO to this project</p>
             </div>
           </div>
 

@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProjectModule } from './project/project.module';
 import { SprintModule } from './sprint/sprint.module';
 import { InvitationModule } from './invitation/invitation.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { InvitationModule } from './invitation/invitation.module';
     ProjectModule,
     SprintModule,
     InvitationModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
