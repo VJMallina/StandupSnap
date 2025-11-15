@@ -11,6 +11,7 @@ import {
 import { Sprint } from './sprint.entity';
 import { TeamMember } from './team-member.entity';
 import { Project } from './project.entity';
+import { Snap } from './snap.entity';
 
 export enum CardStatus {
   NOT_STARTED = 'not_started',
@@ -85,8 +86,8 @@ export class Card {
   @Column({ type: 'timestamp', nullable: true })
   completedAt: Date;
 
-  @OneToMany(() => import('./snap.entity').Snap, (snap) => snap.card)
-  snaps: import('./snap.entity').Snap[];
+  @OneToMany(() => Snap, (snap) => snap.card)
+  snaps: Snap[];
 
   @CreateDateColumn()
   createdAt: Date;

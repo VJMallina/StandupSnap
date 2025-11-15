@@ -50,6 +50,16 @@ export enum Permission {
   // Invite permissions
   SEND_INVITE = 'send_invite',
   MANAGE_ROLES = 'manage_roles',
+
+  // Snap permissions
+  CREATE_SNAP = 'create_snap',
+  EDIT_OWN_SNAP = 'edit_own_snap',
+  EDIT_ANY_SNAP = 'edit_any_snap',
+  DELETE_OWN_SNAP = 'delete_own_snap',
+  DELETE_ANY_SNAP = 'delete_any_snap',
+  VIEW_SNAP = 'view_snap',
+  LOCK_DAILY_SNAPS = 'lock_daily_snaps',
+  GENERATE_SUMMARY = 'generate_summary',
 }
 
 @Entity('roles')

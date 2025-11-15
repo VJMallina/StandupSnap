@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { cardsApi } from '../../services/api/cards';
 import { Card, CardStatus, CardRAG, CardPriority } from '../../types/card';
-import { SprintStatus } from '../../types/sprint';
 import AppLayout from '../../components/AppLayout';
 import EditCardModal from '../../components/cards/EditCardModal';
+import SnapsList from '../../components/snaps/SnapsList';
 
 export default function CardDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -140,7 +140,6 @@ export default function CardDetailsPage() {
   const canEdit = !isLocked && !card.project.isArchived;
   const canDelete = !isLocked && !card.project.isArchived;
   const canComplete = !isLocked && card.status !== CardStatus.COMPLETED && !card.project.isArchived;
-  const isSprintActive = card.sprint.status === SprintStatus.ACTIVE;
 
   return (
     <AppLayout>
@@ -311,34 +310,13 @@ export default function CardDetailsPage() {
           </div>
         </div>
 
-        {/* Snaps Section - M7-UC04 */}
+        {/* Snaps Section - M8 Snap Management */}
         <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Snaps History</h2>
-            {isSprintActive && !isLocked && (
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                onClick={() => {/* TODO: Navigate to create snap */}}
-              >
-                Add Snap
-              </button>
-            )}
-          </div>
-
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-            <p className="text-sm text-blue-700">
-              Snap functionality will be available once the Snap module is implemented.
-              Snaps will show chronological updates with Done/To Do/Blockers breakdown.
-            </p>
-          </div>
-
-          {/* Placeholder for snaps list */}
-          <div className="mt-4 text-center py-8 text-gray-500">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="mt-2">No snaps yet.</p>
-          </div>
+          <SnapsList
+            cardId={card.id}
+            cardTitle={card.title}
+            isLocked={isLocked}
+          />
         </div>
 
         {/* Metadata */}

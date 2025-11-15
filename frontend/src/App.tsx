@@ -17,6 +17,7 @@ import TeamPage from './pages/TeamPage';
 import TeamManagementPage from './pages/TeamManagementPage';
 import ProfilePage from './pages/ProfilePage';
 import SnapsPage from './pages/SnapsPage';
+import DailySnapsPage from './pages/snaps/DailySnapsPage';
 import ReportsPage from './pages/ReportsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -144,6 +145,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <SnapsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/snaps/sprint/:sprintId"
+            element={
+              <ProtectedRoute>
+                <DailySnapsPage />
               </ProtectedRoute>
             }
           />

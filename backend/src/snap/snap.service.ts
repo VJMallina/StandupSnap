@@ -1,0 +1,698 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import Anthropic from '@anthropic-ai/sdk';
+import { Snap, SnapRAG } from '../entities/snap.entity';
+import { Card, CardStatus, CardRAG } from '../entities/card.entity';
+import { Sprint, SprintStatus } from '../entities/sprint.entity';
+import { DailySnapLock } from '../entities/daily-snap-lock.entity';
+import { DailySummary } from '../entities/daily-summary.entity';
+import { CreateSnapDto } from './dto/create-snap.dto';
+import { UpdateSnapDto } from './dto/update-snap.dto';
+import { LockDailySnapsDto } from './dto/lock-daily-snaps.dto';
+
+interface ParsedSnapData {
+  done: string;
+  toDo: string;
+  blockers: string;
+  suggestedRAG: SnapRAG;
+}
+
+@Injectable()
+export class SnapService {
+  private anthropic: Anthropic;
+
+  constructor(
+    @InjectRepository(Snap)
+    private snapRepository: Repository<Snap>,
+    @InjectRepository(Card)
+    private cardRepository: Repository<Card>,
+    @InjectRepository(Sprint)
+    private sprintRepository: Repository<Sprint>,
+    @InjectRepository(DailySnapLock)
+    private lockRepository: Repository<DailySnapLock>,
+    @InjectRepository(DailySummary)
+    private summaryRepository: Repository<DailySummary>,
+    private configService: ConfigService,
+  ) {
+    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
+    if (apiKey) {
+      this.anthropic = new Anthropic({ apiKey });
+    }
+  }
+
+  /**
+   * M8-UC01: Create Snap (Daily Update)
+   * - SM creates a snap for a card in an Active sprint
+   * - AI parses raw input to generate structured Done/ToDo/Blockers
+   * - AI suggests RAG status
+   * - SM can override AI output
+   */
+  async create(createSnapDto: CreateSnapDto, userId: string): Promise<Snap> {
+    const { cardId, rawInput, done, toDo, blockers, suggestedRAG, finalRAG } = createSnapDto;
+
+    // 1. Validate card exists and load with relations
+    const card = await this.cardRepository.findOne({
+      where: { id: cardId },
+      relations: ['sprint', 'snaps'],
+    });
+
+    if (!card) {
+      throw new NotFoundException('Card not found');
+    }
+
+    // 2. Business Validation: Card must have ET specified
+    if (!card.estimatedTime || card.estimatedTime <= 0) {
+      throw new BadRequestException('Card must have Estimated Time (ET) specified to create snap');
+    }
+
+    // 3. Validate sprint is Active and not Closed
+    if (card.sprint.status !== SprintStatus.ACTIVE) {
+      throw new BadRequestException('Cannot create snaps for cards in non-Active sprints');
+    }
+
+    if (card.sprint.isClosed) {
+      throw new BadRequestException('Cannot create snaps after sprint closure');
+    }
+
+    // 5. Check if today's snap is already locked
+    const today = new Date().toISOString().split('T')[0];
+    const isLocked = await this.isDayLocked(card.sprint.id, today);
+    if (isLocked) {
+      throw new BadRequestException('Cannot create snaps after daily snap lock has been applied');
+    }
+
+    // 6. Validate snap date is within sprint range
+    const snapDate = new Date(today);
+    const sprintStart = new Date(card.sprint.startDate);
+    const sprintEnd = new Date(card.sprint.endDate);
+
+    if (snapDate < sprintStart || snapDate > sprintEnd) {
+      throw new BadRequestException('Snap date must be within sprint date range');
+    }
+
+    // 7. AI Parsing (if done/toDo/blockers not provided manually)
+    let parsedData: ParsedSnapData | null = null;
+    if (!done && !toDo && !blockers && !suggestedRAG) {
+      // Use AI to parse the raw input
+      parsedData = await this.parseSnapWithAI(rawInput, card);
+    }
+
+    // 8. Create snap entity
+    const snap = this.snapRepository.create({
+      cardId,
+      createdById: userId,
+      rawInput,
+      done: done || parsedData?.done || null,
+      toDo: toDo || parsedData?.toDo || null,
+      blockers: blockers || parsedData?.blockers || null,
+      suggestedRAG: suggestedRAG || parsedData?.suggestedRAG || null,
+      finalRAG: finalRAG || parsedData?.suggestedRAG || null, // Default to suggested if not overridden
+      snapDate,
+      isLocked: false,
+    });
+
+    // 9. Save snap
+    const savedSnap = await this.snapRepository.save(snap);
+
+    // 10. Auto-transition card to IN_PROGRESS on first snap (if NOT_STARTED)
+    if (card.status === CardStatus.NOT_STARTED) {
+      card.status = CardStatus.IN_PROGRESS;
+      await this.cardRepository.save(card);
+    }
+
+    // 11. Update card RAG status based on snap
+    await this.updateCardRAG(cardId);
+
+    // 12. Return snap with relations
+    return this.snapRepository.findOne({
+      where: { id: savedSnap.id },
+      relations: ['card', 'createdBy'],
+    });
+  }
+
+  /**
+   * M8-UC02: Edit Snap
+   * - Only today's snaps can be edited
+   * - Only before daily lock
+   * - Can regenerate AI parsing
+   */
+  async update(id: string, updateSnapDto: UpdateSnapDto, userId: string): Promise<Snap> {
+    const { regenerate, ...updateData } = updateSnapDto;
+
+    // 1. Find snap with relations
+    const snap = await this.snapRepository.findOne({
+      where: { id },
+      relations: ['card', 'card.sprint'],
+    });
+
+    if (!snap) {
+      throw new NotFoundException('Snap not found');
+    }
+
+    // 2. Validate ownership (only creator can edit, unless user has EDIT_ANY_SNAP permission)
+    if (snap.createdById !== userId) {
+      // Note: Permission check should be done in controller with PermissionsGuard
+      // This is additional validation
+      throw new ForbiddenException('You can only edit your own snaps');
+    }
+
+    // 3. Validate snap is from today
+    const today = new Date().toISOString().split('T')[0];
+    const snapDateStr = new Date(snap.snapDate).toISOString().split('T')[0];
+
+    if (snapDateStr !== today) {
+      throw new BadRequestException('Only today\'s snaps can be edited');
+    }
+
+    // 4. Validate snap is not locked
+    if (snap.isLocked) {
+      throw new BadRequestException('Cannot edit locked snaps');
+    }
+
+    // 5. Validate daily lock not applied
+    const isLocked = await this.isDayLocked(snap.card.sprint.id, today);
+    if (isLocked) {
+      throw new BadRequestException('Cannot edit snaps after daily lock has been applied');
+    }
+
+    // 6. Validate sprint is Active
+    if (snap.card.sprint.status !== SprintStatus.ACTIVE) {
+      throw new BadRequestException('Cannot edit snaps for cards in non-Active sprints');
+    }
+
+    // 7. Handle regenerate flag - re-run AI parsing
+    if (regenerate && updateData.rawInput) {
+      const parsedData = await this.parseSnapWithAI(updateData.rawInput, snap.card);
+      updateData.done = parsedData.done;
+      updateData.toDo = parsedData.toDo;
+      updateData.blockers = parsedData.blockers;
+      updateData.suggestedRAG = parsedData.suggestedRAG;
+      // Keep finalRAG as user's override, or use suggested if not set
+      if (!updateData.finalRAG) {
+        updateData.finalRAG = parsedData.suggestedRAG;
+      }
+    }
+
+    // 8. Update snap
+    Object.assign(snap, updateData);
+    const updatedSnap = await this.snapRepository.save(snap);
+
+    // 9. Recalculate card RAG
+    await this.updateCardRAG(snap.cardId);
+
+    // 10. Return updated snap with relations
+    return this.snapRepository.findOne({
+      where: { id: updatedSnap.id },
+      relations: ['card', 'createdBy'],
+    });
+  }
+
+  /**
+   * M8-UC03: Delete Snap
+   * - Only today's snaps can be deleted
+   * - Only before daily lock
+   */
+  async remove(id: string, userId: string): Promise<void> {
+    // 1. Find snap
+    const snap = await this.snapRepository.findOne({
+      where: { id },
+      relations: ['card', 'card.sprint'],
+    });
+
+    if (!snap) {
+      throw new NotFoundException('Snap not found');
+    }
+
+    // 2. Validate ownership
+    if (snap.createdById !== userId) {
+      throw new ForbiddenException('You can only delete your own snaps');
+    }
+
+    // 3. Validate snap is from today
+    const today = new Date().toISOString().split('T')[0];
+    const snapDateStr = new Date(snap.snapDate).toISOString().split('T')[0];
+
+    if (snapDateStr !== today) {
+      throw new BadRequestException('Only today\'s snaps can be deleted');
+    }
+
+    // 4. Validate snap is not locked
+    if (snap.isLocked) {
+      throw new BadRequestException('Cannot delete locked snaps');
+    }
+
+    // 5. Validate daily lock not applied
+    const isLocked = await this.isDayLocked(snap.card.sprint.id, today);
+    if (isLocked) {
+      throw new BadRequestException('Cannot delete snaps after daily lock has been applied');
+    }
+
+    // 6. Validate sprint is Active
+    if (snap.card.sprint.status === SprintStatus.COMPLETED || snap.card.sprint.isClosed) {
+      throw new BadRequestException('Cannot delete snaps for completed or closed sprints');
+    }
+
+    const cardId = snap.cardId;
+
+    // 7. Delete snap
+    await this.snapRepository.remove(snap);
+
+    // 8. Recalculate card RAG after deletion
+    await this.updateCardRAG(cardId);
+  }
+
+  /**
+   * Get snap by ID
+   */
+  async findOne(id: string): Promise<Snap> {
+    const snap = await this.snapRepository.findOne({
+      where: { id },
+      relations: ['card', 'createdBy'],
+    });
+
+    if (!snap) {
+      throw new NotFoundException('Snap not found');
+    }
+
+    return snap;
+  }
+
+  /**
+   * Get all snaps for a card (with yesterday and older context)
+   * Used in M8-UC01 and M8-UC02 to show prior context
+   */
+  async findByCard(cardId: string): Promise<Snap[]> {
+    const card = await this.cardRepository.findOne({ where: { id: cardId } });
+    if (!card) {
+      throw new NotFoundException('Card not found');
+    }
+
+    return this.snapRepository.find({
+      where: { cardId },
+      relations: ['createdBy'],
+      order: { snapDate: 'DESC', createdAt: 'DESC' }, // Most recent first
+    });
+  }
+
+  /**
+   * Get all snaps for a sprint on a specific date
+   * Used for daily snap view and summary generation
+   */
+  async findBySprintAndDate(sprintId: string, date: string): Promise<Snap[]> {
+    const sprint = await this.sprintRepository.findOne({
+      where: { id: sprintId },
+      relations: ['project'],
+    });
+
+    if (!sprint) {
+      throw new NotFoundException('Sprint not found');
+    }
+
+    // Get all cards for this sprint
+    const cards = await this.cardRepository.find({
+      where: { sprint: { id: sprintId } },
+    });
+
+    const cardIds = cards.map((c) => c.id);
+
+    if (cardIds.length === 0) {
+      return [];
+    }
+
+    return this.snapRepository.find({
+      where: {
+        cardId: cardIds.length === 1 ? cardIds[0] : { $in: cardIds } as any,
+        snapDate: new Date(date),
+      },
+      relations: ['card', 'createdBy', 'card.assignee'],
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  /**
+   * M8-UC04: Lock Daily Snaps
+   * - Locks all snaps for a specific date in a sprint
+   * - Prevents further edits/deletes
+   * - Triggers daily summary generation
+   */
+  async lockDailySnaps(dto: LockDailySnapsDto, userId: string): Promise<DailySnapLock> {
+    const { sprintId, lockDate } = dto;
+
+    // 1. Validate sprint
+    const sprint = await this.sprintRepository.findOne({ where: { id: sprintId } });
+    if (!sprint) {
+      throw new NotFoundException('Sprint not found');
+    }
+
+    // 2. Validate sprint is Active (allow locking for Completed as well for historical data)
+    if (sprint.isClosed) {
+      throw new BadRequestException('Cannot lock snaps for closed sprints');
+    }
+
+    // 3. Check if already locked
+    const existingLock = await this.lockRepository.findOne({
+      where: { sprintId, lockDate: new Date(lockDate) },
+    });
+
+    if (existingLock) {
+      throw new BadRequestException('Daily snaps for this date are already locked');
+    }
+
+    // 4. Get all snaps for this sprint and date
+    const snaps = await this.findBySprintAndDate(sprintId, lockDate);
+
+    // 5. Lock all snaps
+    for (const snap of snaps) {
+      snap.isLocked = true;
+    }
+    await this.snapRepository.save(snaps);
+
+    // 6. Create lock record
+    const lock = this.lockRepository.create({
+      sprintId,
+      lockDate: new Date(lockDate),
+      lockedById: userId,
+      isAutoLocked: false,
+    });
+
+    const savedLock = await this.lockRepository.save(lock);
+
+    // 7. Generate daily summary
+    await this.generateDailySummary(sprintId, lockDate);
+
+    return savedLock;
+  }
+
+  /**
+   * Auto-lock daily snaps (called by scheduler)
+   */
+  async autoLockDailySnaps(sprintId: string, lockDate: string): Promise<void> {
+    // 1. Validate sprint
+    const sprint = await this.sprintRepository.findOne({ where: { id: sprintId } });
+    if (!sprint || sprint.isClosed) {
+      return; // Skip if sprint not found or closed
+    }
+
+    // 2. Check if already locked
+    const existingLock = await this.lockRepository.findOne({
+      where: { sprintId, lockDate: new Date(lockDate) },
+    });
+
+    if (existingLock) {
+      return; // Already locked
+    }
+
+    // 3. Get all snaps for this date
+    const snaps = await this.findBySprintAndDate(sprintId, lockDate);
+
+    // 4. Lock all snaps
+    for (const snap of snaps) {
+      snap.isLocked = true;
+    }
+    await this.snapRepository.save(snaps);
+
+    // 5. Create lock record (no user)
+    const lock = this.lockRepository.create({
+      sprintId,
+      lockDate: new Date(lockDate),
+      lockedById: null,
+      isAutoLocked: true,
+    });
+
+    await this.lockRepository.save(lock);
+
+    // 6. Generate daily summary
+    await this.generateDailySummary(sprintId, lockDate);
+  }
+
+  /**
+   * M8-UC05: Generate Daily Overall Standup Summary
+   * - Aggregates all snaps for a date
+   * - Groups by team member or card
+   * - Calculates RAG overview
+   */
+  async generateDailySummary(sprintId: string, date: string): Promise<DailySummary> {
+    // 1. Check if already generated
+    const existing = await this.summaryRepository.findOne({
+      where: { sprintId, summaryDate: new Date(date) },
+    });
+
+    if (existing) {
+      return existing; // Already generated
+    }
+
+    // 2. Get all snaps for this date
+    const snaps = await this.findBySprintAndDate(sprintId, date);
+
+    // 3. Aggregate content
+    const doneItems: string[] = [];
+    const toDoItems: string[] = [];
+    const blockerItems: string[] = [];
+
+    // 4. Group by assignee for structure
+    const byAssignee = new Map<string, { name: string; snaps: Snap[] }>();
+
+    for (const snap of snaps) {
+      const assigneeName = snap.card.assignee
+        ? snap.card.assignee.fullName
+        : 'Unassigned';
+
+      if (!byAssignee.has(assigneeName)) {
+        byAssignee.set(assigneeName, { name: assigneeName, snaps: [] });
+      }
+      byAssignee.get(assigneeName).snaps.push(snap);
+
+      // Aggregate content
+      if (snap.done) {
+        doneItems.push(`[${snap.card.title}] ${snap.done}`);
+      }
+      if (snap.toDo) {
+        toDoItems.push(`[${snap.card.title}] ${snap.toDo}`);
+      }
+      if (snap.blockers) {
+        blockerItems.push(`[${snap.card.title}] ${snap.blockers}`);
+      }
+    }
+
+    // 5. Calculate RAG overview
+    const cardRAG = { green: 0, amber: 0, red: 0 };
+    const assigneeRAG = { green: 0, amber: 0, red: 0 };
+
+    // Card-level RAG
+    for (const snap of snaps) {
+      if (snap.finalRAG === SnapRAG.GREEN) cardRAG.green++;
+      else if (snap.finalRAG === SnapRAG.AMBER) cardRAG.amber++;
+      else if (snap.finalRAG === SnapRAG.RED) cardRAG.red++;
+    }
+
+    // Assignee-level RAG (simplified: based on worst RAG for each assignee)
+    for (const [_, data] of byAssignee) {
+      let worstRAG = SnapRAG.GREEN;
+      for (const snap of data.snaps) {
+        if (snap.finalRAG === SnapRAG.RED) {
+          worstRAG = SnapRAG.RED;
+          break;
+        } else if (snap.finalRAG === SnapRAG.AMBER) {
+          worstRAG = SnapRAG.AMBER;
+        }
+      }
+
+      if (worstRAG === SnapRAG.GREEN) assigneeRAG.green++;
+      else if (worstRAG === SnapRAG.AMBER) assigneeRAG.amber++;
+      else if (worstRAG === SnapRAG.RED) assigneeRAG.red++;
+    }
+
+    // Sprint-level RAG (based on majority or worst)
+    let sprintLevel = 'green';
+    if (cardRAG.red > 0) sprintLevel = 'red';
+    else if (cardRAG.amber > cardRAG.green) sprintLevel = 'amber';
+
+    // 6. Create summary
+    const summary = this.summaryRepository.create({
+      sprintId,
+      summaryDate: new Date(date),
+      done: doneItems.join('\n'),
+      toDo: toDoItems.join('\n'),
+      blockers: blockerItems.join('\n'),
+      ragOverview: {
+        cardLevel: cardRAG,
+        assigneeLevel: assigneeRAG,
+        sprintLevel,
+      },
+      fullData: {
+        byAssignee: Array.from(byAssignee.entries()).map(([name, data]) => ({
+          assignee: name,
+          snaps: data.snaps.map((s) => ({
+            cardTitle: s.card.title,
+            done: s.done,
+            toDo: s.toDo,
+            blockers: s.blockers,
+            rag: s.finalRAG,
+          })),
+        })),
+      },
+    });
+
+    return this.summaryRepository.save(summary);
+  }
+
+  /**
+   * Get daily summary for a sprint and date
+   */
+  async getDailySummary(sprintId: string, date: string): Promise<DailySummary> {
+    const summary = await this.summaryRepository.findOne({
+      where: { sprintId, summaryDate: new Date(date) },
+      relations: ['sprint'],
+    });
+
+    if (!summary) {
+      throw new NotFoundException('Daily summary not found for this date');
+    }
+
+    return summary;
+  }
+
+  /**
+   * Check if a specific date is locked for a sprint
+   */
+  async isDayLocked(sprintId: string, date: string): Promise<boolean> {
+    const lock = await this.lockRepository.findOne({
+      where: { sprintId, lockDate: new Date(date) },
+    });
+
+    return !!lock;
+  }
+
+  /**
+   * AI Parsing Helper - Parse raw input with Anthropic Claude
+   */
+  private async parseSnapWithAI(rawInput: string, card: Card): Promise<ParsedSnapData> {
+    if (!this.anthropic) {
+      // Fallback if API key not configured
+      return {
+        done: rawInput,
+        toDo: '',
+        blockers: '',
+        suggestedRAG: SnapRAG.AMBER,
+      };
+    }
+
+    try {
+      const prompt = `You are an AI assistant helping to parse daily standup updates for agile project management.
+
+Card Information:
+- Title: ${card.title}
+- Description: ${card.description || 'N/A'}
+- Estimated Time: ${card.estimatedTime} hours
+- Current Status: ${card.status}
+
+Standup Update (Raw Input):
+${rawInput}
+
+Please analyze this update and extract the following in JSON format:
+{
+  "done": "What work was completed (be concise)",
+  "toDo": "What work is planned next (be concise)",
+  "blockers": "Any issues, blockers, or dependencies (empty string if none)",
+  "suggestedRAG": "green|amber|red"
+}
+
+RAG Status Guidelines:
+- GREEN: On track, making good progress, no blockers, aligned with ET
+- AMBER: Minor concerns, slight delays, manageable blockers, might need attention
+- RED: Major issues, significant blockers, way behind schedule, critical attention needed
+
+Return ONLY valid JSON, no additional text.`;
+
+      const response = await this.anthropic.messages.create({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      // Extract JSON from response
+      const firstBlock = response.content[0];
+      if (firstBlock.type !== 'text') {
+        throw new Error('Expected text response from AI');
+      }
+
+      const content = firstBlock.text;
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in AI response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      return {
+        done: parsed.done || '',
+        toDo: parsed.toDo || '',
+        blockers: parsed.blockers || '',
+        suggestedRAG: parsed.suggestedRAG as SnapRAG || SnapRAG.AMBER,
+      };
+    } catch (error) {
+      console.error('AI parsing error:', error);
+      // Fallback to simple parsing
+      return {
+        done: rawInput,
+        toDo: '',
+        blockers: '',
+        suggestedRAG: SnapRAG.AMBER,
+      };
+    }
+  }
+
+  /**
+   * Update Card RAG based on snaps
+   * Logic: Analyze snap frequency, content, and RAG trend
+   */
+  private async updateCardRAG(cardId: string): Promise<void> {
+    const card = await this.cardRepository.findOne({
+      where: { id: cardId },
+      relations: ['snaps', 'sprint'],
+    });
+
+    if (!card || card.snaps.length === 0) {
+      return; // No snaps yet
+    }
+
+    // Get recent snaps (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentSnaps = card.snaps.filter(
+      (s) => new Date(s.snapDate) >= sevenDaysAgo,
+    );
+
+    if (recentSnaps.length === 0) {
+      card.ragStatus = CardRAG.RED; // No recent updates
+      await this.cardRepository.save(card);
+      return;
+    }
+
+    // Calculate RAG based on latest snap's finalRAG
+    const latestSnap = recentSnaps.sort(
+      (a, b) => new Date(b.snapDate).getTime() - new Date(a.snapDate).getTime(),
+    )[0];
+
+    // Map SnapRAG to CardRAG
+    if (latestSnap.finalRAG === SnapRAG.GREEN) {
+      card.ragStatus = CardRAG.GREEN;
+    } else if (latestSnap.finalRAG === SnapRAG.AMBER) {
+      card.ragStatus = CardRAG.AMBER;
+    } else if (latestSnap.finalRAG === SnapRAG.RED) {
+      card.ragStatus = CardRAG.RED;
+    } else {
+      card.ragStatus = CardRAG.AMBER; // Default
+    }
+
+    await this.cardRepository.save(card);
+  }
+}
