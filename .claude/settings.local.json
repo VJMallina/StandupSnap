@@ -29,7 +29,18 @@
       "Bash(npm run start:prod:*)",
       "Bash(xargs kill:*)",
       "Bash(node:*)",
-      "Bash(ss:*)"
+      "Bash(ss:*)",
+      "Bash(npm --version:*)",
+      "Bash(command:*)",
+      "Bash([ -s \"$HOME/.nvm/nvm.sh\" ])",
+      "Bash(bash)",
+      "Bash(export NVM_DIR=\"$HOME/.nvm\")",
+      "Bash([ -s \"$NVM_DIR/nvm.sh\" ])",
+      "Bash(. \"$NVM_DIR/nvm.sh\")",
+      "Bash(nvm install:*)",
+      "Bash(nvm alias:*)",
+      "Bash(npm cache clean:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

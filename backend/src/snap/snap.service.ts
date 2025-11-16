@@ -13,9 +13,11 @@ import { Card, CardStatus, CardRAG } from '../entities/card.entity';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
 import { DailySnapLock } from '../entities/daily-snap-lock.entity';
 import { DailySummary } from '../entities/daily-summary.entity';
+import { CardRAGHistory } from '../entities/card-rag-history.entity';
 import { CreateSnapDto } from './dto/create-snap.dto';
 import { UpdateSnapDto } from './dto/update-snap.dto';
 import { LockDailySnapsDto } from './dto/lock-daily-snaps.dto';
+import { OverrideRAGDto } from './dto/override-rag.dto';
 
 interface ParsedSnapData {
   done: string;
@@ -39,6 +41,8 @@ export class SnapService {
     private lockRepository: Repository<DailySnapLock>,
     @InjectRepository(DailySummary)
     private summaryRepository: Repository<DailySummary>,
+    @InjectRepository(CardRAGHistory)
+    private ragHistoryRepository: Repository<CardRAGHistory>,
     private configService: ConfigService,
   ) {
     const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
@@ -694,5 +698,315 @@ Return ONLY valid JSON, no additional text.`;
     }
 
     await this.cardRepository.save(card);
+  }
+
+  /**
+   * M9-UC01: System Computes RAG Suggestion
+   * Advanced RAG calculation based on timeline, blockers, and progress
+   */
+  private async calculateSystemRAG(card: Card, snap: Snap): Promise<SnapRAG> {
+    // 1. Check if card has Done content
+    const hasDone = snap.done && snap.done.trim().length > 0;
+    const hasBlockers = snap.blockers && snap.blockers.trim().length > 0;
+
+    // 2. Calculate timeline deviation
+    const timelineDeviation = await this.calculateTimelineDeviation(card);
+
+    // 3. Check for consecutive days without Done
+    const consecutiveDaysWithoutDone = await this.getConsecutiveDaysWithoutDone(card.id);
+
+    // 4. Apply RAG logic
+    // RED conditions:
+    if (consecutiveDaysWithoutDone >= 2) {
+      return SnapRAG.RED; // No Done for 2+ days
+    }
+    if (timelineDeviation > 30) {
+      return SnapRAG.RED; // Major delay (>30%)
+    }
+    if (hasBlockers && this.isSevereBlocker(snap.blockers)) {
+      return SnapRAG.RED; // Severe blockers
+    }
+
+    // AMBER conditions:
+    if (timelineDeviation > 0 && timelineDeviation <= 30) {
+      return SnapRAG.AMBER; // Minor delay (<30%)
+    }
+    if (hasBlockers) {
+      return SnapRAG.AMBER; // Any blockers present
+    }
+    if (!hasDone) {
+      return SnapRAG.AMBER; // No progress today
+    }
+
+    // GREEN: On track
+    return SnapRAG.GREEN;
+  }
+
+  /**
+   * Calculate timeline deviation as percentage
+   * Based on ET and days elapsed since card start
+   */
+  private async calculateTimelineDeviation(card: Card): Promise<number> {
+    if (!card.estimatedTime || card.estimatedTime <= 0) {
+      return 0;
+    }
+
+    // Get card start date (first snap date or created date)
+    const snaps = await this.snapRepository.find({
+      where: { cardId: card.id },
+      order: { snapDate: 'ASC' },
+    });
+
+    const startDate = snaps.length > 0
+      ? new Date(snaps[0].snapDate)
+      : new Date(card.createdAt);
+
+    const today = new Date();
+    const daysElapsed = Math.floor(
+      (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    // Assume 8-hour work day
+    const expectedHours = (daysElapsed + 1) * 8;
+    const estimatedHours = card.estimatedTime;
+
+    // Calculate deviation percentage
+    const deviation = ((expectedHours - estimatedHours) / estimatedHours) * 100;
+
+    return Math.max(0, deviation);
+  }
+
+  /**
+   * Get number of consecutive days without Done
+   */
+  private async getConsecutiveDaysWithoutDone(cardId: string): Promise<number> {
+    const recentSnaps = await this.snapRepository.find({
+      where: { cardId },
+      order: { snapDate: 'DESC' },
+      take: 7, // Check last 7 days
+    });
+
+    let count = 0;
+    for (const snap of recentSnaps) {
+      if (!snap.done || snap.done.trim().length === 0) {
+        count++;
+      } else {
+        break; // Stop at first snap with Done
+      }
+    }
+
+    return count;
+  }
+
+  /**
+   * Determine if blockers are severe
+   */
+  private isSevereBlocker(blockers: string): boolean {
+    if (!blockers) return false;
+
+    const severeKeywords = [
+      'blocked',
+      'critical',
+      'urgent',
+      'severe',
+      'major',
+      'cannot proceed',
+      'showstopper',
+      'production down',
+      'client escalation',
+    ];
+
+    const blockersLower = blockers.toLowerCase();
+    return severeKeywords.some(keyword => blockersLower.includes(keyword));
+  }
+
+  /**
+   * M9-UC02: SM Overrides RAG
+   */
+  async overrideRAG(snapId: string, dto: OverrideRAGDto, userId: string): Promise<Snap> {
+    // 1. Find snap
+    const snap = await this.snapRepository.findOne({
+      where: { id: snapId },
+      relations: ['card', 'card.sprint'],
+    });
+
+    if (!snap) {
+      throw new NotFoundException('Snap not found');
+    }
+
+    // 2. Validate snap is from today
+    const today = new Date().toISOString().split('T')[0];
+    const snapDate = new Date(snap.snapDate).toISOString().split('T')[0];
+
+    if (snapDate !== today) {
+      throw new BadRequestException('Can only override RAG for today\'s snaps');
+    }
+
+    // 3. Validate daily lock not applied
+    const isLocked = await this.isDayLocked(snap.card.sprint.id, today);
+    if (isLocked || snap.isLocked) {
+      throw new BadRequestException('Cannot override RAG after daily lock');
+    }
+
+    // 4. Update snap with override
+    snap.finalRAG = dto.ragStatus;
+
+    const updatedSnap = await this.snapRepository.save(snap);
+
+    // 5. Update card RAG
+    await this.updateCardRAG(snap.cardId);
+
+    // 6. Log override in history (for audit)
+    // Note: This will be permanently saved when daily lock occurs
+
+    return updatedSnap;
+  }
+
+  /**
+   * M9-UC07: RAG History Tracking
+   * Save RAG to history when daily lock occurs
+   */
+  async saveRAGHistory(cardId: string, date: string, overriddenById?: string): Promise<void> {
+    // Get card with latest snap for this date
+    const card = await this.cardRepository.findOne({
+      where: { id: cardId },
+      relations: ['snaps'],
+    });
+
+    if (!card || !card.ragStatus) {
+      return; // No RAG to save
+    }
+
+    // Check if snap exists for this date
+    const snap = await this.snapRepository.findOne({
+      where: {
+        cardId,
+        snapDate: new Date(date),
+      },
+    });
+
+    const isOverridden = snap?.suggestedRAG !== snap?.finalRAG;
+
+    // Check if history already exists
+    const existing = await this.ragHistoryRepository.findOne({
+      where: {
+        cardId,
+        date: new Date(date),
+      },
+    });
+
+    if (existing) {
+      // Update existing
+      existing.ragStatus = card.ragStatus;
+      existing.isOverridden = isOverridden;
+      if (overriddenById) {
+        existing.overriddenById = overriddenById;
+      }
+      await this.ragHistoryRepository.save(existing);
+    } else {
+      // Create new
+      const history = this.ragHistoryRepository.create({
+        cardId,
+        date: new Date(date),
+        ragStatus: card.ragStatus,
+        isOverridden,
+        overriddenById,
+      });
+      await this.ragHistoryRepository.save(history);
+    }
+  }
+
+  /**
+   * Get RAG history for a card
+   */
+  async getRAGHistory(cardId: string): Promise<CardRAGHistory[]> {
+    return this.ragHistoryRepository.find({
+      where: { cardId },
+      order: { date: 'DESC' },
+      relations: ['overriddenBy'],
+    });
+  }
+
+  /**
+   * M9-UC05: Sprint-Level RAG Aggregation
+   * Applies worst-case logic (Red > Amber > Green)
+   */
+  async getSprintRAG(sprintId: string): Promise<{
+    ragStatus: CardRAG;
+    breakdown: { green: number; amber: number; red: number };
+  }> {
+    // Get all cards in sprint
+    const cards = await this.cardRepository.find({
+      where: { sprint: { id: sprintId } },
+    });
+
+    const breakdown = { green: 0, amber: 0, red: 0 };
+
+    for (const card of cards) {
+      if (card.ragStatus === CardRAG.GREEN) breakdown.green++;
+      else if (card.ragStatus === CardRAG.AMBER) breakdown.amber++;
+      else if (card.ragStatus === CardRAG.RED) breakdown.red++;
+    }
+
+    // Worst-case logic
+    let ragStatus: CardRAG;
+    if (breakdown.red > 0) {
+      ragStatus = CardRAG.RED;
+    } else if (breakdown.amber > 0) {
+      ragStatus = CardRAG.AMBER;
+    } else {
+      ragStatus = CardRAG.GREEN;
+    }
+
+    return { ragStatus, breakdown };
+  }
+
+  /**
+   * M9-UC06: Project-Level RAG Aggregation
+   * Aggregates across all sprints in a project
+   */
+  async getProjectRAG(projectId: string): Promise<{
+    ragStatus: CardRAG;
+    breakdown: { green: number; amber: number; red: number };
+    sprintBreakdown: Array<{
+      sprintId: string;
+      sprintName: string;
+      ragStatus: CardRAG;
+    }>;
+  }> {
+    // Get all sprints in project
+    const sprints = await this.sprintRepository.find({
+      where: { project: { id: projectId } },
+    });
+
+    const breakdown = { green: 0, amber: 0, red: 0 };
+    const sprintBreakdown = [];
+
+    for (const sprint of sprints) {
+      const sprintRAG = await this.getSprintRAG(sprint.id);
+
+      sprintBreakdown.push({
+        sprintId: sprint.id,
+        sprintName: sprint.name,
+        ragStatus: sprintRAG.ragStatus,
+      });
+
+      // Aggregate
+      if (sprintRAG.ragStatus === CardRAG.GREEN) breakdown.green++;
+      else if (sprintRAG.ragStatus === CardRAG.AMBER) breakdown.amber++;
+      else if (sprintRAG.ragStatus === CardRAG.RED) breakdown.red++;
+    }
+
+    // Worst-case logic
+    let ragStatus: CardRAG;
+    if (breakdown.red > 0) {
+      ragStatus = CardRAG.RED;
+    } else if (breakdown.amber > 0) {
+      ragStatus = CardRAG.AMBER;
+    } else {
+      ragStatus = CardRAG.GREEN;
+    }
+
+    return { ragStatus, breakdown, sprintBreakdown };
   }
 }
