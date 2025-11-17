@@ -1,0 +1,331 @@
+StandupSnap – Product Requirements Specification 
+1. Introduction
+1.1 Purpose
+This document defines requirements for standupSnap, an application intended to streamline capturing and structuring daily standup updates. Free-form text is processed using an AI model to format updates into done, to-do, and blockers.
+1.2 Scope
+The system supports agile elements such as projects, sprints, teams, cards, snaps, estimated timelines (ET), and RAG status.
+Scrum masters, product owners, and PMO may work across multiple projects and can switch project context.
+Snaps may be generated only while a sprint is active.
+RAG suggestion logic activates once ET is defined, even when no snaps have been recorded.
+1.3 Actors
+Scrum master
+Product owner
+PMO
+Team member
+Team members do not interact directly with the system in MVP.
+2. High level overview
+StandupSnap enables scrum masters to manage projects, teams, sprints, and cards.
+Updates (snaps) are captured as raw English text and converted into structured segments.
+Each card may have multiple snaps across a sprint.
+Cards must maintain ET dates to drive automated RAG suggestion. Final RAG is always controlled by the scrum master.
+Snaps may be captured on any day while a sprint is active but cannot be created after the sprint closes.
+Scrum masters may lock a day’s snaps and export a daily summary including RAG.
+Scrum masters, PO, PMO may belong to multiple projects and switch between them.
+3. Functional Requirements
+3.0 Authentication & Registration (MVP)
+3.0.1 Login
+1.	System shall provide login using username + password.
+2.	After login, the application loads all assigned projects for the user.
+3.	If only one project is assigned, the system enters it automatically.
+4.	If multiple projects are assigned, a project selector shall be shown.
+5.	No role-selection dropdown is displayed at login; role authority follows project context.
+3.0.2 Self-Registration
+1.	The system shall allow in-app registration.
+2.	Only the following roles may self-register:
+Scrum master
+Product owner
+PMO
+3.	Registration fields:
+name
+username (unique)
+password
+role (required; SM/PO/PMO)
+4.	After registration, users may log in immediately.
+5.	Newly registered users shall not belong to any project until mapped by an SM.
+3.0.3 Invitation-based Registration
+1.	If a required PO/PMO cannot be found during project creation or user mapping, SM may send an invite.
+2.	The invitation shall include a pre-assigned role (PO or PMO).
+3.	The invited user shall register through the invite link.
+4.	During invite registration, the role is locked and cannot be changed.
+5.	After invite registration, the user becomes available to SM for project allocation.
+6.	Invitation shall be single-use and time-bound.
+3.0.4 Team Members
+1.	Team members do not register or log in in MVP.
+2.	They are created and maintained as project resources and can be assigned cards.
+3.0.5 Session & Logout
+1.	Sessions persist until logout or timeout.
+2.	Switching projects does not require re-authentication.
+3.	Users can log out anytime.
+3.1 User management
+1.	The system shall support four roles: scrum master, product owner, PMO, and team member.
+2.	A user may be assigned to one or more projects.
+3.	A user may have different roles across different projects.
+4.	A user shall only view and interact with projects to which they are assigned.
+5.	Users with no project mapping shall not see any project.
+6.	The system shall allow the scrum master to add team members to a project.
+7.	Team members exist as passive resources and do not directly interact with the system in MVP.
+8.	Role permissions shall be enforced per project context.
+
+3.2 Project management
+3.2.1 Core
+1.	SM shall be able to create, update, archive projects.
+2.	Project contains:
+teams
+sprints
+cards
+snaps
+ET data
+RAG indicators
+3.	PO has limited edit + full view; PMO is view-only.
+3.2.2 Assigning PO/PMO to Project
+1.	During project creation, the system shall display available PO/PMO users for selection.
+2.	If no appropriate user exists, SM may still create the project.
+3.2.3 Invite New PO/PMO (MVP)
+1.	If needed, the SM may send an invite to add a PO/PMO.
+2.	The invite is role-locked and cannot be modified by invitee.
+3.	Once registered, the new user becomes selectable for project mapping.
+3.2.4 Project selector/switch
+1.	The system shall present a project selector on the dashboard if the user is assigned on multiple projects. If the user is assigned to only one project then the system shall display the default customized dashboard pertaining to that project.
+2.	The project selector shall allow switching between projects without UI disruption.
+3.	When switching projects, only data refreshes; navigation layout shall remain stable.
+4.	Switching project context shall refresh sprints, cards, snaps, and reporting content.
+5.	Selected project shall persist until explicitly changed.
+6.	Switching projects shall not require re-authentication.
+7.	If a selected resource does not exist in the new project, user must be routed to the project-level home view.
+3.3 Team management
+1.	The system shall allow scrum masters to create teams within a project.
+2.	Team members can be added or removed by the scrum master.
+3.	Product owner can also have access to add team members and PMO have read-only access to teams.
+3.4 Sprint management
+1.	The system shall allow the scrum master to create, update, and archive sprints.
+2.	Each sprint belongs to a single project.
+3.	Sprint attributes include name, start date, end date, and status (upcoming, active, closed).
+4.	Product owner and PMO have view-only access.
+5.	Once a sprint is closed, snaps shall not be created for cards within the sprint.
+3.5 Card management
+1.	The system shall allow scrum masters to create and modify cards.
+2.	Each card belongs to a single sprint.
+3.	Each card must have a single assignee.
+4.	Card attributes shall include:
+reference ID
+title
+description
+assignee
+ET start date
+ET end date
+status
+optional tags
+suggestedRAG
+finalRAG
+5.	A team member may be assigned multiple cards within a sprint.
+6.	A snap cannot exist without being linked to a card.
+7.	Cards assigned to a team member within a sprint shall be displayed together under that assignee.
+3.6 Card view
+Each card view shall display at minimum:
+reference ID
+title
+description
+assignee
+ET start and end
+status
+suggestedRAG and finalRAG
+tags
+snap history
+3.7 Estimated timeline (ET)
+1.	Each card shall maintain estimated start and end dates.
+2.	ET should be defined at sprint start; if not, ET must be set on the day card work begins.
+3.	Cards without ET are marked unestimated.
+4.	ET assignment timestamp shall be stored.
+5.	RAG suggestion shall not occur until ET is defined.
+3.8 Snap Management
+1.	The system shall allow the scrum master to create snaps for a card.
+2.	A snap contains raw text describing progress.
+3.	The system shall convert raw text into structured segments: done, to-do, blockers.
+4.	Structured AI output shall be editable before saving.
+5.	Each snap belongs to exactly one card.
+6.	Snaps shall be grouped per card and ordered chronologically.
+7.	Snaps may be created on any day while the sprint is active; snap creation is optional.
+8.	Multiple snaps may be created per card per day.
+9.	Snaps cannot be created once the sprint is closed.
+10.	Snaps from closed sprints shall remain viewable.
+11.	Snap details shall appear in both card and assignee view.
+3.9 Assignee view
+1.	The system shall provide an assignee-level view per sprint.
+2.	The view shall display all cards assigned to that team member.
+3.	For each card, ET, RAG, and snaps shall be displayed.
+4.	Snaps shall be grouped under their respective cards.
+5.	The system shall provide RAG summary counts per assignee.
+3.10 Snap locking and Daily summary
+1.	Scrum master shall be able to lock snaps for the day at the sprint level.
+2.	Once locked, no new snaps or edits may be made for that day.
+3.	After lock, system shall allow download of a consolidated daily summary.
+4.	Daily summary includes:
+per-card structured updates
+per-card finalRAG
+grouping by assignee
+RAG totals (red, amber, green)
+5.	Daily summary shall be downloadable in Word or PDF.
+6.	Document shall be cleanly formatted for sharing.
+3.11 Sprint-level summary
+1.	The system shall allow creation of a sprint-level summary.
+2.	Sprint summary shall include:
+all cards
+finalRAG
+ET vs completion state
+optional snap summary
+3.	Sprint summary remains available after sprint closure.
+3.12 RAG status
+1.	Each card shall maintain RAG with two layers: suggestedRAG and finalRAG.
+2.	Scrum master controls finalRAG.
+3.	RAG shall be displayed in card lists, assignee view, daily summaries, and sprint summaries.
+4.	RAG updates shall record timestamp, user, and optional comment.
+3.13 RAG suggestion logic
+1.	When a snap is created, the system shall interpret progress and blockers.
+2.	System shall compare current date to ET.
+3.	System shall compute suggestedRAG using ET, card status, and snap interpretation.
+4.	If ET not defined, no suggestedRAG shall be generated.
+5.	If no snaps exist, suggestedRAG still calculated based on ET and card status.
+6.	If ET end date has passed and card is not complete → suggestedRAG red.
+7.	If ET midpoint reached and no progress → suggestedRAG amber.
+8.	System shall provide reason text for suggestedRAG.
+9.	Scrum master may override suggestedRAG.
+10.	Only finalRAG shall be used in reporting.
+3.14 Reporting
+1.	The system shall provide daily consolidated snap view at project level on the dashboard.
+2.	The system shall provide sprint-level summaries with RAG groupings.
+3.	The system shall allow historical viewing by team member, card, and sprint.
+4.	Daily export shall include RAG totals.
+5.	More advanced export formats may be added later.
+3.15 Profile Section (MVP)
+3.15.1 Access & Display
+1.	Visible post-login.
+2.	Shows:
+name
+username
+primary role
+project list + project-role mapping
+3.15.2 Edit
+1.	User can update:
+name
+password
+2.	User cannot change:
+username
+role
+project assignment
+3.	Password change requires current password.
+3.16 Dashboard (Landing Page)
+3.16.1 Definition
+The dashboard serves as the primary landing page post-login and displays contextual project-level information.
+All navigational and workflow actions originate from the dashboard.
+3.16.2 Landing Logic
+1.	After login, the system shall determine the set of projects associated with the user.
+2.	If the user is mapped to exactly one project, the system shall automatically load the dashboard with that project context.
+3.	If the user is mapped to multiple projects, the system shall display the project selector. After the user selects a project, the dashboard loads for that project context.
+4.	If the user is mapped to no projects, the system shall display the dashboard in an empty-state mode.
+5.	On dashboard the system shall have quick actions to create projects, Invite members, create new sprints
+6.	 The dashboard may provide quick access buttons to create new sprints or cards.
+7.	These actions shall follow role permissions (SM > Create sprint, SM/PO > Create card).
+3.16.3 Dashboard – Project Context View
+When a user is in an active project context, the dashboard shall display at minimum:
+1.	Project Summary
+• project name
+• project duration
+• project roles (SM / PO / PMO)
+• quick access to team
+2.	Sprint Overview
+• list of sprints grouped by status (upcoming / active / closed)
+• highlight the active sprint
+3.	RAG Snapshot
+• count of cards by RAG (Red / Amber / Green)
+• may be grouped by sprint or assignee
+4.	Daily Snap Summary
+• snapshot of snaps captured for the current day
+• indication of cards missing snaps
+• button to lock the day
+5.	Quick Navigation
+• quick actions to access:
+– sprints
+– cards
+– teams
+– reports
+6.	Pending Actions (if applicable)
+• pending invitations
+• cards missing ET
+• cards without assigned resources
+7.	•  Role Sensitivity
+• Action elements shall respect RBAC rules:
+– scrum master may perform all actions including snap lock & summary export
+– product owner may view all data & optionally create snaps if allowed
+– PMO may view only
+8.	•  Notification Indicators (optional MVP)
+The dashboard may highlight items requiring attention such as:
+• approaching sprint close date
+• cards past ET
+• unassigned cards
+• cards without ET
+• missing snaps for the day
+9.	•  Quick Filters (optional MVP)
+The dashboard may allow optional filtering by:
+• sprint
+• assignee
+• RAG
+3.16.4 Dashboard – Empty State Mode
+If a user has no project mapping:
+1.	The dashboard shall display an empty-state message such as:
+“You are not assigned to any project.”
+2.	No project-level metrics shall be displayed.
+3.	The user may only access allowed global features (e.g., profile).
+3.16.5 Dashboard Behavior
+1.	Switching to another project via project selector shall refresh metrics and data while maintaining the global UI shell.
+2.	If a resource is unavailable under the newly selected project, the system shall redirect the user to the dashboard root for that project.
+3.	No editing of cards, snaps, or sprints is allowed from the dashboard; all actions must redirect into the appropriate module.
+4.	Dashboard content is read-only except for daily snap lock actions.
+5.	When switching projects, dashboard widgets shall individually display loading states until data loads successfully.
+6.	The Dashboard may optionally auto-refresh data at fixed intervals (e.g., 5 min) and shall provide a manual refresh action.
+4. Access Control
+Capability | Scrum master | Product owner | PMO | Team member
+Register | yes | yes | yes | no
+Login | yes | yes | yes | no
+Add users to project | yes | yes | no | n/a
+Invite user | yes | yes | no | n/a
+Create project | yes | no | no | no
+Create sprint | yes | no | no | no
+Manage teams | yes | limited | no | no
+Create cards | yes | limited | no | no
+Assign cards | yes | yes (optional) | no | no
+Create or edit snaps | yes | yes (optional) | no | no
+Lock snaps | yes | no | no | no
+Download daily summary | yes | yes (optional) | no | no
+View data | yes | yes | yes | n/a
+Update finalRAG | yes | no | no | no
+Users may have different roles across projects.
+5. Information Architecture
+Modules:
+dashboard
+project selector within the dashboard
+projects
+teams
+sprints
+cards
+snaps
+reports
+Assignee view:
+groups assigned cards
+displays ET and RAG
+shows snaps in chronological order
+6. Non-functional requirements
+1.	UI workflows shall be intuitive.
+2.	AI-generated output shall be editable.
+3.	Project-level RBAC shall be enforced.
+4.	Snap processing must complete within reasonable time.
+5.	RAG logic must apply consistently once ET is defined.
+6.	Data must remain isolated per project.
+7.	Switching project context shall not require re-authentication.
+8.	Daily summary export must be readable and well-formatted.
+7. future enhancements (not MVP)
+Integration with Jira or Azure DevOps
+Custom standup templates
+Voice-based snap entry
+Automated recurring RAG evaluation
+Cross-project PMO analytics
+
