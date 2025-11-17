@@ -1,0 +1,1109 @@
+Side Navigation will have the following – Dashboard, Projects, Sprints, Cards, Snaps, Teams, Reports, Profile, Logout
+✅ Side Navigation — Role Visibility Matrix
+Menu Item	SM	PO	PMO
+Dashboard	✅	✅	✅
+Projects	✅	✅ (view)	✅ (view)
+Sprints	✅	✅	✅ (view)
+Cards	✅	✅	✅ (view)
+Snaps	✅	✅	✅ (view)
+Teams	✅	✅ (view)	✅ (view)
+Reports	✅	✅	✅
+Profile	✅	✅	✅
+Logout	✅	✅	✅
+
+✅ Updated Rule — Team Module Role Permissions
+Role	Permission Level	Description
+Scrum Master (SM)	Full Access	Can create, edit, and remove team members
+Product Owner (PO)	Edit Access	Can view and edit existing team members (but not remove)
+PMO	View Only	Can only view team details; no add/edit/delete actions
+Team Member (TM)	—	Non-login persona; cannot access the application
+
+
+1) Authentication & Onboarding
+1.1 Self-registration for SM / PO / PMO
+Section	Details
+Module #	1 – Authentication & Onboarding
+Use Case ID	M1-UC01
+Use Case Name	Self-Registration (SM / PO / PMO)
+Trigger	The user clicks the “Register / Sign-Up” button on the StandupSnap platform
+Pre-conditions	1. The user is not registered on the platform 
+2. The user is not logged in
+Basic Path (Main Flow)	1. The user visits the StandupSnap platform 
+2. The user clicks the Sign-Up button 
+3. The system displays the registration form fields (Name, Username, Password, Role) 
+4. The user enters details and selects role (SM/PO/PMO) 
+5. The system validates the entered information 
+6. If all data is valid, the system creates a new user record 
+7. The system notifies the user of successful registration
+Alternative Paths	Condition 1: Username already exists 
+1. System notifies: “Username already registered” 
+2. User re-enters a new username 
+Condition 2: Invalid/missing fields 
+1. System shows field validation errors 2. User corrects inputs and resubmits 
+Condition 3: User attempts to register as Team Member 
+1. System does not allow role selection 
+2. System notifies: “Team members cannot self-register”
+Post-conditions	1. User record created in database 
+2. User can log in 
+3. User is not automatically assigned to any project
+Primary Actor	User attempting to register (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	1. Role must be selected from a restricted dropdown list: 
+ • Scrum Master (SM) 
+ • Product Owner (PO) 
+ • PMO 
+2. Team Member (TM) role must not appear in dropdown 
+3. Username must be unique 
+4. Username format must follow: 
+ • 4–50 characters 
+ • Allowed: A-Z, a-z, 0-9, underscore (_) 
+ • No spaces allowed 
+5. Password must meet complexity rules: 
+ • Minimum 8 characters 
+ • Must include at least 1 uppercase letter (A-Z) 
+ • Must include at least 1 lowercase letter (a-z) 
+ • Must include at least 1 numeral (0-9) 
+ • Must include at least 1 special character (! @ # $ % ^ & * ) 
+6. Mandatory fields must display validation errors if left blank
+Notes (Optional)	Rules may be configurable later
+
+1.2 User login with username + password
+	
+Section	Details
+Module #	1 – Authentication & Onboarding
+Use Case ID	M1-UC02
+Use Case Name	User Login with Username + Password
+Trigger	The user clicks the “Login / Sign-In” button on StandupSnap
+Pre-conditions	1. User is registered on the platform 
+2. User is not currently logged in
+Basic Path (Main Flow)	1. User visits the StandupSnap platform 
+2. User clicks Login 
+3. System displays login form (Username, Password) 
+4. User enters credentials and submits 
+5. System authenticates credentials 
+6. If authentication succeeds, user session is created 
+7. User is redirected to the Dashboard 
+8. Dashboard loads based on project context availability
+Alternative Paths	Condition 1 — Invalid credentials 
+1. System shows: “Invalid username/password” 
+2. User re-enters credentials 
+Condition 2 — User disabled / locked 
+1. System shows: “Your account is disabled. Contact admin.” 
+Condition 3 — Platform unavailable 
+1. System shows: “Unable to process request. Try again later.”
+Post-conditions	1. User session is active 2. Dashboard is displayed:  • If ≥1 project assigned → dashboard shows project-based view  • If 0 projects assigned → dashboard shows empty/default state
+3. User can access modules based on assigned roles 
+4. Side navigation becomes visible with modules based on user role
+Primary Actor	Registered User (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	1. Username must exist 
+2. Password must match hashed stored value 
+3. Account must be active 
+4. On successful login:  • If user has ≥1 project → load dashboard with selected (or default) project context  • If user has 0 projects → load default/empty dashboard 
+5. Password must not be stored or transmitted in plaintext
+Notes (Optional)	Project Selector appears as dropdown on dashboard only if user has ≥1 project
+
+
+1.3 Invite-based (role-locked) registration
+Section	Details
+Module #	1 – Authentication & Onboarding
+Use Case ID	M1-UC03
+Use Case Name	Invite-Based (Role-Locked) Registration
+Trigger	The user clicks on the invite link sent by an SM via email
+Pre-conditions	1. The user has received a valid invite link 
+2. The invite contains a pre-assigned role (SM / PO / PMO) 
+3. The invite link is not expired or previously used
+Basic Path (Main Flow)	1. The user clicks the invite link 
+2. System opens registration page with role pre-selected and locked (not editable) 
+3. User enters Name, Username, Password 
+4. User submits the form 
+5. System validates the data 
+6. If valid, the system creates the user with assigned role 
+7. System confirms successful registration 
+8. User may now log in
+Alternative Paths	Condition 1 — Invite link expired / invalid 
+1. System displays message: “This invite link is invalid or has expired.” Condition 2 — Invite already used 
+1. System displays: “This invite has already been used to register.” Condition 3 — Username already exists 
+1. System displays: “Username already taken.” 
+2. User re-enters a new Username 
+Condition 4 — Mandatory fields missing or invalid 
+1. System displays field errors 
+2. User corrects and resubmits
+Post-conditions	1. User account is created with invite-defined role 
+2. User can log in immediately 
+3. User is now selectable by SM for project assignment
+Primary Actor	Invited User (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	1. Role must be pre-assigned via invite and not editable 
+2. Username must be unique 
+3. Username format: 4–50 chars; allowed: A–Z, a–z, 0–9, underscore; no spaces 
+4. Password must meet platform complexity rules:  • ≥ 8 chars  • ≥ 1 uppercase  • ≥ 1 lowercase  • ≥ 1 digit  • ≥ 1 special character (!@#$%^&*) 
+5. Mandatory fields must show validation on missing input 6. Invite must be unused + unexpired
+Notes (Optional)	Invite may later support expiry duration and resending
+
+1.4 Session persistence + timeout
+Section	Details
+Module #	1 – Authentication & Onboarding
+Use Case ID	M1-UC04
+Use Case Name	Session Persistence + Timeout
+Trigger	User logs in and begins a session on StandupSnap
+Pre-conditions	1. User is registered on platform 
+2. User is successfully authenticated
+Basic Path (Main Flow)	1. User logs into StandupSnap 
+2. System generates a session token 
+3. System stores the session token securely (browser + backend) 
+4. User continues using the application normally 
+5. User remains logged in until session expires or they manually log out
+Alternative Paths	Condition 1 — Session expires due to inactivity 
+1. System detects inactivity beyond configured timeout 
+2. System ends user session 
+3. User is redirected to login screen with message: “Session expired. Please log in again.” 
+Condition 2 — User manually closes browser tab 
+1. Session remains stored until timeout 
+2. When user returns within valid session window, system restores session and loads dashboard context 
+Condition 3 — Backend invalidates token (security, admin reset) 
+1. System forces logout on next user action 
+2. User redirected to login page
+Post-conditions	1. Active session persists until expired or manually terminated 
+2. Once expired → user must log in again
+Primary Actor	Registered User (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	1. Session tokens must be securely managed 
+2. Session timeout duration must be configurable (default 24 hours / 1 hour inactivity; can be finalized) 
+3. Inactive sessions must auto-expire based on timeout rule 
+4. User returning within active window should resume session without re-login 
+5. System must prevent token reuse after logout/timeout
+Notes (Optional)	Local remember-me functionality may be supported later
+
+1.5 Logout
+Section	Details
+Module #	1 – Authentication & Onboarding
+Use Case ID	M1-UC05
+Use Case Name	Logout
+Trigger	The user clicks the “Logout / Sign-out” option from the application
+Pre-conditions	1. User is authenticated (logged in)
+Basic Path (Main Flow)	1. User clicks the Logout option 
+2. System invalidates the active session token 
+3. System clears relevant stored session data (local/session storage) 
+4. User is redirected to the Login page 
+5. System displays confirmation that user is logged out
+Alternative Paths	Condition 1 — Session already expired or invalid 
+1. System detects expired/invalid session 
+2. System redirects to Login page 
+Condition 2 — Network/connectivity issue during logout 
+1. System still clears local session 
+2. User redirected to Login page
+Post-conditions	1. Session is terminated 
+2. User is logged out and redirected to Login page 
+3. Protected pages cannot be accessed without re-authentication
+Primary Actor	Registered User (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	1. User session must be invalidated securely 
+2. Token must not be reusable 
+3. After logout, user must not have access to protected areas without login 
+4. Local/session storage cleared appropriately 
+5. Logout must complete even if backend is unavailable
+Notes (Optional)	UI may show toast/snackbar saying “Successfully logged out”
+
+
+
+2) Profile
+2.1 View profile details
+Section	Details
+Module #	2 – Profile
+Use Case ID	M2-UC01
+Use Case Name	View Profile Details
+Trigger	The user clicks the “Profile” option from either: 
+• Side Navigation menu 
+• Top-right user menu (next to Logout)
+Pre-conditions	1. User is authenticated (logged in) 2. User session is active
+Basic Path (Main Flow)	1. User clicks on Profile from either the left navigation OR the top-right corner user menu 2. System retrieves user profile information from database 3. System displays the profile page showing:  • Full Name  • Username  • Role (SM / PO / PMO)  • List of assigned projects (view-only)  • Account creation date 4. The user views their details
+Alternative Paths	Condition 1 — Session expired 1. System detects invalid/expired session 2. User is redirected to Login screen
+Post-conditions	1. Profile details are displayed to the user
+Primary Actor	Authenticated User (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	1. Only logged-in users may access the Profile screen 2. Profile must show only the logged-in user’s own data 3. Role shown must match stored role (SM/PO/PMO) 4. Project list must include only assigned projects 5. System must load all fields correctly before display
+Notes (Optional)	Profile edit operations are defined in the next use case (M2-UC02)
+
+2.2 Edit profile (name, password)
+Section	Details
+Module #	2 – Profile
+Use Case ID	M2-UC02
+Use Case Name	Edit Profile (Name, Password)
+Trigger	The user clicks the Edit Profile icon (pencil icon) on the Profile screen
+Pre-conditions	1. User is authenticated (logged in) 2. User is currently on the Profile screen
+Basic Path (Main Flow)	1. User clicks the Edit Profile icon (usually placed on top-right of the profile card) 2. System displays editable fields:  • Full Name (editable)  • Password change section (Current Password, New Password, Confirm New Password) 3. User updates the required fields 4. User clicks Save (CTA button) 5. System validates updated information 6. If validation succeeds, system updates user data in the database 7. System shows a confirmation message: “Profile updated successfully” 8. Updated details are immediately reflected on the Profile page
+Alternative Paths	Condition 1 — Invalid Name 1. System shows name validation error 2. User corrects name and retries Condition 2 — Incorrect Current Password 1. System shows: “Current password is incorrect” 2. User re-enters current password Condition 3 — New Password invalid 1. System displays password rule violation message 2. User corrects password and retries
+Post-conditions	1. Profile details updated successfully 2. Updated information visible immediately 3. User remains logged in
+Primary Actor	Authenticated User (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	Name Validation: 1. Name must not be blank 2. Allowed characters: alphabets, spaces, period, hyphen Password Change Validation: 3. Current password must match stored password 4. New password must meet required complexity rules:  • ≥ 8 characters  • ≥ 1 uppercase  • ≥ 1 lowercase  • ≥ 1 digit  • ≥ 1 special character (!@#$%^&*) 5. New Password and Confirm Password must match General: 6. Users can only edit their own profile 7. All updates must be securely saved in DB
+Notes (Optional)	Username and role fields remain non-editable
+
+2.3 Display project mapping + role(s)
+Section	Details
+Module #	2 – Profile
+Use Case ID	M2-UC03
+Use Case Name	Display Project Mapping + Role(s)
+Trigger	User opens the Profile screen (from side navigation or top-right user menu)
+Pre-conditions	1. User is authenticated 2. User session is active
+Basic Path (Main Flow)	1. User navigates to the Profile screen 2. System retrieves the list of all projects the user is assigned to 3. For each project, the system fetches the user’s role(s) in that project (SM / PO / PMO) 4. System displays a structured section titled “Project Mappings” or “Your Project Assignments” showing:  • Project Name  • User Role in that Project  • Project Status (Active / Closed) (optional) 5. User views project-role mapping information
+Alternative Paths	Condition 1 — User is not assigned to any project 1. System displays message: “You are not assigned to any project yet.” 2. No project-role mapping list is shown Condition 2 — Session expired 1. System detects invalid session 2. Redirects user to Login page
+Post-conditions	1. User views accurate project-role mapping details 2. Mapping list reflects all active assignments
+Primary Actor	Authenticated User (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	1. User must only see projects they are assigned to 2. Role displayed per project must match the role assigned in that project (SM/PO/PMO) 3. Data must be fetched from accurate project-user mapping 4. If no projects are assigned, default empty state must be shown 5. The list should update immediately if assignments change
+Notes (Optional)	In future, a user may hold multiple roles across different projects; this section should support listing each project-role pair clearly.
+
+2.4 View audit timestamps (login / password change)
+	
+Section	Details
+Module #	2 – Profile
+Use Case ID	M2-UC04
+Use Case Name	View Audit Timestamps (Login / Password Change)
+Trigger	User opens the Profile screen (via side navigation or top-right user menu)
+Pre-conditions	1. User is authenticated 2. User session is active
+Basic Path (Main Flow)	1. User navigates to the Profile screen 2. System retrieves audit log data tied to the user account, specifically:  • Last Login Timestamp  • Last Password Change Timestamp  • (Optional) Account Creation Timestamp 3. System displays an Audit Information section containing these timestamps in a clean, read-only format 4. User reviews the audit information
+Alternative Paths	Condition 1 — No password change history 1. System displays: “Password has not been changed since account creation.” Condition 2 — No login history (first login) 1. System shows: “This is your first login.” Condition 3 — Session expired 1. System detects expired session 2. Redirects user to Login page
+Post-conditions	1. User views accurate account audit timestamps
+Primary Actor	Authenticated User (SM / PO / PMO)
+Supporting Actors	System
+Business Validations	1. User must be shown only their own audit timestamps 
+2. Audit data must be fetched securely and must not expose system internals 
+3. Timestamps must use a consistent format (e.g., DD-MMM-YYYY HH:MM AM/PM) 
+4. If no data exists (first-time events), meaningful default messages must be displayed 
+5. Audit data must load only after user authentication
+Notes (Optional)	Future expansion may include device info, IP logs, or session history.
+
+3) Project Management
+3.1 Create new project
+Section	Details
+Module #	3 – Projects
+Use Case ID	M3-UC01
+Use Case Name	Create New Project
+Trigger	Scrum Master (SM) clicks “Create Project” from the Projects screen or dashboard empty-state CTA
+Pre-conditions	1. User must be authenticated 2. User must have Scrum Master (SM) role 3. PO/PMO user lists must be available
+Basic Path (Main Flow)	1. SM clicks Create Project 2. System displays the Project Creation form containing:  • Project Name (mandatory)  • Project Description (optional)  • Project Start Date (mandatory)  • Project End Date (mandatory)  • Assign Product Owner (PO) (dropdown)  • Assign PMO (dropdown) 3. SM enters details and selects PO/PMO 4. SM clicks Create 5. System validates:  • Project Name is unique  • Start Date is present  • End Date ≥ Start Date (if provided) 6. System creates the project with provided values 7. System maps PO and PMO to the project (if selected) 8. System displays “Project created successfully” 9. Project now appears in dashboard project selector, project list, and PO/PMO views
+Alternative Paths	Condition 1 — No PO/PMO available for assignment
+1.	System displays message: “No PO/PMO available. Do you want to send an invite?”
+2.	SM clicks Send Invite
+3.	System displays invite form with:
+ • Email Address
+ • Role (pre-selected as PO or PMO)
+4.	SM enters the email and submits
+5.	System sends a role-locked invitation email that includes:
+ - Project Name
+ - Invited Role (PO or PMO)
+ - Registration link with embedded role
+ - Message stating role cannot be changed during registration
+6.	System displays: “Invite sent successfully.”
+7.	Project creation continues without assigned PO/PMO (optional), and SM may assign them later through Edit Project.
+
+Condition 2 — Duplicate Project Name 1. System shows “Project with this name already exists” 2. SM enters a different name Condition 3 — Invalid date range 1. System shows “End Date must be later than or equal to Start Date”
+Post-conditions	1. Project is created with defined dates and role mappings 2. Project available in dropdown selector and project lists 3. PO/PMO (if assigned) see the project immediately
+Primary Actor	Scrum Master (SM)
+Supporting Actors	System
+Business Validations	1. Only SM can create projects 2. Project Name must be unique, non-empty 3. Project Start Date is mandatory 4. If Project End Date is provided → must be ≥ Start Date 5. Any sprint created later must lie within Project Start and End Dates 6. Assignable PO/PMO list must contain only users registered with those roles
+7. Invited user must be force-registered with the role defined in the invite. Role selection is disabled on registration form.
+Notes (Optional)	Teams will be added after project creation
+
+3.2 Edit / update project details
+Section	Details
+Module #	3 – Projects
+Use Case ID	M3-UC02
+Use Case Name	Edit / Update Project Details
+Trigger	Scrum Master (SM) clicks the Edit Project icon on the Project Details or Project List screen
+Pre-conditions	1. User must be authenticated 2. User must have Scrum Master (SM) role for this project 3. Project must already exist
+Basic Path (Main Flow)	1. SM opens the Project Details screen 2. SM clicks the Edit Project icon 3. System displays editable fields:  • Project Name  • Project Description  • Project Start Date  • Project End Date  • Assign Product Owner (PO)  • Assign PMO 4. SM updates the required details 5. SM clicks Save Changes 6. System validates:  • Project Name is unique  • Start Date is present  • End Date ≥ Start Date 7. System updates project details in database 8. System displays “Project updated successfully” 9. Dashboard, dropdown selector, and lists reflect updated details instantly
+Alternative Paths	Condition 1 — Duplicate Project Name 1. System shows: “Project with this name already exists” 2. SM enters a new name
+
+ Condition 2 — Invalid date range 1. System shows: “End Date must be later than or equal to Start Date” 
+Condition 3 — No PO/PMO available to assign
+1.	System displays: “No PO/PMO available. Do you want to send an invite?”
+2.	SM clicks Send Invite
+3.	System opens invite form with fields:
+ • Email Address
+ • Locked Role (PO or PMO)
+4.	SM submits invite
+5.	System sends a role-locked invite email containing:
+ - Project Name
+ - Assigned Role (PO or PMO)
+ - Single-use registration link with embedded role token
+ - Instruction that the user cannot change their role during registration
+6.	System displays: “Invite sent successfully.”
+7.	PO/PMO assignment can be completed later once the user registers.
+
+Post-conditions	1. Project details are updated successfully 2. Updated project name/date/roles appear across UI components 3. Existing sprints continue to require validation within project date boundaries
+Primary Actor	Scrum Master (SM)
+Supporting Actors	System
+Business Validations	1. Only SM can edit project details 2. Project Name must remain unique and non-empty 3. Project Start Date must be present (cannot be removed) 4. Project End Date must be ≥ Start Date 5. All sprints under this project must remain within Start/End Date range 6. Assigned PO/PMO must belong to correct user roles 7. Editing project details must not affect existing teams, sprints, or card assignments 
+8. Invited user must be force-registered with the role defined in the invite. Role selection is disabled on registration form.
+Notes (Optional)	PO and PMO have view-only access to project details
+
+3.3 View Project List/Details
+Section	Details
+Module #	3 – Projects
+Use Case ID	M3-UC03
+Use Case Name	View Project List / Project Details
+Trigger	User clicks Projects from side navigation
+Pre-conditions	1. User must be authenticated 2. User must be SM / PO / PMO 3. Projects must exist in the system
+Basic Path (Main Flow)	A) View Project List 1. User clicks Projects 2. System displays two tabs:  • Active Projects (default)  • Archived Projects 3. For each tab, system loads corresponding projects where the user is assigned B) View Project Details 4. User selects a project from either tab 5. System displays the Project Details screen with:  • Project Name  • Project Description  • Project Start Date  • Project End Date  • Assigned PO  • Assigned PMO  • Total Sprints  • Total Cards  • Total Team Members 6. User views project information
+Alternative Paths	Condition 1 — No Projects Assigned 1. System displays “No projects assigned” empty state Condition 2 — Project data cannot be loaded 1. System displays: “Unable to load project information.”
+Post-conditions	1. Project list or details successfully displayed 2. User remains in the Projects module
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Only assigned projects are visible 2. Edit icons visible only for SM in Active Projects tab 3. No edit or unarchive available for Archived Projects in MVP 4. System must clearly separate Active and Archived projects
+Notes (Optional)	Unarchive functionality will be added later (not part of MVP)
+
+3.4 Archive / deactivate / delete project
+Section	Details
+Module #	3 – Projects
+Use Case ID	M3-UC04
+Use Case Name	Archive / Delete Project
+Trigger	Scrum Master (SM) clicks Archive or Delete on the Project Details screen
+Pre-conditions	1. User is authenticated 2. User is Scrum Master (SM) for that project 3. Project exists in “Active” state
+Basic Path (Main Flow)	A) Archive Project (Soft Close) 1. SM clicks Archive Project 2. System displays confirmation modal explaining effects 3. SM confirms 4. System sets project status to Archived 5. Project is removed from:  • Dashboard project selector  • Active Projects tab 6. Project appears under Archived Projects tab 7. System displays: “Project archived successfully” B) Delete Project (Hard Delete) 8. SM clicks Delete Project 9. System requires strong confirmation (e.g., type DELETE) 10. SM confirms deletion 11. System permanently deletes the project and all related data 12. System displays: “Project deleted successfully”
+Alternative Paths	Condition 1 — SM cancels confirmation • No changes made Condition 2 — Project already archived • Archive action hidden/disabled Condition 3 — System error • System displays: “Unable to complete action. Try again.”
+Post-conditions	1. Archived project appears in Archived Projects tab only 2. Deleted project disappears from the system entirely 3. Dashboard and project selector update immediately
+Primary Actor	Scrum Master (SM)
+Supporting Actors	System
+Business Validations	1. Only SM can archive or delete projects 2. Delete must be protected with typed confirmation 3. Archived projects must still preserve historical data 4. Deleted projects must remove all dependent data completely 5. PO and PMO cannot archive or delete 6. Unarchive is not available in MVP
+Notes (Optional)	Unarchive will be introduced as a future enhancement (not part of MVP).
+
+4) Project Selector / Context Switching
+4.1 Display all assigned projects
+	
+Section	Details
+Module #	4 – Project Selector / Context Switching
+Use Case ID	M4-UC01
+Use Case Name	Display All Assigned Projects
+Trigger	User clicks the Project Selector dropdown on the Dashboard
+Pre-conditions	1. User must be authenticated 2. User must hold one of these roles: SM / PO / PMO 3. User must be assigned to at least one Active project
+Basic Path (Main Flow)	1. User logs in and lands on the dashboard 2. User clicks the Project Selector dropdown 3. System retrieves all Active Projects assigned to the user based on role (SM/PO/PMO) 4. System displays the project names in the dropdown 5. User sees the list of all available projects for context switching
+Alternative Paths	Condition 1 — No projects assigned 1. System shows a disabled dropdown with message: “No projects assigned” 2. Dashboard shows default empty behavior Condition 2 — Projects loading fails 1. System shows: “Unable to load projects. Please refresh.”
+Post-conditions	1. User sees an accurate list of all assigned Active projects 2. Project selector stays available throughout the session
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Only Active projects should appear in the selector 2. Archived projects must not appear 3. Deleted projects must never appear (hard deleted) 4. User must only see projects where they have a mapped role (SM/PO/PMO) 5. Dropdown must refresh after creation/edit/archive/delete
+Notes (Optional)	Team members will not appear here because they do not directly interact with the selector.
+
+4.2 Auto-select default project
+	
+Section	Details
+Module #	4 – Project Selector / Context Switching
+Use Case ID	M4-UC02
+Use Case Name	Auto-select default project
+Trigger	User logs in OR dashboard loads
+Pre-conditions	User authenticated
+Basic Path	Case A — User has 1 project: 1. System auto-selects the only project 2. Dashboard loads with that project context Case B — User has 2+ projects AND has previous selection: 3. System loads last active project automatically 4. Dashboard renders that project context Case C — User has 2+ projects AND NO previous selection: 5. System selects first project in assigned project list 6. Dashboard loads that project
+Alternative Paths	Condition — User has 0 active projects → Redirect to empty-state dashboard
+Post-conditions	Dashboard always shows one valid project unless user has none
+Business Validations	1. Last active project is stored per user 2. Auto-selection must never trigger when user manually switches context
+
+4.3 Switch active project context
+	
+Section	Details
+Module #	4 – Project Selector / Context Switching
+Use Case ID	M4-UC03
+Use Case Name	Switch active project context
+Trigger	User selects a different project from dropdown
+Pre-conditions	User authenticated AND has 2+ active projects
+Basic Path	1. User opens Project Selector dropdown 2. User selects a project 3. System sets this project as new active context 4. Dashboard reloads with new project data 5. System stores this selection as last active project
+Alternative Paths	Condition — Selected project becomes archived mid-session → Redirect user to empty-state dashboard
+Post-conditions	The selected project becomes the globally active context for entire system
+Business Validations	1. Context switching must update all dashboard sections 2. Selection persists across sessions
+
+4.4 Redirect invalid project references
+Section	Details
+Module #	4 – Project Selector / Context Switching
+Use Case ID	M4-UC04
+Use Case Name	Redirect invalid project references
+Trigger	System attempts to load project via URL/session
+Pre-conditions	User authenticated
+Basic Path	1. System reads requested project ID (URL, state, session, cache) 2. System verifies:  • Project exists  • Project active  • User assigned 3. If any condition fails → system loads fallback project:  • Last active project (if available)  • Else first project in list  • Else empty-state dashboard (0 projects)
+Alternative Paths	User manually selects a new project → override fallback logic
+Post-conditions	User never lands on invalid/deleted/unauthorized project
+Business Validations	1. Safety redirect must always find correct fallback 2. Archived/deleted must never load
+Notes	Supports deep links / bookmarks safely
+
+4.5 Empty-state display if no projects
+Section	Details
+Module #	4 – Project Selector / Context Switching
+Use Case ID	M4-UC05
+Use Case Name	Empty-state display if no projects
+Trigger	Dashboard loads with 0 active projects
+Pre-conditions	User authenticated
+Basic Path	1. System checks number of active projects = 0 2. System displays empty-state view:  • “No active projects assigned.”  • Create Project button (SM only)  • Disabled project selector
+Alternative Paths	Condition — SM creates a project → Auto-select new project Condition — PO/PMO gets assigned mid-session → New project becomes active
+Post-conditions	User stays in empty state until at least one active project Exists
+Business Validations	1. Empty state is shown only when 0 projects 2. Team members never reach dashboard
+
+5) Team Management
+5.1 Create project team
+Section	Details
+Module #	5 – Team Management
+Use Case ID	M5-UC01
+Use Case Name	Create Project Team
+Trigger	User navigates to Team (via Side Navigation or Project → Team tab) and clicks Add Team Member
+Pre-conditions	1. User is authenticated 2. An active project is selected 3. User role for the selected project:  • SM → Full Access  • PO → Edit Access  • PMO → View-only
+Basic Path (Main Flow)	1. User opens the Team section for the active project 2. System displays the existing team members 3. User clicks Add Team Member 4. System shows two options:  A) Select an existing team member profile (previously created for any project)  B) Create a New Team Member profile 5. If creating a new team member, system displays the following fields:  • Full Name (mandatory)  • Designation Role (mandatory dropdown)  • Display Name / Nickname (optional) Designation Role Dropdown List:  • Developer  • QA / Tester  • Business Analyst  • UI/UX Designer  • DevOps Engineer  • Automation Engineer  • Backend Developer  • Frontend Developer  • Full Stack Developer 6. User fills the form and clicks Add 7. System validates inputs 8. System creates the team member profile (non-login entity) 9. System assigns this member to the project team 10. System displays: “Team member added successfully.”
+Alternative Paths	Condition 1 — Member already in project team • System shows: “Member already part of this project team.” Condition 2 — Required fields missing • System shows specific validation errors Condition 3 — No reusable profiles exist • System directly opens “Create New Member” form Condition 4 — System error • System displays: “Unable to add team member. Please try again.”
+Post-conditions	1. Team member profile is created (if new) 2. Team member is assigned to the selected project 3. Member becomes available for card assignment and snapshots (snaps)
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), System
+Business Validations	1. Only SM and PO can add team members 2. Phone number is not collected 3. Designation Role is mandatory and must be selected from the fixed dropdown list 4. Duplicate team members within the same project must be prevented 5. PMO has view-only permissions 6. Team editing is disabled for archived projects 7. Team member profiles are non-login personas created only through SM/PO flow
+Notes (Optional)	Future enhancement may allow custom designation roles (admin-managed).
+
+5.2 Add or remove team members (non-login)
+	
+Section	Details
+Module #	5 – Team Management
+Use Case ID	M5-UC02
+Use Case Name	Add or Remove Team Members (Non-Login)
+Trigger	User navigates to Team screen → chooses Add Existing Member or Remove next to a member
+Pre-conditions	1. User authenticated 2. An active project is selected 3. User role for the selected project:  • SM → Full Access  • PO → Edit Access  • PMO → View-only 4. Team member profiles must already exist (created via M5-UC01)
+Basic Path (Main Flow)	### A) Add Existing Team Member to Project 1. User opens Team screen 2. User clicks Add Team Member 3. System displays list of existing team-member profiles not yet assigned to project 4. User selects one or multiple members and clicks Add 5. System validates selections 6. System assigns selected members to the project 7. System displays: “Team members added successfully.” ### B) Remove Team Member from Project 8. In team list, user clicks Remove next to a member 9. System displays confirmation modal: “Remove this team member from project?” 10. User confirms 11. System validates:  • Member is not tied to ongoing snap creation  • Member is not the only assignee of an active card 12. System removes the member from the project team 13. System displays: “Team member removed successfully.”
+Alternative Paths	Condition 1 — No available profiles to add • System shows: “No more team members available to add.” Condition 2 — Member already part of team selected again • System shows: “Member already assigned to this project.” Condition 3 — Removal blocked due to assigned work • System shows: “Cannot remove team member assigned to active cards.” Condition 4 — System error • System shows: “Unable to update team. Please try again.”
+Post-conditions	1. Team roster is updated 2. Newly added members appear in card assignment, sprint planning, and snaps 3. Removed members disappear from all these assignment lists
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), System
+Business Validations	1. Only SM & PO can add or remove team members 2. PMO is view-only 3. Team members are non-login profiles 4. Removing a member must not break card/sprint integrity (minimum enforcement for MVP) 5. No modifications allowed in archived projects 6. Duplicate additions are blocked
+Notes (Optional)	The team member profile remains in the system even after being removed from the project — it can be reused for other projects.
+
+6) Sprint Management
+6.1 Create new sprint (Manual & Auto Generation)
+Section	Details
+Module #	6 – Sprint Management
+Use Case ID	M6-UC01
+Use Case Name	Create Sprint (Manual & Auto Generation)
+Trigger	User navigates to Sprints and selects either Manual or Auto-Generated tab
+Pre-conditions	1. User authenticated 2. Active project selected 3. User role:  • SM → Full Access  • PO → Edit Access  • PMO → View-only 4. Project has valid start & end dates 5. Project is not archived
+Basic Path (Main Flow)	### STEP 1 — User selects creation method 1. User opens Sprints under selected project 2. System displays two tabs:  • Manual Sprints  • Auto-Generated Sprints 3. User chooses the desired tab---### A) Manual Sprint Creation (Manual Tab) 4A. User clicks Create Sprint 5A. System shows form with:  • Sprint Name (mandatory)  • Sprint Start Date (mandatory)  • Sprint End Date (mandatory)  • Sprint Goal (optional) 6A. User fills fields and clicks Create 7A. System validates:  ✔ Dates within project start/end  ✔ End Date ≥ Start Date  ✔ No sprint overlap across ALL sprints (manual or auto)  ✔ Sprint name unique 8A. System creates sprint 9A. Sprint appears in combined sprint list 10A. System displays: “Sprint created successfully.” ---### B) Auto-Generate Sprints (Auto Tab) 4B. User selects Auto-Generated Sprints tab 5B. System shows fields:  • Sprint Duration dropdown (1 / 2 / 3 / 4 weeks)  • Sprint Name Prefix (optional e.g., “Sprint”) 6B. User clicks Generate Preview 7B. System calculates sprints from Project Start to End Date based on duration 8B. System displays preview list:  • Sprint 1: Start → End  • Sprint 2: Start → End  • … until project end 9B. User clicks Create All 10B. System validates:  ✔ Auto-generated sprints do not overlap with existing sprints  ✔ Duration fits inside project timeline 11B. System creates all sprints in one batch 12B. System displays: “Auto-generated sprints created successfully.”
+Alternative Paths	Manual Mode Issues: • Sprint overlaps → Error: “Sprint overlaps with existing sprint.” • Dates outside project → Error: “Sprint must lie within project timeline.” • Missing fields → Validation error Auto Mode Issues: • Duration too large → “Cannot generate sprints with selected duration.” • Overlap with existing sprints → “Resolve sprint conflicts before auto-generating.” • No project end date → Auto tab disabled • Final sprint shorter than duration → Allowed, auto-adjusted
+Post-conditions	1. One or more sprints exist for the project 2. Sprints are available for card assignment and snap workflow 3. Sprint timelines contribute to RAG logic for cards
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), System
+Business Validations	1. Sprints must be fully inside project start & end dates 2. No overlap allowed across ALL sprints (manual+auto) 3. Sprint names must be unique within project 4. Auto-generation requires project end date 5. PO can create/edit only if you allow it (you said yes, SM+PO) 6. PMO view-only 7. Archived projects cannot create/modify sprints
+Notes (Optional)	Both sprint types appear in a unified list for reporting and dashboard.
+
+6.2 View Sprint List & Sprint Details
+Section	Details
+Module #	6 – Sprint Management
+Use Case ID	M6-UC02
+Use Case Name	View Sprint List & Sprint Details
+Trigger	User navigates to Sprints under the selected project
+Pre-conditions	1. User authenticated 2. Active project selected 3. One or more sprints exist (manual or auto-generated, both treated identically)
+Basic Path (Main Flow)	1. User opens Sprints for the selected project 2. System displays a single unified Sprint List, containing all sprints regardless of how they were created 3. List displays:  • Sprint Name  • Start Date — End Date  • Sprint Status (Not Started / Active / Completed)  • Total Cards  • Days remaining (optional) 4. User clicks a sprint to open Sprint Details 5. System shows details:  • Sprint Name  • Sprint Goal (if provided)  • Sprint Start & End Dates  • Status  • Total Cards  • Cards by Status (To-do / WIP / Done)  • Cards by Assignees  • List of cards inside that sprint  • (Future) Snap summaries linked to sprint
+Alternative Paths	Condition 1 — No sprints exist • System displays empty-state: “No sprints created yet.” Condition 2 — Load failure • “Unable to load sprint list.” Condition 3 — Archived Project • Sprint list visible in read-only mode
+Post-conditions	1. User views a complete unified list of sprints 2. User can navigate into sprint details for deeper card visibility
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. All sprints (manual or auto-generated) must appear in one unified list 2. List must be sorted by start date 3. User role rules:  • SM – full access  • PO – edit/view  • PMO – view-only 4. Archived project → everything read-only 5. Deleted sprints must not show
+Notes (Optional)	Sprint creation UI has two creation paths (manual/auto) but sprint data model is identical.
+
+6.3 Edit Sprint Details
+	
+Section	Details
+Module #	6 – Sprint Management
+Use Case ID	M6-UC03
+Use Case Name	Edit Sprint Details
+Trigger	User opens a sprint from the Sprint List and clicks Edit Sprint
+Pre-conditions	1. User is authenticated 2. An active project is selected 3. Sprint exists under the project 4. User role permissions:  • SM → Full access  • PO → Edit access  • PMO → View-only (no edits) 5. Project is not archived
+Basic Path (Main Flow)	1. User navigates to Sprints → selects a sprint → opens Sprint Details 2. System displays Edit Sprint button (only for SM/PO) 3. User clicks Edit Sprint 4. The system displays editable fields:  • Sprint Name  • Sprint Goal (optional)  • Sprint Start Date  • Sprint End Date 5. User makes changes and clicks Save 6. The system validates the updated sprint:  ✔ Start Date ≥ Project Start Date  ✔ End Date ≤ Project End Date  ✔ End Date ≥ Start Date  ✔ Updated dates do NOT overlap with ANY other sprint (manual or auto)  ✔ Sprint Name remains unique 7. If validations pass → System updates sprint details 8. System shows: “Sprint updated successfully.”
+Alternative Paths	Condition 1 — Edited dates overlap with another sprint • System blocks: “Sprint dates overlap with another sprint. Adjust the other sprint(s) before proceeding.” Condition 2 — Dates outside project boundaries • “Sprint must lie within the project timeline.” Condition 3 — Missing mandatory fields • System highlights validation errors Condition 4 — PMO attempts edit • Edit button hidden or disabled Condition 5 — Sprint is Completed (optional rule) • Restrict editing of Start/End dates • Allow editing of Sprint Name/Goal only Condition 6 — System error • “Unable to update sprint. Please try again.”
+Post-conditions	1. Sprint details are updated across all sprint-related views 2. Sprint appears in the unified sprint list with updated dates and name 3. Cards assigned to the sprint remain intact (dates may impact RAG, handled in Card module)
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), PMO (view-only), System
+Business Validations	1. Sprint must remain within project boundaries 2. Sprint edits cannot cause overlap with ANY existing sprint 3. Editing a sprint must NOT auto-update or auto-shift other sprints 4. If overlap occurs, the system must block the edit 5. PMO cannot edit sprint details 6. Archived projects disable editing entirely 7. Sprint name must be unique within the project
+Notes (Optional)	Impact on card ET/RAG will be recalculated in the Card module logic.
+
+6.4 Delete Sprint
+Section	Details
+Module #	6 – Sprint Management
+Use Case ID	M6-UC04
+Use Case Name	Delete Sprint
+Trigger	User opens a sprint from Sprint List → clicks Delete Sprint
+Pre-conditions	1. User authenticated 2. Active project selected 3. Sprint exists under the project 4. User role:  • SM → Full Access  • PO → Edit Access  • PMO → View-only (cannot delete) 5. Project is NOT archived 6. Sprint is not actively in progress (optional business rule—see validations)
+Basic Path (Main Flow)	1. User navigates to Sprints → selects a sprint → opens Sprint Details 2. System displays Delete Sprint button (only for SM/PO based on permission) 3. User clicks Delete Sprint 4. System displays deletion confirmation modal:  • “Deleting this sprint will remove it permanently.”  • “Cards assigned to this sprint will need reassignment.”  • “This cannot be undone.” 5. User confirms deletion 6. System validates sprint eligibility for deletion (see validations) 7. If validations pass → System deletes sprint 8. Sprint removed from sprint list 9. System shows “Sprint deleted successfully.”
+Alternative Paths	Condition 1 — Sprint has cards assigned • System blocks deletion: “Sprint contains cards. Reassign or delete cards before deleting sprint.” Condition 2 — Sprint has snaps created (daily updates) • Block: “Sprint contains snap history. Sprint cannot be deleted.” Condition 3 — Sprint is currently active (today is within its date range) • Block: “Active sprint cannot be deleted.” Condition 4 — PMO tries to delete • Delete button hidden Condition 5 — Project is archived • Entire screen is read-only Condition 6 — System/Network error • “Unable to delete sprint.”
+Post-conditions	1. Sprint data is permanently removed from system 2. Cards previously in this sprint must be unassigned or reassigned (if deletion allowed after card cleanup) 3. Sprint no longer appears in Sprint List or project reports
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), PMO (view-only), System
+Business Validations	1. Sprint cannot be deleted if it contains:  • Cards assigned to it  • Snap history (daily updates) 2. Sprint cannot be deleted if active today 3. Sprint cannot be deleted in an archived project 4. Only SM & PO can delete (PO allowed based on your model) 5. Deleting a sprint must NOT auto-adjust or modify other sprints 6. Deletion must maintain project-level date integrity and report consistency
+Notes (Optional)	Sprint deletion is irreversible. Consider keeping audit logs for admin transparency.
+
+6.5 View sprint status + lifecycle
+Section	Details
+Module #	6 – Sprint Management
+Use Case ID	M6-UC05
+Use Case Name	View Sprint Status + Sprint Lifecycle
+Trigger	User opens Sprints section or views the Sprint List
+Pre-conditions	1. User authenticated 2. Active project selected 3. One or more sprints exist (manual or auto)
+Basic Path (Main Flow)	1. User navigates to Sprints under project 2. System displays unified sprint list with lifecycle status for each sprint:  a) Upcoming / Not Started   • Today < Start Date  b) Active   • Start Date ≤ Today ≤ End Date  c) Completed   • Today > End Date  d) Archived (future)   • Only if sprint is manually archived later3. List shows:  • Sprint Name  • Start – End Dates  • Status Badge (Upcoming / Active / Completed)  • Days remaining (optional)  • Total cards 4. User clicks a sprint to open Sprint Details 5. System displays lifecycle state in the detail view as well
+Alternative Paths	Condition 1 — No sprints exist → System shows: “No sprints created yet.” Condition 2 — Load failure → “Unable to load sprint status.” Condition 3 — Archived project → Sprint statuses visible but read-only
+Post-conditions	1. User sees accurate lifecycle state for each sprint 2. System uses lifecycle status to influence other modules (e.g., card ET, snap eligibility)
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Sprint lifecycle is system-computed, not manually set 2. Lifecycle states depend solely on today’s date relative to sprint dates 3. Status transitions:  • Upcoming → Active (automatically on Start Date)  • Active → Completed (automatically on End Date + 1 day) 4. No auto-shifting other sprints due to lifecycle change 5. PMO: read-only 6. Sprint lifecycle cannot be overridden manually in MVP
+Notes (Optional)	Lifecycle status can be used for dashboard summaries and RAG calculations in the cards module.
+
+6.6 Close sprint and prevent snap creation
+Section	Details
+Module #	6 – Sprint Management
+Use Case ID	M6-UC06
+Use Case Name	Close Sprint and Prevent Snap Creation
+Trigger	User opens a sprint and clicks Close Sprint
+Pre-conditions	1. User authenticated 2. Active project selected 3. Sprint exists 4. User is SM or PO 5. Project not archived
+Basic Path (Main Flow)	1. User opens Sprint Details 2. User clicks Close Sprint 3. System shows confirmation modal  • “Closing the sprint prevents new snaps.”  • “Closure is permanent in MVP.” 4. User confirms closure 5. System validates sprint eligibility:  ✔ Sprint is Active or Completed (NOT Upcoming)  ✔ No active cards exist in this sprint (see validations) 6. If validations pass → system marks sprint as Closed 7. Snap creation is disabled for all cards in sprint 8. Cards become read-only 9. System shows “Sprint closed successfully.”
+Alternative Paths	Condition 1 — Active cards exist • System blocks closure and shows:  “Sprint contains active cards. Complete or move all active cards before closing the sprint.” Condition 2 — Sprint is Upcoming • “Upcoming sprints cannot be closed.” Condition 3 — PMO tries to close • Button hidden Condition 4 — Project archived • Closure disabled Condition 5 — System error • “Unable to close sprint.”
+Post-conditions	1. Sprint becomes Closed (final state) 2. No further snaps allowed 3. Cards in sprint remain visible but read-only 4. Sprint is locked from editing
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), System
+Business Validations	1. Sprint cannot be closed if ANY active cards exist  Active card = Card not in Done state OR has pending activity 2. Only SM/PO can close sprint 3. Closed sprint cannot be reopened in MVP 4. Closed sprint cannot be edited 5. Snap creation disabled after closure 6. Archived project → no closure allowed
+Notes (Optional)	In future, re-open sprint may allow editing active cards again.
+
+6.7 Sprint listing and filtering
+Section	Details
+Module #	6 – Sprint Management
+Use Case ID	M6-UC07
+Use Case Name	Sprint Listing, Filtering & Search
+Trigger	User navigates to Sprints under an active project
+Pre-conditions	1. User authenticated 2. Active project selected 3. One or more sprints exist
+Basic Path (Main Flow)	1. User opens Sprints section 2. System displays Unified Sprint List (manual + auto created sprints combined) 3. System shows default sorting: Chronological (Start Date ascending) 4. System displays sprint attributes:  • Sprint Name  • Start – End Dates  • Status (Upcoming / Active / Completed / Closed)  • Total Cards 5. System displays filter controls:  • Filter by Sprint Status (Upcoming / Active / Completed / Closed)  • Filter by Date Range (optional future)  • Filter by Cards Count (optional future) 6. User selects one or more filters 7. System updates sprint list based on selected filters 8. System displays Search Bar (search by sprint name) 9. User enters search query → system performs instant filtering 10. User can clear filters to return to full list
+Alternative Paths	Condition 1 — No sprints match filter → System shows: “No sprints found for selected filters.” Condition 2 — No sprints exist at all → System shows: “No sprints created yet.” with CTA to create sprint Condition 3 — System error → “Unable to load sprint list.”
+Post-conditions	1. User views and interacts with filtered, searchable sprint list 2. Sprint details accessible after filtering/searching
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Sorting order must always be chronological 2. Filters cannot modify the underlying sprint data (read-only interaction) 3. Search must only match sprint names within the selected project context 4. All sprints (manual or auto-generated) must appear uniformly in the list 5. PMO has the same list and filtering access (view-only) 6. Archived projects show sprint list + filters as read-only
+Notes (Optional)	Future enhancement may include advanced filters (by assignee load, by card status).
+
+7) Card Management
+7.1 Create new card
+Section	Details
+Module #	7 – Card Management
+Use Case ID	M7-UC01
+Use Case Name	Create Card
+Trigger	User clicks Create Card
+Pre-conditions	1. User authenticated 2. Active project selected 3. At least one non-Closed sprint exists 4. User role: SM (full) / PO (edit) / PMO (view) 5. Project not archived
+Basic Path (Main Flow)	1. User selects Create Card 2. System displays Card Form with mandatory fields:  • Card Title  • Assign Sprint  • Assign Team Member  • Estimated Time (ET) 3. Optional fields:  • Card ID / Reference (Jira Ticket ID)  • Description  • Priority 4. User submits the form 5. System validates:  ✔ Sprint exists and is not Closed  ✔ Assignee is in Project Team  ✔ ET is provided (mandatory)  ✔ Mandatory fields present 6. System creates the card 7. Card appears under:  • Sprint → Card List  • Assignee’s Card View 8. System shows “Card created successfully.”
+Alternative Paths	Condition 1 — No sprints exist → Block card creation Condition 2 — Sprint is Closed → Block creation Condition 3 — ET missing → “Estimated Time is required.” Condition 4 — Assignee missing Condition 5 — PMO tries to create Condition 6 — System error
+Post-conditions	1. Card created with ET, sprint, and assignee 2. Card ready for snap creation when sprint becomes Active 3. ET will be used for RAG predictions 4. Card appears in all relevant lists
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), PMO (view-only), System
+Business Validations	1. ET is MANDATORY (not optional) 2. Card MUST belong to one sprint 3. Cards without ET cannot be created 4. Sprint must not be Closed 5. Assignee must be a project team member 6. Only SM/PO can create cards 7. Archived project → read-only
+Notes	ET drives the RAG engine, snap interpretation logic, and project health analytics.
+
+7.2 Edit card properties
+Section	Details
+Module #	7 – Card Management
+Use Case ID	M7-UC02
+Use Case Name	Edit Card
+Trigger	User (SM/PO) opens a card and selects Edit Card
+Pre-conditions	1. User is authenticated 2. Active project selected 3. Card exists under a sprint 4. Sprint is not Closed 5. User roles:  • SM → Full access  • PO → Edit access  • PMO → View-only 6. Project not archived
+Basic Path (Main Flow)	1. User navigates to Sprint → Card List → selects a Card 2. User clicks Edit Card 3. System displays editable fields:  • Card Title (mandatory)  • Card Description (optional)  • Card ID / Reference (optional)  • Priority (optional)  • Estimated Time (ET) (mandatory)  • Assignee (mandatory)  • Sprint Assignment (allowed only under rules below) 4. User updates fields and clicks Save 5. System validates:  ✔ ET must be present  ✔ Sprint must not be Closed  ✔ Assignee must belong to project team  ✔ Field constraints respected 6. System updates the card 7. System recalculates card RAG (when snap exists) 8. System shows “Card updated successfully.”
+Alternative Paths	Condition 1 — Sprint is Closed → “Cannot edit card in a closed sprint.” Condition 2 — User attempts to change sprint Rules enforced:  • Cannot move card to a Closed sprint  • Cannot move card to a sprint already Completed if the card has snaps  • Cannot move card out of sprint if sprint is Active and snaps exist → Error messages shown accordingly Condition 3 — Assignee not in team → “Assignee must be a project team member.” Condition 4 — ET missing → “Estimated Time is mandatory.” Condition 5 — PMO attempts edit → Edit button hidden Condition 6 — System error
+Post-conditions	1. Updated card saved successfully 2. Card retains association with sprint 3. RAG recalculated based on updated ET + snap content (if applicable) 4. Card appears updated in Sprint List and Assignee View
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), PMO (view-only), System
+Business Validations	1. ET is mandatory on edit 2. Sprint must not be Closed 3. Sprint cannot be changed under these conditions:  • Card has snaps → cannot move sprint  • Target sprint is Closed → blocked 4. Only SM/PO can edit cards 5. Archived project → read-only 6. System recalculates RAG after edits affecting time/scope
+Notes	Moving a card across sprints is tightly restricted to preserve snap history and RAG accuracy.
+
+
+
+7.3 Delete Card
+Section	Details
+Module #	7 – Card Management
+Use Case ID	M7-UC03
+Use Case Name	Delete Card
+Trigger	User (SM/PO) selects Delete Card from Card Details
+Pre-conditions	1. User authenticated 2. Active project selected 3. Card exists under a sprint 4. Sprint is not Closed 5. User role is SM or PO 6. Project not archived
+Basic Path (Main Flow)	1. User opens Card Details 2. User clicks Delete Card 3. System shows confirmation modal:  • “Deleting this card will permanently remove all associated snaps.”  • “This action cannot be undone.” 4. User confirms deletion 5. System validates:  ✔ Sprint is not Closed  ✔ User has permission 6. System deletes the card AND all associated snaps in a single action 7. Sprint metrics and RAG computations auto-update 8. System shows “Card deleted successfully.”
+Alternative Paths	Condition 1 — Sprint is Closed → “Cards in a Closed sprint cannot be deleted.” Condition 2 — PMO tries to delete → Delete button hidden Condition 3 — Project archived → Deletion disabled Condition 4 — System error → “Unable to delete card.”
+Post-conditions	1. Card removed from sprint and assignee view 2. All snaps under the card removed 3. RAG and dashboard metrics updated accordingly
+Primary Actor	Scrum Master (SM)
+Supporting Actors	Product Owner (PO), PMO (view-only), System
+Business Validations	1. Only SM/PO can delete cards 2. Deletion removes the card + snaps (no partial retention) 3. Closed sprint → card deletion blocked 4. Archived project → read-only 5. Deletion must not modify any other sprint’s data
+Notes (Optional)	Snap deletion does not require separate confirmation — included in the card deletion confirmation.
+
+7.4 View card details page
+Section	Details
+Module #	7 – Card Management
+Use Case ID	M7-UC04
+Use Case Name	View Card Details
+Trigger	User selects a card from Sprint → Card List OR Assignee → Card View
+Pre-conditions	1. User authenticated 2. Active project selected 3. Card exists under a sprint 4. User has project access (SM/PO/PMO)
+Basic Path (Main Flow)	1. User navigates to Sprints → Card List or Team Member View 2. User clicks a card 3. System loads Card Details page showing:  Card Metadata  • Card Title  • Card ID / External Reference  • Description  • Priority  Sprint Details  • Sprint Name  • Sprint Start & End Date  • Sprint Status (Upcoming / Active / Completed / Closed)  Assignment Details  • Assigned Team Member (Name + Role)  • Assignment date (optional)  Timeline & ET  • Estimated Time (ET) (mandatory)  • Time remaining or expected  RAG Status  • System-generated RAG (latest)  Snaps Section  • Chronological list of snaps made for the card  • For each snap:   – Date/time   – “Done / To Do / Blockers” breakdown   – Raw text entered by SM 4. If sprint is Active → “Add Snap” button visible (SM only) 5. If sprint is Completed/Closed → Snap section becomes read-only
+Alternative Paths	Condition 1 — Sprint is Closed → Card remains visible but no editing/snap creation allowed Condition 2 — Card has no snaps → Snap section shows “No snaps yet.” Condition 3 — PMO views card → Entire screen is read-only Condition 4 — Card deleted or missing → Show “Card no longer exists.” Condition 5 — System error → Show “Unable to load card details.”
+Post-conditions	1. User can view full card details including snaps, ET, RAG, and sprint mapping 2. System logs any access (optional audit)
+Primary Actor	Scrum Master (SM)
+Supporting Actors	PO, PMO, System
+Business Validations	1. Card details must always show the sprint it belongs to 2. Card must display ET since it is mandatory 3. RAG is visible but not editable manually 4. Snaps must be shown in chronological order 5. If sprint is Closed → read-only mode enforced 6. PMO always sees read-only version 7. Assignee details must match the project’s team members list
+Notes (Optional)	This screen becomes the core entry point for performing Snap operations (Add Snap / View Snap History).
+
+7.5 Card Listing, Filtering, Search
+Section	Details
+Module #	7 – Card Management
+Use Case ID	M7-UC05
+Use Case Name	Card Listing + Filtering + Search
+Trigger	User navigates to: • Sprints → Card List, OR • Team Member → Assigned Cards
+Pre-conditions	1. User authenticated 2. Active project selected 3. At least one sprint exists 4. At least one card exists in the project
+Basic Path (Main Flow)	1. User opens Cards (via Sprint Details OR Team Member View) 2. System displays a Unified Card List containing:  Card Attributes:  • Card Title  • Assignee Name  • Sprint Name  • Estimated Time (ET)  • Latest RAG Status  • Snap Count  • Priority (optional) 3. System displays filters:  • By Sprint  • By Assignee  • By RAG (R / A / G)  • By Status (Active / Completed / Closed / All)  • By Priority (optional) 4. User selects one or multiple filters 5. System updates the card list immediately based on filters 6. System displays Search Bar (search by card title or external ID) 7. User types a search term → results update in real time 8. User can clear filters to return to full list
+Alternative Paths	Condition 1 — No cards match filters/search → “No cards found for selected filters.” Condition 2 — No cards in sprint → Display message + CTA to create card (SM/PO only) Condition 3 — PMO view → PMO can filter + search but cannot create/edit/delete Condition 4 — Sprint is Closed → Cards show a lock icon; list is read-only Condition 5 — System error → “Unable to load card list.”
+Post-conditions	1. User sees tailored card list based on selected filters 2. Snap and RAG data reflected correctly 3. Navigation to Card Details is enabled for each row
+Primary Actor	SM / PO
+Supporting Actors	PMO (view-only), System
+Business Validations	1. Filters must never alter underlying card data (UI-level only) 2. Sorting defaults to:  • Sprint order (chronological) → within sprint by card title 3. RAG badge reflects latest computed value via snap logic 4. Closed sprint → all cards listed in read-only mode 5. PMO can perform filtering/searching but not editing/deleting 6. Search must match:  • Card Title  • External ID (Jira/Task ID) 7. Snap count must show total snaps logged for that card
+Notes (Optional)	Future enhancement: multi-column sorting, RAG trend indicators, snap aging indicators.
+
+7.6 Card Life Cycle Management
+Section	Details
+Module #	7 – Card Management
+Use Case ID	M7-UC06
+Use Case Name	Card Lifecycle Management
+Trigger	System or Scrum Master (SM) action that updates card state
+Pre-conditions	1. User authenticated 2. Sprint = Active 3. Card exists with valid ET and assignee
+Basic Path (Main Flow)	1. SM creates a new card → System sets state = Not Started. 2. When the SM logs the first snap for the card → System auto-transitions Not Started → In Progress. 3. When SM decides the card is fully completed → SM clicks Mark as Completed → System sets state = Completed. 4. When Sprint is closed → System transitions all Completed cards to Closed. 5. Closed cards become fully read-only.
+Alternative Paths	Condition 1: SM marks a card as Completed directly from Not Started state → Allowed. Condition 2: Sprint close attempted with cards in Not Started / In Progress → System blocks sprint close. Condition 3: Attempt to edit card details or snaps in Completed/Closed state → Blocked. Condition 4: Attempt to add snaps after completion → Blocked.
+Post-conditions	1. Card always remains in one of four valid lifecycle states. 2. RAG value remains unchanged when card is marked Completed. 3. All cards must reach Completed before sprint closure. 4. Closed cards become permanently read-only in MVP.
+Primary Actor	Scrum Master (SM)
+Supporting Actors	System
+Business Validations	1. Only SM can manually change card state to Completed. 2. System auto-transitions Not Started → In Progress on first snap. 3. Snap creation allowed only when card is Not Started or In Progress. 4. RAG is preserved when Completed (no auto-green). 5. Completed cards cannot revert to earlier states (MVP). 6. Inactive/Closed cards cannot be modified. 7. Sprint cannot close unless all cards = Completed.
+Notes	Card lifecycle directly affects sprint closure and RAG reporting. Future releases may introduce more states.
+
+8) Snap Management
+8.1 Add raw snap for a card
+Section	Details
+Module #	8 – Snap Management
+Use Case ID	M8-UC01
+Use Case Name	Create Snap (Daily Update)
+Trigger	SM opens a card in an Active sprint and selects “Add Snap”
+Pre-conditions	1. User authenticated 2. An Active Sprint is selected 3. Card belongs to the Active Sprint 4. Sprint is NOT Completed or Closed 5. User roles:  • SM → Full access  • PO → Read snaps only (no creation)  • PMO → Read-only 6. Card must have ET specified 7. Card must not be deleted
+Basic Path (Main Flow)	1. SM navigates to Sprint → Snap Management → Today 
+2. SM opens the card and clicks Add Snap 
+3. System displays prior context: 
+ ✔ Yesterday’s Snap (expanded) if available 
+ ✔ Older Snaps (collapsed) under “View Full History”3. System displays snap input area:  • Free-text field where SM writes the update in normal English 4. SM enters update text and clicks Generate Snap 5. System sends content to AI model 6. AI processes update and converts into structured output:  • Done (what is completed)  • To Do (next planned work)  • Blockers (if any detected) 7. AI also analyzes:  • Timeline progress vs ET  • Content tone for blockers  • Implicit delays  • Work momentum 8. System generates RAG suggestion for SM (not auto-applied):  • Green: On track  • Amber: At risk  • Red: Off track 9. SM sees AI output + suggested RAG 10. SM can:  • Accept AI output as-is  • Edit Done/ToDo/Blockers manually  • Override RAG if necessary 11. SM clicks Save Snap 12. System saves structured snap to the card’s history 13. Card’s final RAG is updated (SM-decided) 14. System shows “Snap created successfully.”
+Alternative Paths	Condition 1 — Sprint Completed → Block: “Cannot create snaps after sprint completion.” Condition 2 — Sprint Closed → Block: “This sprint is closed. Snap creation disabled.” Condition 3 — Card has no ET → Block: “ET required to create snap.” Condition 4 — AI parsing fails → System shows: “Could not process text. Submit again or edit manually.” → SM can input Done/To Do/Blockers manually Condition 5 — PMO/PO tries to add snap → “You don’t have permission to add snaps.” Condition 6 — System error → “Unable to save snap.”
+Post-conditions	1. Snap saved as today’s update 
+2. RAG updated based on AI + SM override 
+3. Snap visible in today’s snap group 
+4. Older snaps remain in collapsed history
+5. Daily standup summary (overall snap) can pick this up after snap lock
+Primary Actor	Scrum Master (SM)
+Supporting Actors	System (AI Model), PO (View), PMO (View)
+Business Validations	1. Snap creation only allowed when sprint is Active 2. Snap creation disabled for Completed or Closed sprints 3. ET is mandatory to allow snap creation 4. Only SM can create snaps 5. RAG suggestion by AI is advisory — final decision SM’s 6. Each snap must be timestamped and stored sequentially 7. A card can have multiple snaps in a day (no restriction) 8. Snap logic contributes directly to RAG & dashboard summaries
+
+
+1. Only SM can create snaps 
+2. Snap only for “today” allowed 
+3. Each snap timestamped 
+4. Yesterday’s snap must always display (if exists) 
+5. Older snaps always collapsed by default 
+6. Reverse chronological ordering enforced
+
+Notes (Optional)	Daily Lock will finalize these snaps.
+
+8.2 Edit Snaps
+Section	Details
+Module #	8 – Snap Management
+Use Case ID	M8-UC02
+Use Case Name	Edit Snap
+Trigger	SM selects a previously created snap (same day) and clicks Edit Snap
+Pre-conditions	1. User is authenticated 2. Active sprint selected 3. Card belongs to an Active sprint 4. Snap exists for the current day (same date) 5. Daily Snap Lock is NOT applied 6. Sprint is not Completed or Closed 7. User role is SM (PO/PMO are read-only)
+Basic Path (Main Flow)	1. SM opens Card Details → Snap History 
+2. SM clicks Edit Snap for a today snap 
+
+3. System displays context snaps (NEW): 
+ ✔ Yesterday’s snap (expanded) if available 
+ ✔ Older snaps collapsed under “View Full History” 
+ ✔ All previous snaps are read-only 
+
+4. System loads the selected today snap in editable mode: 
+ • Raw input entered by SM 
+ • AI-generated Done/To Do/Blockers 
+ • RAG (suggested) 
+5. SM edits any of the fields 
+6. SM may optionally click Re-Generate to re-run AI parsing 
+7. SM clicks Save Changes 
+8. System validates snap eligibility for editing 
+9. System saves updates, recalculates RAG 
+10. System displays success message
+Alternative Paths	A. Yesterday snap not available → Show: “No snap logged yesterday.” 
+
+B. Snap from previous day → Block edit: “Only today’s snaps can be edited.” 
+
+C. Daily lock applied → Edit button hidden 
+
+D. Sprint Completed/Closed → Read-only snap history 
+
+E. AI processing fails → Allow SM to manually edit structured text 
+
+F. PMO/PO attempts edit → Edit button hidden
+Post-conditions	
+1. Today’s snap updated 
+2. RAG recalculated based on new content + ET logic 
+3. Yesterday + older snaps remain unchanged & read-only 
+4. Snap history chronology preserved
+
+Primary Actor	Scrum Master (SM)
+Supporting Actors	System (AI), PO (view), PMO (view)
+Business Validations	1. Only SM can edit snaps 
+2. Only today’s snaps can be edited 
+3. Editing disabled after daily lock 
+4. Yesterday’s snap must appear expanded (if exists) 
+5. Older snaps must remain collapsed by default 
+6. All previous snaps read-only 
+7. No modification allowed for non-today dates
+Notes (Optional)	
+Enhancements only add contextual visibility — NO changes to the original behavior.
+
+
+8.3 Delete Snaps
+Section	Details
+Module #	8 – Snap Management
+Use Case ID	M8-UC03
+Use Case Name	Delete Snap
+Trigger	Scrum Master (SM) selects a snap from Snap History and clicks Delete Snap
+Pre-conditions	1. User is authenticated 2. Sprint is Active 3. Card exists under the sprint 4. Snap exists for today 5. Daily Snap Lock is NOT applied 6. Sprint is not Completed or Closed 7. User role = SM only (PO/PMO cannot delete snaps)
+Basic Path (Main Flow)	1. SM navigates to Card Details → Snap History 2. SM selects a snap created today 3. System displays Delete Snap button (only if eligible) 4. SM clicks Delete Snap 5. System shows confirmation modal:  • “Deleting this snap will remove it permanently.”  • “This action cannot be undone.” 6. SM confirms deletion 7. System validates:  ✔ Snap is from today  ✔ Daily Snap Lock not applied  ✔ Sprint is Active 8. System deletes the snap 9. System recalculates card RAG (if needed) 10. System updates sprint/card metrics 11. System shows “Snap deleted successfully.”
+Alternative Paths	Condition 1 — Snap belongs to a previous day → “Past snaps cannot be deleted.” Condition 2 — Daily Snap Lock is applied → “Snaps cannot be deleted after daily lock.” Condition 3 — Sprint Completed or Closed → Snap History is read-only Condition 4 — PMO/PO attempts delete → Delete button hidden Condition 5 — System error → “Unable to delete snap.”
+Post-conditions	1. Snap permanently removed from history 2. Card RAG may change based on current progress vs ET 3. Daily overall snap (standup summary) will NOT include deleted snap data 4. Chronological snap order preserved
+Primary Actor	Scrum Master (SM)
+Supporting Actors	System (AI), PO (read-only), PMO (read-only)
+Business Validations	1. Only SM may delete snaps 2. Snap deletion only allowed for today’s snaps 3. Snap deletion disabled after:  • Daily Snap Lock  • Sprint Completed  • Sprint Closed 4. RAG must be recalculated after deletion 5. Snap deletion must maintain chronological order 6. Snap deletion action is irreversible
+Notes (Optional)	No audit revision required in MVP — deletion is final.
+
+8.4 Lock Daily Snaps
+Section	Details
+Use Case ID	M8-UC04
+Use Case Name	Lock Daily Snaps (Daily Standup Lock)
+Trigger	SM clicks “Lock Snaps for Today” from Snap Management OR system auto-locks after 24 hours
+Pre-conditions	1. User authenticated for manual lock 2. Sprint = Active 3. Today’s date is within sprint range 4. Snap Lock not already applied 5. Role: SM only (manual)
+Basic Path (Manual Lock)	1. SM opens Sprint → Snap Management → Today 2. System displays all snaps for today 3. SM clicks Lock Snaps for Today 4. System shows confirmation modal 5. SM confirms 6. System locks all today’s snaps:  • Disables Add, Edit, Delete  • Marks day as Locked  • Freezes RAG 7. System triggers Daily Overall Standup Summary generation 8. System shows: “Today’s snaps locked.”
+Automatic Lock Path	1. Snap Lock is not manually applied 2. System scheduler runs at midnight (project timezone) or 24 hours after last snap (configurable) 3. System auto-locks all snaps for that day 4. System generates daily summary automatically
+Alternative Paths	Condition 1 — Sprint Completed/Closed → block Condition 2 — No snaps today → lock still allowed Condition 3 — Unauthorized role → hide lock button
+Post-conditions	1. All today’s snaps frozen permanently 2. Daily summary becomes available for download/export 3. Next day snaps start fresh
+Business Validations	1. Only SM can manually lock 2. Auto-lock must occur daily 3. Locked snaps must become permanently read-only 4. No new snaps allowed once locked 5. Summary generation must only use locked snaps
+Notes	Auto-lock ensures consistency even if the SM forgets to lock.
+
+8.5 Generate Daily Overall Standup Summary
+Section	Details
+Module #	8 – Snap Management
+Use Case ID	M8-UC05
+Use Case Name	Generate Daily Overall Standup Summary
+Trigger	System triggers summary after Daily Snap Lock (manual or auto-lock)
+Pre-conditions	1. User authenticated (for viewing/download) 2. Sprint = Active (or summary may also be viewed for past days in Completed sprint) 3. Daily Snap Lock applied (manual or automatic) 4. Snaps for the day are finalized and read-only 5. Summary cannot be generated before lock
+Basic Path (System Flow – Automatic)	1. Daily Snap Lock occurs (M8-UC04), either:  ✔ SM clicks Lock Snaps OR  ✔ System auto-locks at midnight / 24-hour schedule 2. System aggregates all snaps logged today across all cards in the active sprint. 3. System groups content by:  • Team Member → Cards → Snaps  • Or Cards → Team Member (configurable UI only) 4. System compiles structured format:  ### Done (all completed updates for all cards)  ### To Do (planned next work)  ### Blockers (collected from any card) 5. System merges RAGs to generate:  • Card-level RAG  • Assignee-level RAG  • Sprint-level RAG 6. System formats the Daily Overall Snap into a single consolidated output. 7. Summary becomes available for SM to:  • View on screen  • Download as PDF  • Download as Word file  • Copy as plain text (optional) 8. System marks the summary as generated for that date.
+Basic Path (Manual Viewing by SM/PO/PMO)	1. User opens Sprint → Snap Management → Daily Summary 2. System displays:  • Date  • Sprint name  • All consolidated sections (Done, To Do, Blockers)  • RAG overview  • Per-assignee summary 3. SM/PO/PMO can only view the summary; edits are not allowed. 4. SM may download/export summary.
+Alternative Paths	Condition 1 — Daily Snaps not locked yet → “Daily summary will be available after snap lock.” Condition 2 — No snaps created today → System still generates summary (empty Done/To Do/Blockers). → Display: “No snaps recorded for this day.” Condition 3 — System error → “Unable to generate summary.” Condition 4 — Sprint Completed → Summary can still be viewed historically.
+Post-conditions	1. Daily summary stored as final and immutable for that date 2. All users (SM/PO/PMO) can view historical summaries 3. No updates to snaps allowed after summary generation 4. RAG for the day becomes part of sprint health history
+Primary Actor	System (for generation) / SM (for viewing + download)
+Supporting Actors	PO (view-only), PMO (view-only)
+Business Validations	1. Daily summary can be generated only after lock 2. Summary output is read-only and cannot be edited 3. RAG values used are final values from snap lock 4. Summary must combine all cards, including those with no snaps 5. Summary must not include future or backdated snaps
+Notes (Optional)	Future enhancements: • Email summary to stakeholders daily • Slack/Teams integration • Multi-format exports (HTML, markdown, etc.)
+
+9) RAG Management
+9.1 System-generated suggestedRAG
+Section	Details
+Module #	9 – RAG Management
+Use Case ID	M9-UC01
+Use Case Name	System Computes RAG Suggestion
+Trigger	A snap is created or edited for the current day
+Pre-conditions	1. User authenticated 2. Sprint = Active 3. Card has valid ET 4. Snap belongs to today 5. Card is in Not Started or In Progress
+Basic Path (Main Flow)	1. SM adds or edits today’s snap for a card. 2. System reads snap content: Done, To Do, Blockers. 3. System calculates timeline deviation:  • Expected progress based on ET & card start date  • Actual progress based on presence of "Done" 4. System evaluates blockers and severity. 5. System applies defined RAG logic:  • Green = on track, no blockers  • Amber = minor delay (<30%), mild blockers  • Red = major delay (>30%), severe blockers, no Done for 2+ days 6. System generates Suggested RAG for today. 7. System displays RAG suggestion to SM.
+Alternative Paths	Condition 1 — No snaps created today → No RAG update. Condition 2 — ET missing → Block snap creation. Condition 3 — Card completed → No RAG updates.
+Post-conditions	1. Card’s “suggested RAG” value updated for today. 2. SM can override in next use case.
+Primary Actor	System
+Supporting Actors	SM
+Business Validations	1. RAG suggestion must follow timeline-driven rules. 2. RAG cannot be auto-changed after daily lock. 3. RAG cannot be auto-changed for completed cards.
+Notes	Suggestion only — final RAG belongs to SM.
+
+9.2 SM Overrides RAG
+	
+Section	Details
+Module #	9 – RAG Management
+Use Case ID	M9-UC02
+Use Case Name	SM Overrides RAG
+Trigger	SM clicks “Override RAG” on today’s snap
+Pre-conditions	1. User authenticated 2. Role = SM 3. Snap belongs to today 4. Daily Lock not applied
+Basic Path (Main Flow)	1. System shows suggested RAG on Snap panel. 2. SM clicks “Override RAG”. 3. SM selects Green/Amber/Red manually. 4. System updates card’s RAG for today with overridden value. 5. System logs override for audit/history.
+Alternative Paths	Condition 1 — Daily Lock applied → Override disabled. Condition 2 — Unauthorized role (PO/PMO) → Override hidden.
+Post-conditions	1. RAG updated to SM’s selected value. 2. System no longer recalculates for that day.
+Primary Actor	SM
+Supporting Actors	System
+Business Validations	1. Override always takes priority. 2. Override must not be changed automatically. 3. Override applies only to today’s snap (not past days).
+Notes	RAG override is part of daily governance.
+
+9.3 Display RAG Across the System
+Section	Details
+Module #	9 – RAG Management
+Use Case ID	M9-UC03
+Use Case Name	Display RAG Across the System
+Trigger	A card’s RAG is updated (system or SM)
+Pre-conditions	1. Sprint = Active or Completed 2. RAG value available
+Basic Path (Main Flow)	1. System displays RAG on Card List under the sprint. 2. System displays RAG inside Card Details. 3. System shows RAG in Snap History (per day). 4. Sprint Dashboard displays:  • Count of Green/Amber/Red cards  • Sprint-level RAG (worst-case logic) 5. Project Dashboard displays:  • RAG across multiple sprints  • Overall project health trend
+Alternative Paths	Condition 1 — Card Closed → RAG shown as final historical value.
+Post-conditions	1. RAG is visible consistently everywhere. 2. Sprint and Project dashboards reflect changes immediately.
+Primary Actor	System
+Supporting Actors	SM/PO/PMO
+Business Validations	1. RAG visibility must be uniform on all screens. 2. Completed/Closed cards show historical RAG only.
+Notes	Sprint-level aggregation covered in next UC.
+
+9.4 RAG Recalculation on Snap Edit/Delete
+Section	Details
+Module #	9 – RAG Management
+Use Case ID	M9-UC04
+Use Case Name	RAG Recalculation on Snap Edit/Delete
+Trigger	SM edits or deletes today’s snap
+Pre-conditions	1. Snap belongs to today 2. Sprint = Active 3. Daily Lock not applied
+Basic Path (Main Flow)	1. SM edits/deletes today’s snap. 2. System recalculates RAG using the same rules as creation. 3. System shows updated suggested RAG. 4. SM can override again if needed.
+Alternative Paths	Condition 1 — Snap from past days → No recalculation. Condition 2 — Daily lock applied → No recalculation.
+Post-conditions	RAG updated for today.
+Primary Actor	System
+Supporting Actors	SM
+Business Validations	1. Recalculation allowed only for today’s snaps. 2. Historical RAG never recalculates.
+Notes	Maintains daily accuracy.
+
+9.5 Sprint-Level RAG Aggregation
+
+Section	Details
+Module #	9 – RAG Management
+Use Case ID	M9-UC05
+Use Case Name	Sprint-Level RAG Aggregation
+Trigger	Any card RAG changes
+Pre-conditions	1. Sprint has ≥1 cards 2. Card RAG values available
+Basic Path (Main Flow)	1. System checks RAG of all cards in the sprint. 2. System applies worst-case logic (Red > Amber > Green). 3. Sprint-level RAG = highest risk color present. 4. Sprint dashboard displays the aggregated RAG.
+Alternative Paths	None
+Post-conditions	Sprint RAG updates across all dashboards.
+Primary Actor	System
+Supporting Actors	SM/PO/PMO
+Business Validations	1. Worst-case rule must always be applied in MVP. 2. Completed cards still contribute their last RAG.
+Notes	Other models can be added later.
+
+9.6 Project-Level RAG Aggregation
+Section	Details
+Module #	9 – RAG Management
+Use Case ID	M9-UC06
+Use Case Name	Project-Level RAG Aggregation
+Trigger	Any sprint RAG changes
+Pre-conditions	Project has ≥1 active or completed sprints
+Basic Path (Main Flow)	1. System collects RAG from all sprints for a project. 2. System applies worst-case logic:  Red > Amber > Green. 3. Project dashboard shows:  • Latest sprint RAG  • Trend graph (optional later)  • Count of cards per RAG per sprint
+Alternative Paths	None
+Post-conditions	Project RAG visible on project dashboard.
+Primary Actor	System
+Supporting Actors	SM/PO/PMO
+Business Validations	1. Project RAG must reflect real delivery risk. 2. Worst-case rule applied consistently.
+Notes	Trend-based logic can come later.
+
+9.7 RAG History Tracking
+Section	Details
+Module #	9 – RAG Management
+Use Case ID	M9-UC07
+Use Case Name	RAG History Tracking
+Trigger	Daily Snap Lock
+Pre-conditions	1. Snap Lock applied for the day 2. RAG for the day is final
+Basic Path (Main Flow)	1. Daily lock occurs (manual or auto). 2. System freezes RAG for the day. 3. RAG entry written to card’s historical RAG timeline. 4. RAG history becomes visible in:  • Card Details → RAG History  • Sprint Dashboard → RAG progression  • Project Dashboard → cumulative trends
+Alternative Paths	Condition 1 — No snap today → RAG not recorded.
+Post-conditions	Daily RAG permanently stored.
+Primary Actor	System
+Supporting Actors	SM
+Business Validations	1. Historical RAG cannot be edited. 2. Snap edits after lock do not affect history.
+Notes	Essential for performance reporting.
+
+10) Assignee View
+10.1 View All Assignees (Team Members List)
+Section	Details
+Module #	10 – Assignee View
+Use Case ID	M10-UC01
+Use Case Name	View All Assignees (Team Members List)
+Trigger	User clicks “Team” or “Assignees” from left navigation OR from sprint-level view
+Pre-conditions	1. User authenticated 2. User has access to the project (SM/PO/PMO) 3. Project has at least one team member added
+Basic Path (Main Flow)	1. User opens the Team / Assignees section. 2. System fetches all team members mapped to the current project. 3. System displays the list of team members with:  • Name  • Role (Dev/QA/etc.)  • Assigned cards count (active sprint only)  • Assignee-level RAG (worst-case across their cards)  • Optional avatar/initials 4. User clicks on a team member. 5. System navigates to the Assignee Details Page (M10-UC02).
+Alternative Paths	Condition 1 — No team members added yet → Show empty-state: “No team members added. Please add from Team Management.” Condition 2 — User is PMO → Same view, but all read-only.
+Post-conditions	1. Assignee list displayed. 2. User can navigate to any assignee’s page.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Only team members added under the current project should be shown. 2. Assignee-level RAG = worst-case of all their active sprint cards (Red > Amber > Green). 3. Only cards from active sprint count toward statistics. 4. Assignee list auto-refreshes when team changes.
+Notes	View is identical for PO/PMO except no edit options.
+ 
+10.2 View Assignee Details Page
+Section	Details
+Module #	10 – Assignee View
+Use Case ID	M10-UC02
+Use Case Name	View Assignee Details Page
+Trigger	User clicks on a team member from the Assignee List (M10-UC01)
+Pre-conditions	1. User authenticated 2. User has access to the project (SM/PO/PMO) 3. Assignee exists within the project team 4. Active sprint exists
+Basic Path (Main Flow)	1. User selects an assignee from the list. 2. System loads the Assignee Details Page containing: A. Assignee Summary Section  • Name  • Role (Dev/QA/etc.)  • Total cards assigned in active sprint  • Completed cards count  • In-progress cards count  • Assignee-level RAG (worst-case across their cards) B. Assigned Cards Section (Active Sprint Only)  For each card system displays:  • Card Name  • Card Status (Not Started / In Progress / Completed / Closed)  • ET (days)  • RAG  • Last snap date  • Navigation option → “View Card Details” C. Assignee Snap History (Daily Grouped)  • Today’s snaps across all assigned cards  • Yesterday’s snaps expanded  • Older snaps collapsed  • All previous snaps read-only (history only)  • Today’s snaps editable only from card details (not here)
+Alternative Paths	Condition 1 — No active sprint → Show: “No active sprint available.” Condition 2 — Assignee has no cards in active sprint → Show summary + empty-state card list. Condition 3 — User is PMO → Page is fully read-only.
+Post-conditions	1. User views assignee’s workload and history. 2. User can navigate to card details if needed.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Only cards from active sprint shown. 2. Snap history must group snaps per day (not per card). 3. Yesterday’s snaps always expanded by default. 4. Older snaps always collapsed. 5. SM cannot add snaps from this screen; must use Card Details. 6. PMO cannot edit anything.
+Notes	This page acts like a “360° view” of the assignee’s sprint activity.
+
+10.3 View Assignee Details Page
+Section	Details
+Module #	10 – Assignee View
+Use Case ID	M10-UC03
+Use Case Name	View Assignee Snap History
+Trigger	User navigates to the “Snap History” section within the Assignee Details Page
+Pre-conditions	1. User authenticated 2. User has access to the project (SM/PO/PMO) 3. Assignee has at least one card in the active sprint 4. Snaps exist for the assignee (today or historically)
+Basic Path (Main Flow)	1. User scrolls to or opens the Snap History section for the assignee. 2. System displays all snaps grouped day-wise, not card-wise: A. Today’s Snaps  • All snaps created today across all assigned cards  • Editable only via card details (SM only) B. Yesterday’s Snaps (Expanded by Default)  • All snaps created yesterday  • Shown expanded with full structured DTB view C. Older Snaps (Collapsed by Default)  • Each older day shown as a collapsible section  • Expands to show snaps grouped by card 3. System displays for each snap:  • Timestamp  • Done / To-Do / Blockers (structured view)  • Raw text (optional)  • RAG for the day 4. User may expand or collapse any day’s history.
+Alternative Paths	Condition 1 — No snaps recorded for any day → System shows “No snaps available for this assignee.” Condition 2 — Sprint Closed → All snaps remain visible but read-only.
+Post-conditions	1. Assignee’s full chronological work progress is visible. 2. User can analyze performance over time.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Today’s snaps must be shown first. 2. Yesterday’s snaps must be expanded by default. 3. Older snaps must be collapsed by default. 4. All past-day snaps are read-only. 5. Only SM can edit today’s snaps (via card details only). 6. PMO cannot modify any snap.
+Notes	This view mirrors daily standup flow and gives SM visibility into each team member’s progress.
+
+10.4 Filter Assignee’s Cards
+Section	Details
+Module #	10 – Assignee View
+Use Case ID	M10-UC04
+Use Case Name	Filter Assignee’s Cards
+Trigger	User selects filter options in the “Assigned Cards” section of the Assignee Details Page
+Pre-conditions	1. User authenticated 2. User has access to the project (SM/PO/PMO) 3. Assignee has at least one card in the active sprint
+Basic Path (Main Flow)	1. User opens the Assignee Details Page. 2. User sees the list of cards assigned to that team member for the active sprint. 3. User clicks the Filter icon/dropdown. 4. System displays available filter options:  • Card Status: Not Started / In Progress / Completed / Closed  • RAG: Green / Amber / Red  • Search by Card Name (text search) 5. User selects one or more filters. 6. System updates the card list to show only matching cards. 7. User may clear filters to return to the full list.
+Alternative Paths	Condition 1 — No cards match filters → System shows “No cards found for selected filters.” Condition 2 — PMO User → Same behavior; filters remain view-only.
+Post-conditions	1. User sees filtered list of assigned cards. 2. No changes made to actual card data—UI-level filtering only.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Filters apply only to cards within the active sprint. 2. Filters must not remove mandatory information such as RAG or status. 3. Keyword search must match card name or ID (if available). 4. Filters must combine using AND logic (e.g., Status = In Progress AND RAG = Red).
+Notes	This improves SM/PO monitoring of delivery risk and assignee workload.
+
+10.5 Role-Based Permissions in Assignee View
+Section	Details
+Module #	10 – Assignee View
+Use Case ID	M10-UC05
+Use Case Name	Role-Based Permissions in Assignee View
+Trigger	User opens the Assignee List or Assignee Details Page
+Pre-conditions	1. User authenticated 2. User has a role allowed to access the project (SM/PO/PMO)
+Basic Path (Main Flow)	When a user opens Assignee View (list or details), the system enforces: A. Scrum Master (SM)  • Full access to all assignee information  • Can edit snaps (from Card Details only)  • Can mark cards completed  • Can view full snap history  • Can apply filters B. Product Owner (PO)  • Full visibility of assignee lists  • Full visibility of assignee details and snap history  • Cannot edit snaps  • Cannot mark cards completed  • Cannot modify cards C. PMO  • Read-only view of entire Assignee module  • Cannot edit snaps  • Cannot change card statuses  • Cannot modify assignees or teams 2. System hides or disables UI elements depending on role.
+Alternative Paths	Condition 1 — Unauthorized user role (Team Member) → System does NOT show Assignee View in side-navigation. → Direct access via URL is blocked with “Unauthorized”.
+Post-conditions	1. User sees only what their role permits. 2. No unauthorized access or accidental modifications are possible.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Only SM can modify snaps, card status, or perform card actions. 2. PO and PMO cannot modify any snap or card in Assignee View. 3. Role-based UI restrictions must be consistent across all assignee screens. 4. Backend must validate all edit attempts (no client-side trust).
+Notes	Ensures governance and prevents accidental data manipulation by non-SM roles.
+
+10.6 Closed Sprint Restrictions in Assignee View
+Section	Details
+Module #	10 – Assignee View
+Use Case ID	M10-UC06
+Use Case Name	Closed Sprint Restrictions in Assignee View
+Trigger	User opens the Assignee List or Assignee Details Page while the sprint is in “Closed” state
+Pre-conditions	1. User authenticated 2. User has access to the project (SM/PO/PMO) 3. Sprint is in Closed state
+Basic Path (Main Flow)	1. User navigates to Assignee View (list or details). 2. System checks sprint status = Closed. 3. System loads Assignee List and/or Assignee Details Page in read-only mode. 4. The following restrictions apply: A. No Snap Creation or Editing  • “Add Snap” disabled everywhere  • Snap editing disabled B. No Card Modifications  • Cannot mark cards completed (already done before closure)  • Cannot change ET, RAG, or assignee C. Full Snap History Remains Visible  • All snaps are view-only  • Day-wise grouping remains intact D. Filters remain operational (view-only) 5. System displays a banner on top of the page:  “Sprint is Closed — All updates are locked.”
+Alternative Paths	Condition 1 — Attempt to access editable field → System blocks action and shows: “Sprint is closed. Editing is not allowed.” Condition 2 — User tries to navigate to Card Details to edit → Card Details also opens in read-only mode.
+Post-conditions	1. Assignee information is visible but locked. 2. No updates or modifications are possible.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. No snap edits permitted in closed sprints for any role. 2. Card lifecycle locked (status = Closed). 3. All RAG values frozen. 4. Past snaps preserved exactly—no recalculation.
+Notes	This ensures data integrity after sprint closure and preserves a clean audit trail.
+
+11) Dashboard
+11.1 View Dashboard (Default Project Context)
+Section	Details
+Module #	11 – Dashboard
+Use Case ID	M11-UC01
+Use Case Name	View Dashboard (Default Project Context)
+Trigger	User logs in or selects “Dashboard” from side navigation
+Pre-conditions	1. User authenticated 2. User has at least one assigned project 3. Project selector is populated based on user-role project mapping
+Basic Path (Main Flow)	1. User lands on Dashboard after login. 2. System checks number of projects assigned to the user:  • If one project → auto-select that project  • If multiple → show Project Selector with “Select Project” placeholder 3. System loads the dashboard widgets for the selected project:  • Project Summary  • Active Sprint Summary  • Sprint Health (RAG + counts)  • Team/Assignee Snapshot  • Daily Snap Summary  • Daily Standup Summary (if locked)
+Alternative Paths	Condition 1 — No project selected yet → Show placeholder dashboard with message: “Select a project to view its dashboard.” Condition 2 — Role = PMO → Same dashboard but fully read-only.
+Post-conditions	Dashboard loads for selected project and displays all relevant widgets.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Dashboard must always reflect current project context. 2. No data from other projects may leak.
+Notes	Dashboard always adapts to the selected project.
+
+11.2 Project Selector Logic
+Section	Details
+Module #	11 – Dashboard
+Use Case ID	M11-UC02
+Use Case Name	Project Selector Logic
+Trigger	User clicks project selector dropdown
+Pre-conditions	1. User authenticated 2. User has ≥1 assigned project
+Basic Path (Main Flow)	1. User clicks Project Selector. 2. System displays all projects assigned to the user. 3. User selects a project from the list. 4. System reloads dashboard widgets with new project context. 5. System remembers the last selected project for the session.
+Alternative Paths	Condition 1 — Only one project assigned → Dropdown hidden, project auto-selected.
+Post-conditions	Selected project becomes dashboard context.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Only show projects the user is mapped to. 2. Switching project must refresh all dashboard widgets.
+Notes	Required for users handling multiple projects.
+
+11.3 Sprint Health Display
+Section	Details
+Module #	11 – Dashboard
+Use Case ID	M11-UC03
+Use Case Name	Sprint Health Display
+Trigger	User views dashboard and project has an active sprint
+Pre-conditions	1. Active sprint exists 2. Cards exist in that sprint
+Basic Path (Main Flow)	1. System loads active sprint details. 2. System calculates sprint RAG using worst-case logic: Red > Amber > Green. 3. System displays sprint indicators:  • Sprint Name  • Day X of Y  • Sprint Start/End Dates  • Sprint-level RAG  • RAG distribution count (G/A/R)  • Cards summary (Total / Completed / In-progress / Not started)
+Alternative Paths	Condition 1 — No cards in sprint → Show metrics as zero with neutral RAG. Condition 2 — Sprint is Closed → Show sprint summary in read-only.
+Post-conditions	Sprint health is visible on the dashboard.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Sprint RAG must always reflect real-time card RAG. 2. Closed sprints show final frozen values.
+Notes	This is the core dashboard insight for project health.
+
+11.4 Team / Assignee Summary Widget
+Section	Details
+Module #	11– Dashboard
+Use Case ID	M11-UC04
+Use Case Name	Team / Assignee Summary Widget
+Trigger	Dashboard loads for selected project
+Pre-conditions	1. Team members added to project 2. Active sprint exists
+Basic Path (Main Flow)	1. System displays a compact list of team members with:  • Name  • Role  • Active card count  • Assignee-level RAG (worst-case) 2. User clicks on an assignee. 3. System navigates to Assignee Details Page 
+Alternative Paths	Condition 1 — No team members → Show “No team members added.”
+Post-conditions	Assignee insights visible and navigable.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Only project team members must be shown. 2. Only active sprint data included in counts.
+Notes	This widget gives a quick snapshot of people-driven risks.
+
+11.5 Daily Snap Summary Widget
+Section	Details
+Module #	11 – Dashboard
+Use Case ID	M11-UC05
+Use Case Name	Daily Snap Summary Widget
+Trigger	Dashboard loads for active sprint day
+Pre-conditions	1. Active sprint exists 2.Sprint not closed
+Basic Path (Main Flow)	1. System checks snaps for the current day. 2. System shows:  • Snaps added today  • Cards pending snaps  • Assignees pending snaps 3. If snaps not locked → Show CTA: “Go to Snap Management”. 4. If locked → Show: “Today’s snaps are locked” and CTA: “View Daily Summary”.
+Alternative Paths	Condition 1 — No cards in sprint → Widget hidden.
+Post-conditions	User knows snap completion status for the day.
+Primary Actor	SM (primarily)
+Supporting Actors	System
+Business Validations	1. Snap status must be real-time. 2. Widget must reflect lock/unlock status accurately.
+Notes	Critical for ensuring daily standup data collection.
+
+11.6 Daily Standup Summary Widget
+Section	Details
+Module #	11 – Dashboard
+Use Case ID	M11-UC06
+Use Case Name	Daily Standup Summary Widget
+Trigger	Daily snaps are locked for the sprint
+Pre-conditions	1. Snap lock applied (manual or auto) 2. Daily summary generated
+Basic Path (Main Flow)	1. System displays daily summary widget containing:  • Done Summary  • To-Do Summary  • Blockers Summary  • RAG distribution for today  • Assignee-level snippets 2. Show CTA: “View Full Summary”. 3. User clicks CTA → Opens Daily Summary page.
+Alternative Paths	Condition 1 — Snaps not locked yet → Widget hidden.
+Post-conditions	Daily consolidated summary accessible from dashboard.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	1. Summary displays only after lock. 2. Must be frozen (non-editable).
+Notes	Completes standup workflow.
+
+11.7 Empty-State Dashboard
+Section	Details
+Module #	11 – Dashboard
+Use Case ID	M11-UC07
+Use Case Name	Empty-State Dashboard
+Trigger	User logs in with zero projects assigned
+Pre-conditions	User authenticated, but user has no project mappings
+Basic Path (Main Flow)	1. User logs in. 2. System detects no projects assigned. 3. System displays empty-state page:  • “No projects assigned.”  • “Please contact your Scrum Master.”
+Alternative Paths	None
+Post-conditions	User sees guidance message.
+Primary Actor	SM, PO, PMO
+Supporting Actors	System
+Business Validations	No project data or widgets may load.
+Notes	Prevents confusion for new users.
+
