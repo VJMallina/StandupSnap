@@ -38,6 +38,16 @@ export async function seedRoles(dataSource: DataSource): Promise<void> {
       Permission.DELETE_CARD,
       Permission.VIEW_CARD,
 
+      // Full access to snaps (M8-UC01 to M8-UC05)
+      Permission.CREATE_SNAP,
+      Permission.EDIT_OWN_SNAP,
+      Permission.EDIT_ANY_SNAP,
+      Permission.DELETE_OWN_SNAP,
+      Permission.DELETE_ANY_SNAP,
+      Permission.VIEW_SNAP,
+      Permission.LOCK_DAILY_SNAPS,
+      Permission.GENERATE_SUMMARY,
+
       // Can send invites and manage roles
       Permission.SEND_INVITE,
       Permission.MANAGE_ROLES,
@@ -74,6 +84,9 @@ export async function seedRoles(dataSource: DataSource): Promise<void> {
       Permission.DELETE_CARD,
       Permission.VIEW_CARD,
 
+      // View-only access to snaps (M8-UC01: PO can view snaps)
+      Permission.VIEW_SNAP,
+
       // Can send invites
       Permission.SEND_INVITE,
     ],
@@ -92,6 +105,9 @@ export async function seedRoles(dataSource: DataSource): Promise<void> {
 
       // View cards
       Permission.VIEW_CARD,
+
+      // View-only access to snaps (M8-UC01: PMO can view snaps)
+      Permission.VIEW_SNAP,
     ],
   };
 

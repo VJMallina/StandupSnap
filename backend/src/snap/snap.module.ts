@@ -7,6 +7,7 @@ import { Card } from '../entities/card.entity';
 import { Sprint } from '../entities/sprint.entity';
 import { DailySnapLock } from '../entities/daily-snap-lock.entity';
 import { DailySummary } from '../entities/daily-summary.entity';
+import { CardRAGHistory } from '../entities/card-rag-history.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DailySummary } from '../entities/daily-summary.entity';
       Sprint,
       DailySnapLock,
       DailySummary,
+      CardRAGHistory,
     ]),
   ],
   controllers: [SnapController],
