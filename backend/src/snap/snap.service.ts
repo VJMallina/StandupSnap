@@ -5,9 +5,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import Anthropic from '@anthropic-ai/sdk';
 import { Snap, SnapRAG } from '../entities/snap.entity';
 import { Card, CardStatus, CardRAG } from '../entities/card.entity';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
@@ -28,7 +27,8 @@ interface ParsedSnapData {
 
 @Injectable()
 export class SnapService {
-  private anthropic: Anthropic;
+  private ollamaUrl: string;
+  private ollamaModel: string;
 
   constructor(
     @InjectRepository(Snap)
@@ -45,10 +45,9 @@ export class SnapService {
     private ragHistoryRepository: Repository<CardRAGHistory>,
     private configService: ConfigService,
   ) {
-    const apiKey = this.configService.get<string>('ANTHROPIC_API_KEY');
-    if (apiKey) {
-      this.anthropic = new Anthropic({ apiKey });
-    }
+    // Use Ollama (free, open-source) instead of paid APIs
+    this.ollamaUrl = this.configService.get<string>('OLLAMA_URL') || 'http://localhost:11434';
+    this.ollamaModel = this.configService.get<string>('OLLAMA_MODEL') || 'qwen2.5:7b';
   }
 
   /**
@@ -59,17 +58,22 @@ export class SnapService {
    * - SM can override AI output
    */
   async create(createSnapDto: CreateSnapDto, userId: string): Promise<Snap> {
-    const { cardId, rawInput, done, toDo, blockers, suggestedRAG, finalRAG } = createSnapDto;
+    try {
+      console.log('[SnapService.create] Starting snap creation:', { cardId: createSnapDto.cardId, userId });
+      const { cardId, rawInput, done, toDo, blockers, suggestedRAG, finalRAG } = createSnapDto;
 
-    // 1. Validate card exists and load with relations
-    const card = await this.cardRepository.findOne({
-      where: { id: cardId },
-      relations: ['sprint', 'snaps'],
-    });
+      // 1. Validate card exists and load with relations
+      const card = await this.cardRepository.findOne({
+        where: { id: cardId },
+        relations: ['sprint', 'snaps'],
+      });
 
-    if (!card) {
-      throw new NotFoundException('Card not found');
-    }
+      if (!card) {
+        console.error('[SnapService.create] Card not found:', cardId);
+        throw new NotFoundException('Card not found');
+      }
+
+      console.log('[SnapService.create] Card found:', { cardId: card.id, sprintId: card.sprint?.id });
 
     // 2. Business Validation: Card must have ET specified
     if (!card.estimatedTime || card.estimatedTime <= 0) {
@@ -122,23 +126,40 @@ export class SnapService {
       isLocked: false,
     });
 
-    // 9. Save snap
-    const savedSnap = await this.snapRepository.save(snap);
+      // 9. Save snap
+      console.log('[SnapService.create] Saving snap...');
+      const savedSnap = await this.snapRepository.save(snap);
+      console.log('[SnapService.create] Snap saved:', savedSnap.id);
 
-    // 10. Auto-transition card to IN_PROGRESS on first snap (if NOT_STARTED)
-    if (card.status === CardStatus.NOT_STARTED) {
-      card.status = CardStatus.IN_PROGRESS;
-      await this.cardRepository.save(card);
+      // 10. Auto-transition card to IN_PROGRESS on first snap (if NOT_STARTED)
+      if (card.status === CardStatus.NOT_STARTED) {
+        console.log('[SnapService.create] Transitioning card to IN_PROGRESS');
+        card.status = CardStatus.IN_PROGRESS;
+        await this.cardRepository.save(card);
+      }
+
+      // 11. Update card RAG status based on snap
+      console.log('[SnapService.create] Updating card RAG...');
+      await this.updateCardRAG(cardId);
+
+      // 12. Return snap with relations
+      console.log('[SnapService.create] Fetching snap with relations...');
+      const result = await this.snapRepository.findOne({
+        where: { id: savedSnap.id },
+        relations: ['card', 'createdBy'],
+      });
+
+      if (!result) {
+        console.error('[SnapService.create] Failed to retrieve created snap:', savedSnap.id);
+        throw new Error('Failed to retrieve created snap');
+      }
+
+      console.log('[SnapService.create] Snap creation successful');
+      return result;
+    } catch (error) {
+      console.error('[SnapService.create] Error creating snap:', error);
+      throw error;
     }
-
-    // 11. Update card RAG status based on snap
-    await this.updateCardRAG(cardId);
-
-    // 12. Return snap with relations
-    return this.snapRepository.findOne({
-      where: { id: savedSnap.id },
-      relations: ['card', 'createdBy'],
-    });
   }
 
   /**
@@ -332,7 +353,7 @@ export class SnapService {
 
     return this.snapRepository.find({
       where: {
-        cardId: cardIds.length === 1 ? cardIds[0] : { $in: cardIds } as any,
+        cardId: cardIds.length === 1 ? cardIds[0] : In(cardIds),
         snapDate: new Date(date),
       },
       relations: ['card', 'createdBy', 'card.assignee'],
@@ -575,19 +596,9 @@ export class SnapService {
   }
 
   /**
-   * AI Parsing Helper - Parse raw input with Anthropic Claude
+   * AI Parsing Helper - Parse raw input with Ollama (free, open-source)
    */
   private async parseSnapWithAI(rawInput: string, card: Card): Promise<ParsedSnapData> {
-    if (!this.anthropic) {
-      // Fallback if API key not configured
-      return {
-        done: rawInput,
-        toDo: '',
-        blockers: '',
-        suggestedRAG: SnapRAG.AMBER,
-      };
-    }
-
     try {
       const prompt = `You are an AI assistant helping to parse daily standup updates for agile project management.
 
@@ -615,21 +626,33 @@ RAG Status Guidelines:
 
 Return ONLY valid JSON, no additional text.`;
 
-      const response = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
+      console.log('[SnapService.parseSnapWithAI] Calling Ollama API...');
+
+      // Use axios for HTTP requests (Node.js compatible)
+      const axios = require('axios');
+
+      const response = await axios.post(`${this.ollamaUrl}/api/generate`, {
+        model: this.ollamaModel,
+        prompt: prompt,
+        stream: false,
+        options: {
+          temperature: 0.1, // Lower temperature for more consistent JSON output
+        },
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000, // 30 second timeout
       });
 
-      // Extract JSON from response
-      const firstBlock = response.content[0];
-      if (firstBlock.type !== 'text') {
-        throw new Error('Expected text response from AI');
-      }
+      const content = response.data.response;
 
-      const content = firstBlock.text;
+      console.log('[SnapService.parseSnapWithAI] Ollama response received');
+
+      // Extract JSON from response
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.warn('[SnapService.parseSnapWithAI] No JSON found in response, using fallback');
         throw new Error('No JSON found in AI response');
       }
 
@@ -642,7 +665,7 @@ Return ONLY valid JSON, no additional text.`;
         suggestedRAG: parsed.suggestedRAG as SnapRAG || SnapRAG.AMBER,
       };
     } catch (error) {
-      console.error('AI parsing error:', error);
+      console.error('[SnapService.parseSnapWithAI] AI parsing error:', error);
       // Fallback to simple parsing
       return {
         done: rawInput,

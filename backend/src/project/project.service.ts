@@ -24,7 +24,7 @@ export class ProjectService {
     private userRepository: Repository<User>,
   ) {}
 
-  async create(createProjectDto: CreateProjectDto): Promise<Project> {
+  async create(createProjectDto: CreateProjectDto, creatorUserId: string): Promise<Project> {
     const { productOwnerId, pmoId, ...projectData } = createProjectDto;
 
     const project = this.projectRepository.create(projectData);
@@ -51,7 +51,26 @@ export class ProjectService {
       project.pmo = pmo;
     }
 
-    return this.projectRepository.save(project);
+    const savedProject = await this.projectRepository.save(project);
+
+    // Automatically add the creator (Scrum Master) as a project member
+    const creator = await this.userRepository.findOne({
+      where: { id: creatorUserId },
+    });
+
+    if (creator) {
+      const projectMember = this.projectMemberRepository.create({
+        project: savedProject,
+        user: creator,
+        role: 'Scrum Master',
+        startDate: new Date(),
+        isActive: true,
+      });
+
+      await this.projectMemberRepository.save(projectMember);
+    }
+
+    return savedProject;
   }
 
   async findAll(isActive?: boolean, isArchived?: boolean): Promise<Project[]> {

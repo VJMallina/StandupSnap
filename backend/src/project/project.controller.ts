@@ -10,6 +10,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Request,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -33,8 +34,9 @@ export class ProjectController {
   @Post()
   @RequirePermissions(Permission.CREATE_PROJECT)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
+  create(@Request() req, @Body() createProjectDto: CreateProjectDto) {
+    const userId = req.user.userId;
+    return this.projectService.create(createProjectDto, userId);
   }
 
   @Get()

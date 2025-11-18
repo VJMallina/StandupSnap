@@ -52,7 +52,9 @@
       "Bash(docker start:*)",
       "Bash(docker stop:*)",
       "Bash(docker kill:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(docker-compose start:*)",
+      "Bash(docker restart:*)"
     ],
     "deny": [],
     "ask": []

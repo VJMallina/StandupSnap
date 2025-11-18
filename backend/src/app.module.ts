@@ -12,6 +12,8 @@ import { UsersModule } from './users/users.module';
 import { TeamMemberModule } from './team-member/team-member.module';
 import { CardModule } from './card/card.module';
 import { SnapModule } from './snap/snap.module';
+import { AssigneeModule } from './assignee/assignee.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 // Team Management Module for non-login team members
 @Module({
@@ -44,6 +46,8 @@ import { SnapModule } from './snap/snap.module';
     TeamMemberModule,
     CardModule,
     SnapModule,
+    AssigneeModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

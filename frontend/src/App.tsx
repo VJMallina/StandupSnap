@@ -18,6 +18,8 @@ import TeamManagementPage from './pages/TeamManagementPage';
 import ProfilePage from './pages/ProfilePage';
 import SnapsPage from './pages/SnapsPage';
 import DailySnapsPage from './pages/snaps/DailySnapsPage';
+import AssigneeListPage from './pages/assignees/AssigneeListPage';
+import AssigneeDetailsPage from './pages/assignees/AssigneeDetailsPage';
 import ReportsPage from './pages/ReportsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -153,6 +155,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <DailySnapsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assignees"
+            element={
+              <ProtectedRoute>
+                <AssigneeListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/assignees/:id"
+            element={
+              <ProtectedRoute>
+                <AssigneeDetailsPage />
               </ProtectedRoute>
             }
           />

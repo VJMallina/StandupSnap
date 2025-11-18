@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { snapsApi } from '../../services/api/snaps';
 import { sprintsApi } from '../../services/api/sprints';
+import { cardsApi } from '../../services/api/cards';
 import { Snap, DailySummary } from '../../types/snap';
 import { Sprint } from '../../types/sprint';
+import { Card } from '../../types/card';
 import AppLayout from '../../components/AppLayout';
 import SnapCard from '../../components/snaps/SnapCard';
+import CreateSnapModal from '../../components/snaps/CreateSnapModal';
 
 export default function DailySnapsPage() {
   const { sprintId } = useParams<{ sprintId: string }>();
@@ -15,6 +18,7 @@ export default function DailySnapsPage() {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [cards, setCards] = useState<Card[]>([]);
   const [snaps, setSnaps] = useState<Snap[]>([]);
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [isLocked, setIsLocked] = useState(false);
@@ -23,6 +27,7 @@ export default function DailySnapsPage() {
   const [lockingDay, setLockingDay] = useState(false);
   const [generatingSummary, setGeneratingSummary] = useState(false);
   const [viewMode, setViewMode] = useState<'snaps' | 'summary'>('snaps');
+  const [creatingSnapForCard, setCreatingSnapForCard] = useState<Card | null>(null);
 
   useEffect(() => {
     if (sprintId) {
@@ -49,6 +54,10 @@ export default function DailySnapsPage() {
     try {
       setLoading(true);
       setError(null);
+
+      // Load all cards for this sprint
+      const cardsData = await cardsApi.getAll({ sprintId: sprintId! });
+      setCards(cardsData);
 
       // Load snaps for the selected date
       const snapsData = await snapsApi.getBySprintAndDate(sprintId!, selectedDate);
@@ -152,18 +161,34 @@ Assignee Level:
     URL.revokeObjectURL(url);
   };
 
-  // Group snaps by assignee
-  const snapsByAssignee = snaps.reduce((acc, snap) => {
-    const assigneeName = snap.card?.assignee
-      ? snap.card.assignee.fullName
+  // Group cards by assignee
+  const cardsByAssignee = cards.reduce((acc, card) => {
+    const assigneeName = card.assignee
+      ? card.assignee.fullName
       : 'Unassigned';
 
     if (!acc[assigneeName]) {
       acc[assigneeName] = [];
     }
-    acc[assigneeName].push(snap);
+    acc[assigneeName].push(card);
     return acc;
-  }, {} as Record<string, Snap[]>);
+  }, {} as Record<string, Card[]>);
+
+  // Helper to get snaps for a specific card on the selected date
+  const getSnapsForCard = (cardId: string) => {
+    return snaps.filter(snap => snap.card.id === cardId);
+  };
+
+  // Helper to get yesterday's snap for a card
+  const getYesterdaySnapForCard = (cardId: string) => {
+    const yesterday = new Date(selectedDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    // This would need to be fetched separately, for now return null
+    // TODO: Implement proper yesterday snap fetching
+    return null;
+  };
 
   const getRAGColor = (rag: string) => {
     switch (rag) {
@@ -267,23 +292,78 @@ Assignee Level:
             </svg>
           </div>
         ) : viewMode === 'snaps' ? (
-          /* Snaps View */
+          /* Snaps View - Grouped by Assignee, showing Cards */
           <>
-            {snaps.length === 0 ? (
+            {cards.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                <p className="text-gray-600">No snaps recorded for this date</p>
+                <p className="text-gray-600">No cards found in this sprint</p>
+                <button
+                  onClick={() => navigate(`/sprints/${sprintId}`)}
+                  className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Go to Sprint
+                </button>
               </div>
             ) : (
               <div className="space-y-6">
-                {Object.entries(snapsByAssignee).map(([assigneeName, assigneeSnaps]) => (
+                {Object.entries(cardsByAssignee).map(([assigneeName, assigneeCards]) => (
                   <div key={assigneeName} className="bg-white shadow rounded-lg p-6">
                     <h3 className="text-lg font-semibold mb-4 border-b pb-2">
-                      {assigneeName} ({assigneeSnaps.length} snap{assigneeSnaps.length !== 1 ? 's' : ''})
+                      {assigneeName} ({assigneeCards.length} card{assigneeCards.length !== 1 ? 's' : ''})
                     </h3>
-                    <div className="space-y-4">
-                      {assigneeSnaps.map((snap) => (
-                        <SnapCard key={snap.id} snap={snap} showCardTitle={true} />
-                      ))}
+                    <div className="space-y-6">
+                      {assigneeCards.map((card) => {
+                        const cardSnaps = getSnapsForCard(card.id);
+                        const hasSnapToday = cardSnaps.length > 0;
+
+                        return (
+                          <div key={card.id} className="border border-gray-200 rounded-lg p-4">
+                            {/* Card Header */}
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-gray-900">{card.title}</h4>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {card.description || 'No description'}
+                                </p>
+                                <div className="flex gap-2 mt-2">
+                                  <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700">
+                                    ET: {card.estimatedTime}h
+                                  </span>
+                                  {card.ragStatus && (
+                                    <span className={`text-xs px-2 py-1 rounded ${getRAGColor(card.ragStatus)}`}>
+                                      {card.ragStatus.toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              {!isLocked && (
+                                <button
+                                  onClick={() => setCreatingSnapForCard(card)}
+                                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                                >
+                                  + Add Snap
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Today's Snaps for this Card */}
+                            {hasSnapToday && (
+                              <div className="mt-4 space-y-3">
+                                <h5 className="text-sm font-medium text-gray-700">Today's Snaps:</h5>
+                                {cardSnaps.map((snap) => (
+                                  <SnapCard key={snap.id} snap={snap} showCardTitle={false} />
+                                ))}
+                              </div>
+                            )}
+
+                            {!hasSnapToday && (
+                              <div className="mt-3 text-sm text-gray-500 italic">
+                                No snap recorded for today
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -430,6 +510,21 @@ Assignee Level:
           </>
         )}
       </div>
+
+      {/* Create Snap Modal */}
+      {creatingSnapForCard && (
+        <CreateSnapModal
+          cardId={creatingSnapForCard.id}
+          cardTitle={creatingSnapForCard.title}
+          yesterdaySnap={getYesterdaySnapForCard(creatingSnapForCard.id)}
+          olderSnaps={[]}
+          onClose={() => setCreatingSnapForCard(null)}
+          onSuccess={() => {
+            setCreatingSnapForCard(null);
+            loadDailyData();
+          }}
+        />
+      )}
     </AppLayout>
   );
 }
