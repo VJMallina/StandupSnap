@@ -19,6 +19,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedSummary, setExpandedSummary] = useState<string | null>(null);
+  const [expandedAssignees, setExpandedAssignees] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadProjects();
@@ -99,35 +100,60 @@ export default function ReportsPage() {
   };
 
   const handleDownload = (summary: DailySummary) => {
-    const content = `
-Daily Standup Summary
+    let content = `
+================================================================================
+                         DAILY STANDUP SUMMARY
+================================================================================
 Sprint: ${summary.sprint?.name || 'Unknown'}
-Date: ${new Date(summary.summaryDate).toLocaleDateString()}
+Date: ${new Date(summary.summaryDate).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })}
 
-=== DONE ===
-${summary.done || 'Nothing completed'}
+================================================================================
+                         SPRINT HEALTH OVERVIEW
+================================================================================
+Overall Day RAG: ${(summary.ragOverview?.sprintLevel || 'GREEN').toUpperCase()}
 
-=== TO DO ===
-${summary.toDo || 'Nothing planned'}
+Card-Level Status:
+  - Green: ${summary.ragOverview?.cardLevel?.green || 0} cards
+  - Amber: ${summary.ragOverview?.cardLevel?.amber || 0} cards
+  - Red: ${summary.ragOverview?.cardLevel?.red || 0} cards
 
-=== BLOCKERS ===
-${summary.blockers || 'No blockers'}
+Assignee-Level Status:
+  - Green: ${summary.ragOverview?.assigneeLevel?.green || 0} assignees
+  - Amber: ${summary.ragOverview?.assigneeLevel?.amber || 0} assignees
+  - Red: ${summary.ragOverview?.assigneeLevel?.red || 0} assignees
 
-=== RAG OVERVIEW ===
-Sprint Level: ${summary.ragOverview?.sprintLevel?.toUpperCase() || 'N/A'}
+================================================================================
+                         CARD-LEVEL UPDATES
+================================================================================
+`;
 
-Card Level:
-  Green: ${summary.ragOverview?.cardLevel?.green || 0}
-  Amber: ${summary.ragOverview?.cardLevel?.amber || 0}
-  Red: ${summary.ragOverview?.cardLevel?.red || 0}
+    if (summary.fullData?.byAssignee) {
+      summary.fullData.byAssignee.forEach((assigneeData: any) => {
+        content += `\n--- ${assigneeData.assignee} ---\n`;
+        assigneeData.snaps?.forEach((snap: any) => {
+          content += `\n  Card: ${snap.cardTitle}\n`;
+          content += `  RAG Status: ${(snap.rag || 'green').toUpperCase()}\n`;
+          content += `  Done: ${snap.done || '-'}\n`;
+          content += `  To Do: ${snap.toDo || '-'}\n`;
+          content += `  Blockers: ${snap.blockers || '-'}\n`;
+        });
+      });
+    } else {
+      content += '\nNo card-level data available\n';
+    }
 
-Assignee Level:
-  Green: ${summary.ragOverview?.assigneeLevel?.green || 0}
-  Amber: ${summary.ragOverview?.assigneeLevel?.amber || 0}
-  Red: ${summary.ragOverview?.assigneeLevel?.red || 0}
-    `.trim();
+    content += `
+================================================================================
+                              END OF REPORT
+================================================================================
+`;
 
-    const blob = new Blob([content], { type: 'text/plain' });
+    const blob = new Blob([content.trim()], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -192,7 +218,22 @@ Assignee Level:
       })
     );
 
-    // RAG Status
+    // Sprint Health Overview Section
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'SPRINT HEALTH OVERVIEW',
+            bold: true,
+            size: 28,
+            color: '4F46E5',
+          }),
+        ],
+        spacing: { before: 300, after: 200 },
+      })
+    );
+
+    // Overall Day RAG
     const ragColor = summary.ragOverview?.sprintLevel === 'red' ? 'DC2626' :
                      summary.ragOverview?.sprintLevel === 'amber' ? 'D97706' : '059669';
 
@@ -200,7 +241,7 @@ Assignee Level:
       new Paragraph({
         children: [
           new TextRun({
-            text: 'RAG STATUS: ',
+            text: 'Overall Day RAG: ',
             bold: true,
             size: 24,
           }),
@@ -211,127 +252,16 @@ Assignee Level:
             color: ragColor,
           }),
         ],
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 400 },
+        spacing: { after: 200 },
       })
     );
 
-    // Done Section
+    // Card Level Stats
     children.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: 'DONE',
-            bold: true,
-            size: 28,
-            color: '059669',
-          }),
-        ],
-        spacing: { before: 300, after: 200 },
-      })
-    );
-
-    const doneItems = (summary.done || 'Nothing completed').split('\n');
-    doneItems.forEach(item => {
-      if (item.trim()) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: item.trim(),
-                size: 22,
-              }),
-            ],
-            spacing: { after: 100 },
-          })
-        );
-      }
-    });
-
-    // To Do Section
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'TO DO',
-            bold: true,
-            size: 28,
-            color: '2563EB',
-          }),
-        ],
-        spacing: { before: 300, after: 200 },
-      })
-    );
-
-    const todoItems = (summary.toDo || 'Nothing planned').split('\n');
-    todoItems.forEach(item => {
-      if (item.trim()) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: item.trim(),
-                size: 22,
-              }),
-            ],
-            spacing: { after: 100 },
-          })
-        );
-      }
-    });
-
-    // Blockers Section
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'BLOCKERS',
-            bold: true,
-            size: 28,
-            color: 'DC2626',
-          }),
-        ],
-        spacing: { before: 300, after: 200 },
-      })
-    );
-
-    const blockerItems = (summary.blockers || 'No blockers').split('\n');
-    blockerItems.forEach(item => {
-      if (item.trim()) {
-        children.push(
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: item.trim(),
-                size: 22,
-              }),
-            ],
-            spacing: { after: 100 },
-          })
-        );
-      }
-    });
-
-    // RAG Overview Section
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'RAG OVERVIEW',
-            bold: true,
-            size: 28,
-            color: '7C3AED',
-          }),
-        ],
-        spacing: { before: 400, after: 200 },
-      })
-    );
-
-    children.push(
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: 'Card Level: ',
+            text: 'Card-Level Status: ',
             bold: true,
             size: 22,
           }),
@@ -355,11 +285,12 @@ Assignee Level:
       })
     );
 
+    // Assignee Level Stats
     children.push(
       new Paragraph({
         children: [
           new TextRun({
-            text: 'Assignee Level: ',
+            text: 'Assignee-Level Status: ',
             bold: true,
             size: 22,
           }),
@@ -379,9 +310,141 @@ Assignee Level:
             color: 'DC2626',
           }),
         ],
-        spacing: { after: 100 },
+        spacing: { after: 400 },
       })
     );
+
+    // Card-Level Updates Section
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'CARD-LEVEL UPDATES',
+            bold: true,
+            size: 28,
+            color: '2563EB',
+          }),
+        ],
+        spacing: { before: 300, after: 200 },
+      })
+    );
+
+    // Add card-level data by assignee
+    if (summary.fullData?.byAssignee) {
+      summary.fullData.byAssignee.forEach((assigneeData: any) => {
+        // Assignee header
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: assigneeData.assignee,
+                bold: true,
+                size: 24,
+                color: '1F2937',
+              }),
+            ],
+            spacing: { before: 300, after: 150 },
+          })
+        );
+
+        // Each card for this assignee
+        assigneeData.snaps?.forEach((snap: any) => {
+          const cardRagColor = snap.rag === 'red' ? 'DC2626' :
+                              snap.rag === 'amber' ? 'D97706' : '059669';
+
+          // Card title with RAG
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${snap.cardTitle} `,
+                  bold: true,
+                  size: 22,
+                }),
+                new TextRun({
+                  text: `[${(snap.rag || 'green').toUpperCase()}]`,
+                  bold: true,
+                  size: 20,
+                  color: cardRagColor,
+                }),
+              ],
+              spacing: { before: 200, after: 100 },
+            })
+          );
+
+          // Done
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Done: ',
+                  bold: true,
+                  size: 20,
+                  color: '059669',
+                }),
+                new TextRun({
+                  text: snap.done || '-',
+                  size: 20,
+                }),
+              ],
+              spacing: { after: 50 },
+            })
+          );
+
+          // To Do
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'To Do: ',
+                  bold: true,
+                  size: 20,
+                  color: '2563EB',
+                }),
+                new TextRun({
+                  text: snap.toDo || '-',
+                  size: 20,
+                }),
+              ],
+              spacing: { after: 50 },
+            })
+          );
+
+          // Blockers
+          children.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Blockers: ',
+                  bold: true,
+                  size: 20,
+                  color: 'DC2626',
+                }),
+                new TextRun({
+                  text: snap.blockers || '-',
+                  size: 20,
+                }),
+              ],
+              spacing: { after: 150 },
+            })
+          );
+        });
+      });
+    } else {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'No card-level data available',
+              size: 22,
+              color: '6B7280',
+              italics: true,
+            }),
+          ],
+          spacing: { after: 200 },
+        })
+      );
+    }
 
     const doc = new Document({
       sections: [{ properties: {}, children }],
@@ -389,6 +452,14 @@ Assignee Level:
 
     const blob = await Packer.toBlob(doc);
     saveAs(blob, `summary-${new Date(summary.summaryDate).toISOString().split('T')[0]}.docx`);
+  };
+
+  const toggleAssignee = (summaryId: string, assigneeIdx: number) => {
+    const key = `${summaryId}-${assigneeIdx}`;
+    setExpandedAssignees(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
   const clearFilters = () => {
@@ -583,49 +654,8 @@ Assignee Level:
                   {/* Expanded Content */}
                   {isExpanded && (
                     <div className="border-t border-gray-100 p-6 bg-gray-50">
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                        {/* Done */}
-                        <div className="bg-white rounded-xl p-4 border border-gray-100">
-                          <h4 className="font-semibold text-emerald-700 mb-3 flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Done
-                          </h4>
-                          <div className="text-sm text-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
-                            {summary.done || 'Nothing completed'}
-                          </div>
-                        </div>
-
-                        {/* To Do */}
-                        <div className="bg-white rounded-xl p-4 border border-gray-100">
-                          <h4 className="font-semibold text-blue-700 mb-3 flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                            To Do
-                          </h4>
-                          <div className="text-sm text-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
-                            {summary.toDo || 'Nothing planned'}
-                          </div>
-                        </div>
-
-                        {/* Blockers */}
-                        <div className="bg-white rounded-xl p-4 border border-gray-100">
-                          <h4 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            Blockers
-                          </h4>
-                          <div className="text-sm text-gray-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
-                            {summary.blockers || 'No blockers'}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex justify-end gap-3">
+                      {/* Download Actions - At Top */}
+                      <div className="flex justify-end gap-3 mb-6">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -650,6 +680,112 @@ Assignee Level:
                           </svg>
                           Word
                         </button>
+                      </div>
+
+                      {/* Sprint Health Overview */}
+                      <div className="mb-6 bg-white rounded-xl p-4 border border-gray-100">
+                        <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          Sprint Health Overview
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="text-center p-3 bg-gray-50 rounded-lg">
+                            <p className="text-xs text-gray-500 mb-1">Day RAG</p>
+                            <div className={`inline-flex px-3 py-1 rounded-full text-sm font-semibold ${ragConfig.bg} ${ragConfig.text}`}>
+                              {(summary.ragOverview?.sprintLevel || 'green').toUpperCase()}
+                            </div>
+                          </div>
+                          <div className="text-center p-3 bg-emerald-50 rounded-lg">
+                            <p className="text-xs text-gray-500 mb-1">Green Cards</p>
+                            <p className="text-2xl font-bold text-emerald-600">{summary.ragOverview?.cardLevel?.green || 0}</p>
+                          </div>
+                          <div className="text-center p-3 bg-amber-50 rounded-lg">
+                            <p className="text-xs text-gray-500 mb-1">Amber Cards</p>
+                            <p className="text-2xl font-bold text-amber-600">{summary.ragOverview?.cardLevel?.amber || 0}</p>
+                          </div>
+                          <div className="text-center p-3 bg-red-50 rounded-lg">
+                            <p className="text-xs text-gray-500 mb-1">Red Cards</p>
+                            <p className="text-2xl font-bold text-red-600">{summary.ragOverview?.cardLevel?.red || 0}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card-Level Snaps */}
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                          Card-Level Updates
+                        </h4>
+
+                        {summary.fullData?.byAssignee?.map((assigneeData: any, idx: number) => {
+                          const assigneeKey = `${summary.id}-${idx}`;
+                          const isAssigneeExpanded = expandedAssignees[assigneeKey] !== false; // Default expanded
+
+                          return (
+                            <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 border-b border-gray-100 cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-colors flex items-center justify-between"
+                                onClick={() => toggleAssignee(summary.id, idx)}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <h5 className="font-semibold text-gray-900">{assigneeData.assignee}</h5>
+                                  <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full">
+                                    {assigneeData.snaps?.length || 0} cards
+                                  </span>
+                                </div>
+                                <svg
+                                  className={`w-5 h-5 text-gray-400 transition-transform ${isAssigneeExpanded ? 'rotate-180' : ''}`}
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </div>
+                              {isAssigneeExpanded && (
+                                <div className="divide-y divide-gray-100">
+                                  {assigneeData.snaps?.map((snap: any, snapIdx: number) => {
+                                    const snapRagConfig = getRAGConfig(snap.rag || 'green');
+                                    return (
+                                      <div key={snapIdx} className="p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                          <h6 className="font-medium text-gray-900">{snap.cardTitle}</h6>
+                                          <span className={`px-2 py-1 rounded text-xs font-semibold ${snapRagConfig.bg} ${snapRagConfig.text}`}>
+                                            {(snap.rag || 'green').toUpperCase()}
+                                          </span>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                          <div className="bg-emerald-50 rounded-lg p-3">
+                                            <p className="font-medium text-emerald-700 mb-1">Done</p>
+                                            <p className="text-gray-700 whitespace-pre-wrap">{snap.done || '-'}</p>
+                                          </div>
+                                          <div className="bg-blue-50 rounded-lg p-3">
+                                            <p className="font-medium text-blue-700 mb-1">To Do</p>
+                                            <p className="text-gray-700 whitespace-pre-wrap">{snap.toDo || '-'}</p>
+                                          </div>
+                                          <div className="bg-red-50 rounded-lg p-3">
+                                            <p className="font-medium text-red-700 mb-1">Blockers</p>
+                                            <p className="text-gray-700 whitespace-pre-wrap">{snap.blockers || '-'}</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {(!summary.fullData?.byAssignee || summary.fullData.byAssignee.length === 0) && (
+                          <div className="bg-white rounded-xl p-6 text-center text-gray-500 border border-gray-100">
+                            No card-level data available
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

@@ -134,7 +134,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       {/* Toggle Button - Edge positioned like Claude */}
       <button
         onClick={onToggle}
-        className="absolute -right-3 top-7 z-50 w-6 h-6 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors shadow-lg"
+        className="absolute -right-3 top-7 z-50 w-6 h-6 bg-slate-800 border border-indigo-700/50 rounded-full flex items-center justify-center hover:bg-indigo-800 transition-colors shadow-lg"
       >
         <svg
           className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
@@ -149,10 +149,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <div
         className={`${
           isCollapsed ? 'w-20' : 'w-72'
-        } bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 min-h-screen text-white flex flex-col shadow-2xl border-r border-gray-800/50 transition-all duration-300 ease-in-out`}
+        } bg-gradient-to-b from-slate-900 via-slate-900 to-indigo-950 min-h-screen text-white flex flex-col shadow-2xl border-r border-indigo-900/30 transition-all duration-300 ease-in-out`}
       >
         {/* Logo Section */}
-        <div className="p-4 border-b border-gray-800/50">
+        <div className="p-4 border-b border-indigo-900/30">
           <div className="flex items-center justify-between">
             <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'space-x-3'}`}>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
@@ -179,7 +179,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-3 py-3 rounded-xl transition-all duration-200 ${
                 isActive(item.path)
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
-                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                  : 'text-slate-400 hover:bg-indigo-900/30 hover:text-white'
               }`}
             >
               <div className={`flex-shrink-0 ${isActive(item.path) ? 'transform scale-110' : 'group-hover:scale-110 transition-transform'}`}>
@@ -197,9 +197,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
             {/* Tooltip for collapsed state */}
             {isCollapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-gray-700">
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-3 py-1.5 bg-slate-900 text-white text-sm font-medium rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 border border-indigo-800/50">
                 {item.name}
-                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-slate-900"></div>
               </div>
             )}
           </div>
@@ -207,11 +207,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       </nav>
 
         {/* Footer */}
-        <div className={`p-4 border-t border-gray-800/50 ${isCollapsed ? 'px-2' : ''}`}>
+        <div className={`p-4 border-t border-indigo-900/30 ${isCollapsed ? 'px-2' : ''}`}>
           <div className={`${isCollapsed ? 'flex justify-center' : 'text-center'}`}>
-            <div className={`inline-flex items-center ${isCollapsed ? 'p-2' : 'space-x-2 px-3 py-1.5'} rounded-lg bg-gray-800/50 border border-gray-700/50`}>
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              {!isCollapsed && <span className="text-xs text-gray-400 font-medium">v0.1.0 Beta</span>}
+            <div className={`inline-flex items-center ${isCollapsed ? 'p-2' : 'space-x-2 px-3 py-1.5'} rounded-lg bg-indigo-900/30 border border-indigo-800/30`}>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              {!isCollapsed && <span className="text-xs text-slate-400 font-medium">v0.1.0 Beta</span>}
             </div>
           </div>
         </div>

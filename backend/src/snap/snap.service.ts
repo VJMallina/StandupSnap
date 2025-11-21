@@ -542,10 +542,20 @@ export class SnapService {
       else if (worstRAG === SnapRAG.RED) assigneeRAG.red++;
     }
 
-    // Sprint-level RAG (based on majority or worst)
+    // Sprint-level RAG (based on which color outnumbers the other two combined)
     let sprintLevel = 'green';
-    if (cardRAG.red > 0) sprintLevel = 'red';
-    else if (cardRAG.amber > cardRAG.green) sprintLevel = 'amber';
+    if (cardRAG.red > cardRAG.green + cardRAG.amber) {
+      sprintLevel = 'red';
+    } else if (cardRAG.amber > cardRAG.green + cardRAG.red) {
+      sprintLevel = 'amber';
+    } else if (cardRAG.green > cardRAG.amber + cardRAG.red) {
+      sprintLevel = 'green';
+    } else {
+      // If no clear majority, default to the worst status present
+      if (cardRAG.red > 0) sprintLevel = 'red';
+      else if (cardRAG.amber > 0) sprintLevel = 'amber';
+      else sprintLevel = 'green';
+    }
 
     // 6. Create summary
     const summary = this.summaryRepository.create({

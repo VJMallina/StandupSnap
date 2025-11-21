@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectsApi } from '../../services/api/projects';
 import { usersApi, User } from '../../services/api/users';
+import { invitationsApi } from '../../services/api/invitations';
 import AppLayout from '../../components/AppLayout';
 
 export default function CreateProjectPage() {
@@ -21,6 +22,12 @@ export default function CreateProjectPage() {
   const [productOwners, setProductOwners] = useState<User[]>([]);
   const [pmos, setPmos] = useState<User[]>([]);
   const [checkingName, setCheckingName] = useState(false);
+
+  // Invite mode state
+  const [invitePO, setInvitePO] = useState(false);
+  const [invitePMO, setInvitePMO] = useState(false);
+  const [poEmail, setPoEmail] = useState('');
+  const [pmoEmail, setPmoEmail] = useState('');
 
   useEffect(() => {
     loadUsers();
@@ -115,18 +122,57 @@ export default function CreateProjectPage() {
       return;
     }
 
+    // Validate invite emails
+    if (invitePO && !poEmail.trim()) {
+      setErrors(prev => ({ ...prev, poEmail: 'Email is required for invitation' }));
+      return;
+    }
+    if (invitePMO && !pmoEmail.trim()) {
+      setErrors(prev => ({ ...prev, pmoEmail: 'Email is required for invitation' }));
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await projectsApi.create({
+      // Create project first
+      const project = await projectsApi.create({
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         startDate: formData.startDate,
         endDate: formData.endDate,
-        productOwnerId: formData.productOwnerId || undefined,
-        pmoId: formData.pmoId || undefined,
+        productOwnerId: invitePO ? undefined : (formData.productOwnerId || undefined),
+        pmoId: invitePMO ? undefined : (formData.pmoId || undefined),
         isActive: formData.isActive,
       });
+
+      // Send invitations if needed
+      const invitationPromises: Promise<any>[] = [];
+
+      if (invitePO && poEmail.trim()) {
+        invitationPromises.push(
+          invitationsApi.create({
+            email: poEmail.trim(),
+            assignedRole: 'product_owner',
+            projectId: project.id,
+          })
+        );
+      }
+
+      if (invitePMO && pmoEmail.trim()) {
+        invitationPromises.push(
+          invitationsApi.create({
+            email: pmoEmail.trim(),
+            assignedRole: 'pmo',
+            projectId: project.id,
+          })
+        );
+      }
+
+      if (invitationPromises.length > 0) {
+        await Promise.all(invitationPromises);
+      }
+
       navigate('/projects');
     } catch (err: any) {
       setError(err.message || 'Failed to create project');
@@ -236,37 +282,123 @@ export default function CreateProjectPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Product Owner</label>
-            <select
-              value={formData.productOwnerId}
-              onChange={(e) => setFormData({ ...formData, productOwnerId: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Not assigned</option>
-              {productOwners.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.name} ({user.email})
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-gray-500">Optional - Assign a Product Owner to this project</p>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-semibold text-gray-700">Product Owner</label>
+              <button
+                type="button"
+                onClick={() => {
+                  setInvitePO(!invitePO);
+                  if (!invitePO) {
+                    setFormData({ ...formData, productOwnerId: '' });
+                  } else {
+                    setPoEmail('');
+                  }
+                }}
+                className={`text-xs px-2 py-1 rounded ${
+                  invitePO
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {invitePO ? 'Select Existing' : 'Invite New'}
+              </button>
+            </div>
+            {invitePO ? (
+              <div>
+                <input
+                  type="email"
+                  value={poEmail}
+                  onChange={(e) => {
+                    setPoEmail(e.target.value);
+                    if (errors.poEmail) setErrors({ ...errors, poEmail: '' });
+                  }}
+                  className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.poEmail ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter email to invite"
+                />
+                {errors.poEmail && (
+                  <p className="mt-1 text-sm text-red-600">{errors.poEmail}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">An invitation will be sent to this email</p>
+              </div>
+            ) : (
+              <div>
+                <select
+                  value={formData.productOwnerId}
+                  onChange={(e) => setFormData({ ...formData, productOwnerId: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Not assigned</option>
+                  {productOwners.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} ({user.email})
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">Optional - Assign a Product Owner to this project</p>
+              </div>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">PMO</label>
-            <select
-              value={formData.pmoId}
-              onChange={(e) => setFormData({ ...formData, pmoId: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Not assigned</option>
-              {pmos.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.name} ({user.email})
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-xs text-gray-500">Optional - Assign a PMO to this project</p>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-semibold text-gray-700">PMO</label>
+              <button
+                type="button"
+                onClick={() => {
+                  setInvitePMO(!invitePMO);
+                  if (!invitePMO) {
+                    setFormData({ ...formData, pmoId: '' });
+                  } else {
+                    setPmoEmail('');
+                  }
+                }}
+                className={`text-xs px-2 py-1 rounded ${
+                  invitePMO
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {invitePMO ? 'Select Existing' : 'Invite New'}
+              </button>
+            </div>
+            {invitePMO ? (
+              <div>
+                <input
+                  type="email"
+                  value={pmoEmail}
+                  onChange={(e) => {
+                    setPmoEmail(e.target.value);
+                    if (errors.pmoEmail) setErrors({ ...errors, pmoEmail: '' });
+                  }}
+                  className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors.pmoEmail ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="Enter email to invite"
+                />
+                {errors.pmoEmail && (
+                  <p className="mt-1 text-sm text-red-600">{errors.pmoEmail}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">An invitation will be sent to this email</p>
+              </div>
+            ) : (
+              <div>
+                <select
+                  value={formData.pmoId}
+                  onChange={(e) => setFormData({ ...formData, pmoId: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Not assigned</option>
+                  {pmos.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} ({user.email})
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">Optional - Assign a PMO to this project</p>
+              </div>
+            )}
           </div>
         </div>
 

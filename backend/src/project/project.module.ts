@@ -5,11 +5,12 @@ import { ProjectController } from './project.controller';
 import { Project } from '../entities/project.entity';
 import { ProjectMember } from '../entities/project-member.entity';
 import { User } from '../entities/user.entity';
+import { Card } from '../entities/card.entity';
 import { TeamMemberModule } from '../team-member/team-member.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, ProjectMember, User]),
+    TypeOrmModule.forFeature([Project, ProjectMember, User, Card]),
     TeamMemberModule,
   ],
   controllers: [ProjectController],

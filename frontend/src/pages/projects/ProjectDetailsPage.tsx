@@ -17,6 +17,8 @@ export default function ProjectDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(true);
+  const [isTeamExpanded, setIsTeamExpanded] = useState(true);
 
   const canEdit = hasPermission(Permission.EDIT_PROJECT);
   const canDelete = hasPermission(Permission.DELETE_PROJECT);
@@ -207,7 +209,7 @@ export default function ProjectDetailsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Team Members</p>
-                <p className="text-3xl font-bold text-gray-900">{project.members?.length || 0}</p>
+                <p className="text-3xl font-bold text-gray-900">{project.teamMembers?.length || 0}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -220,9 +222,22 @@ export default function ProjectDetailsPage() {
 
         {/* Project Details Card */}
         <div className="bg-white shadow-lg rounded-xl overflow-hidden mb-6">
-          <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+          <div
+            className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-colors"
+            onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+          >
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Project Information</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-gray-900">Project Information</h2>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${isInfoExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
               <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
                 project.isActive
                   ? 'bg-green-100 text-green-800'
@@ -233,6 +248,7 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
 
+          {isInfoExpanded && (
           <div className="px-8 py-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -278,7 +294,7 @@ export default function ProjectDetailsPage() {
                 <label className="block text-sm font-semibold text-gray-500 mb-1">Product Owner</label>
                 <p className="text-lg text-gray-900">
                   {project.productOwner
-                    ? `${project.productOwner.firstName} ${project.productOwner.lastName}`
+                    ? project.productOwner.name
                     : 'Not assigned'}
                 </p>
                 {project.productOwner && (
@@ -290,7 +306,7 @@ export default function ProjectDetailsPage() {
                 <label className="block text-sm font-semibold text-gray-500 mb-1">PMO</label>
                 <p className="text-lg text-gray-900">
                   {project.pmo
-                    ? `${project.pmo.firstName} ${project.pmo.lastName}`
+                    ? project.pmo.name
                     : 'Not assigned'}
                 </p>
                 {project.pmo && (
@@ -323,6 +339,7 @@ export default function ProjectDetailsPage() {
               </div>
             </div>
           </div>
+          )}
         </div>
 
         {/* Archived Badge */}
@@ -340,39 +357,71 @@ export default function ProjectDetailsPage() {
           </div>
         )}
 
-        {/* Team Members Section (if available) */}
-        {project.members && project.members.length > 0 && (
-          <div className="bg-white shadow-lg rounded-xl overflow-hidden">
-            <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Team Members</h2>
-            </div>
-            <div className="px-8 py-6">
-              <div className="space-y-4">
-                {project.members.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold mr-3">
-                        {member.user.firstName?.charAt(0)}{member.user.lastName?.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {member.user.firstName} {member.user.lastName}
-                        </p>
-                        <p className="text-sm text-gray-600">{member.user.email}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">{member.role}</p>
-                      <p className="text-xs text-gray-500">
-                        {member.isActive ? 'Active' : 'Inactive'}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+        {/* Team Members Section */}
+        <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+          <div
+            className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-colors"
+            onClick={() => setIsTeamExpanded(!isTeamExpanded)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-gray-900">Team Members</h2>
+                <span className="text-sm text-gray-500 bg-white px-2 py-0.5 rounded-full">
+                  {project.teamMembers?.length || 0}
+                </span>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${isTeamExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
             </div>
           </div>
-        )}
+          {isTeamExpanded && (
+            <div className="px-8 py-6">
+              {project.teamMembers && project.teamMembers.length > 0 ? (
+                <div className="space-y-4">
+                  {project.teamMembers.map((member: any) => (
+                    <div key={member.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold mr-3">
+                          {member.fullName?.charAt(0) || '?'}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">{member.fullName}</p>
+                          {member.displayName && (
+                            <p className="text-xs text-gray-500">aka {member.displayName}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                          {member.designationRole}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <p>No team members assigned</p>
+                  <button
+                    onClick={() => navigate(`/projects/${id}/team`)}
+                    className="mt-3 text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Add Team Members
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Archive Confirmation Modal */}
         {showArchiveModal && (

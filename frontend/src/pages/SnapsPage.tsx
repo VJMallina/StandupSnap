@@ -330,7 +330,7 @@ export default function SnapsPage() {
 
     snaps.forEach((snap, index) => {
       const rag = getRAGLabel(snap.finalRAG || snap.suggestedRAG);
-      const assignee = snap.card?.assignee?.fullName || snap.card?.assignee?.name || snap.card?.assignee?.username || 'Unassigned';
+      const assignee = snap.card?.assignee?.fullName || snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'Unassigned';
 
       summary += `${index + 1}. ${snap.card?.title || 'Unknown Card'}\n`;
       summary += `   Assignee: ${assignee}\n`;
@@ -478,7 +478,7 @@ export default function SnapsPage() {
       const rag = snap.finalRAG || snap.suggestedRAG;
       const ragColor = rag === SnapRAG.GREEN ? '059669' : rag === SnapRAG.AMBER ? 'D97706' : rag === SnapRAG.RED ? 'DC2626' : '6B7280';
       const ragLabel = rag === SnapRAG.GREEN ? 'GREEN' : rag === SnapRAG.AMBER ? 'AMBER' : rag === SnapRAG.RED ? 'RED' : 'N/A';
-      const assignee = snap.card?.assignee?.fullName || snap.card?.assignee?.name || snap.card?.assignee?.username || 'Unassigned';
+      const assignee = snap.card?.assignee?.fullName || snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'Unassigned';
 
       // Card title with number
       children.push(
@@ -836,7 +836,7 @@ export default function SnapsPage() {
                         <div className={`w-3 h-3 rounded-full ${getRAGColor(snap.finalRAG || snap.suggestedRAG)} mr-3`}></div>
                         <div>
                           <p className="font-medium text-gray-900">{snap.card?.title || 'Unknown Card'}</p>
-                          <p className="text-sm text-gray-500">{snap.card?.assignee?.name || snap.card?.assignee?.username || 'Unassigned'}</p>
+                          <p className="text-sm text-gray-500">{snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'Unassigned'}</p>
                         </div>
                       </div>
                       <span className="text-sm text-gray-500">{getRAGLabel(snap.finalRAG || snap.suggestedRAG)}</span>
@@ -945,7 +945,7 @@ export default function SnapsPage() {
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{snap.card?.title || 'Unknown Card'}</h3>
-                          <p className="text-sm text-gray-500">{snap.card?.assignee?.name || snap.card?.assignee?.username || 'Unassigned'}</p>
+                          <p className="text-sm text-gray-500">{snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'Unassigned'}</p>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="flex items-center">

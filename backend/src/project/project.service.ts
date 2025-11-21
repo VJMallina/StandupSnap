@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { Project } from '../entities/project.entity';
 import { ProjectMember } from '../entities/project-member.entity';
 import { User } from '../entities/user.entity';
+import { Card } from '../entities/card.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { AddMemberDto } from './dto/add-member.dto';
@@ -22,6 +23,8 @@ export class ProjectService {
     private projectMemberRepository: Repository<ProjectMember>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Card)
+    private cardRepository: Repository<Card>,
   ) {}
 
   async create(createProjectDto: CreateProjectDto, creatorUserId: string): Promise<Project> {
@@ -84,22 +87,30 @@ export class ProjectService {
 
     return this.projectRepository.find({
       where,
-      relations: ['members', 'members.user', 'sprints', 'productOwner', 'pmo'],
+      relations: ['members', 'members.user', 'sprints', 'productOwner', 'pmo', 'teamMembers'],
       order: { createdAt: 'DESC' },
     });
   }
 
-  async findOne(id: string): Promise<Project> {
+  async findOne(id: string): Promise<Project & { cards?: any[] }> {
     const project = await this.projectRepository.findOne({
       where: { id },
-      relations: ['members', 'members.user', 'sprints', 'productOwner', 'pmo'],
+      relations: ['members', 'members.user', 'sprints', 'productOwner', 'pmo', 'teamMembers'],
     });
 
     if (!project) {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    return project;
+    // Get cards for this project
+    const cards = await this.cardRepository.find({
+      where: { project: { id } },
+    });
+
+    return {
+      ...project,
+      cards,
+    };
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto): Promise<Project> {
