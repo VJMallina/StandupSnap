@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
 import AppLayout from '../components/AppLayout';
 import { reportsApi } from '../services/api/reports';
 import { dashboardApi, ProjectSummary } from '../services/api/dashboard';
@@ -134,6 +136,259 @@ Assignee Level:
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadWord = async (summary: DailySummary) => {
+    const children: any[] = [];
+
+    // Title
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'Daily Standup Summary',
+            bold: true,
+            size: 48,
+            color: '2563EB',
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 400 },
+      })
+    );
+
+    // Date and Sprint
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: new Date(summary.summaryDate).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
+            bold: true,
+            size: 28,
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: `Sprint: ${summary.sprint?.name || 'Unknown'}`,
+            italics: true,
+            size: 24,
+            color: '6B7280',
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 400 },
+      })
+    );
+
+    // RAG Status
+    const ragColor = summary.ragOverview?.sprintLevel === 'red' ? 'DC2626' :
+                     summary.ragOverview?.sprintLevel === 'amber' ? 'D97706' : '059669';
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'RAG STATUS: ',
+            bold: true,
+            size: 24,
+          }),
+          new TextRun({
+            text: (summary.ragOverview?.sprintLevel || 'GREEN').toUpperCase(),
+            bold: true,
+            size: 24,
+            color: ragColor,
+          }),
+        ],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 400 },
+      })
+    );
+
+    // Done Section
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'DONE',
+            bold: true,
+            size: 28,
+            color: '059669',
+          }),
+        ],
+        spacing: { before: 300, after: 200 },
+      })
+    );
+
+    const doneItems = (summary.done || 'Nothing completed').split('\n');
+    doneItems.forEach(item => {
+      if (item.trim()) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: item.trim(),
+                size: 22,
+              }),
+            ],
+            spacing: { after: 100 },
+          })
+        );
+      }
+    });
+
+    // To Do Section
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'TO DO',
+            bold: true,
+            size: 28,
+            color: '2563EB',
+          }),
+        ],
+        spacing: { before: 300, after: 200 },
+      })
+    );
+
+    const todoItems = (summary.toDo || 'Nothing planned').split('\n');
+    todoItems.forEach(item => {
+      if (item.trim()) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: item.trim(),
+                size: 22,
+              }),
+            ],
+            spacing: { after: 100 },
+          })
+        );
+      }
+    });
+
+    // Blockers Section
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'BLOCKERS',
+            bold: true,
+            size: 28,
+            color: 'DC2626',
+          }),
+        ],
+        spacing: { before: 300, after: 200 },
+      })
+    );
+
+    const blockerItems = (summary.blockers || 'No blockers').split('\n');
+    blockerItems.forEach(item => {
+      if (item.trim()) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: item.trim(),
+                size: 22,
+              }),
+            ],
+            spacing: { after: 100 },
+          })
+        );
+      }
+    });
+
+    // RAG Overview Section
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'RAG OVERVIEW',
+            bold: true,
+            size: 28,
+            color: '7C3AED',
+          }),
+        ],
+        spacing: { before: 400, after: 200 },
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'Card Level: ',
+            bold: true,
+            size: 22,
+          }),
+          new TextRun({
+            text: `${summary.ragOverview?.cardLevel?.green || 0} Green`,
+            size: 22,
+            color: '059669',
+          }),
+          new TextRun({
+            text: ` | ${summary.ragOverview?.cardLevel?.amber || 0} Amber`,
+            size: 22,
+            color: 'D97706',
+          }),
+          new TextRun({
+            text: ` | ${summary.ragOverview?.cardLevel?.red || 0} Red`,
+            size: 22,
+            color: 'DC2626',
+          }),
+        ],
+        spacing: { after: 100 },
+      })
+    );
+
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'Assignee Level: ',
+            bold: true,
+            size: 22,
+          }),
+          new TextRun({
+            text: `${summary.ragOverview?.assigneeLevel?.green || 0} Green`,
+            size: 22,
+            color: '059669',
+          }),
+          new TextRun({
+            text: ` | ${summary.ragOverview?.assigneeLevel?.amber || 0} Amber`,
+            size: 22,
+            color: 'D97706',
+          }),
+          new TextRun({
+            text: ` | ${summary.ragOverview?.assigneeLevel?.red || 0} Red`,
+            size: 22,
+            color: 'DC2626',
+          }),
+        ],
+        spacing: { after: 100 },
+      })
+    );
+
+    const doc = new Document({
+      sections: [{ properties: {}, children }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `summary-${new Date(summary.summaryDate).toISOString().split('T')[0]}.docx`);
   };
 
   const clearFilters = () => {
@@ -370,18 +625,30 @@ Assignee Level:
                       </div>
 
                       {/* Actions */}
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-3">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDownload(summary);
+                          }}
+                          className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all shadow-sm"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          TXT
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownloadWord(summary);
                           }}
                           className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-sm"
                         >
                           <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                           </svg>
-                          Download Report
+                          Word
                         </button>
                       </div>
                     </div>

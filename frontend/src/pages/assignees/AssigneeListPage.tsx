@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppLayout from '../../components/AppLayout';
 import { assigneesApi, AssigneeListItem } from '../../services/api/assignees';
+import { projectsApi } from '../../services/api/projects';
 import { sprintsApi } from '../../services/api/sprints';
+import { Project } from '../../types/project';
 import { Sprint } from '../../types/sprint';
 
 export default function AssigneeListPage() {
@@ -10,7 +12,11 @@ export default function AssigneeListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [assignees, setAssignees] = useState<AssigneeListItem[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(
+    searchParams.get('projectId') || '',
+  );
   const [selectedSprintId, setSelectedSprintId] = useState<string>(
     searchParams.get('sprintId') || '',
   );
@@ -18,25 +24,57 @@ export default function AssigneeListPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadSprints();
+    loadProjects();
   }, []);
 
   useEffect(() => {
-    // Load assignees even without sprint selection (will show all)
-    loadAssignees();
-  }, [selectedSprintId]);
+    if (selectedProjectId) {
+      loadSprints();
+    } else {
+      setSprints([]);
+      setSelectedSprintId('');
+    }
+  }, [selectedProjectId]);
+
+  useEffect(() => {
+    // Only load assignees when a project is selected
+    if (selectedProjectId) {
+      loadAssignees();
+    } else {
+      setAssignees([]);
+      setLoading(false);
+    }
+  }, [selectedSprintId, selectedProjectId]);
+
+  const loadProjects = async () => {
+    try {
+      const data = await projectsApi.getAll(false);
+      setProjects(data);
+
+      // Auto-select first project if none selected
+      if (!selectedProjectId && data.length > 0) {
+        setSelectedProjectId(data[0].id);
+      } else if (!selectedProjectId) {
+        setLoading(false);
+      }
+    } catch (err: any) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   const loadSprints = async () => {
     try {
-      const data = await sprintsApi.getAll();
+      const data = await sprintsApi.getAll({ projectId: selectedProjectId });
       // Filter active sprints
       const activeSprints = data.filter((s) => s.status === 'active');
       setSprints(activeSprints);
 
       // Auto-select first active sprint if none selected
-      if (!selectedSprintId && activeSprints.length > 0) {
+      if (activeSprints.length > 0) {
         setSelectedSprintId(activeSprints[0].id);
-      } else if (!selectedSprintId) {
+      } else {
+        setSelectedSprintId('');
         // No active sprints, but still load assignees
         setLoading(false);
       }
@@ -52,6 +90,7 @@ export default function AssigneeListPage() {
       setError(null);
 
       const data = await assigneesApi.getAll({
+        projectId: selectedProjectId || undefined,
         sprintId: selectedSprintId || undefined,
       });
 
@@ -64,9 +103,22 @@ export default function AssigneeListPage() {
     }
   };
 
+  const handleProjectChange = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setSelectedSprintId('');
+    if (projectId) {
+      setSearchParams({ projectId });
+    } else {
+      setSearchParams({});
+    }
+  };
+
   const handleSprintChange = (sprintId: string) => {
     setSelectedSprintId(sprintId);
-    setSearchParams({ sprintId });
+    const params: Record<string, string> = {};
+    if (selectedProjectId) params.projectId = selectedProjectId;
+    if (sprintId) params.sprintId = sprintId;
+    setSearchParams(params);
   };
 
   const getRAGBadge = (rag: string | null) => {
@@ -142,26 +194,55 @@ export default function AssigneeListPage() {
             </div>
           </div>
 
-          {/* Sprint Selector */}
-          {sprints.length > 0 && (
-            <div className="bg-white p-4 rounded-lg shadow mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Sprint:
-              </label>
-              <select
-                value={selectedSprintId}
-                onChange={(e) => handleSprintChange(e.target.value)}
-                className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a sprint...</option>
-                {sprints.map((sprint) => (
-                  <option key={sprint.id} value={sprint.id}>
-                    {sprint.name}
+          {/* Filters */}
+          <div className="bg-white p-4 rounded-lg shadow mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Project Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Project
+                </label>
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => handleProjectChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select a project...</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Sprint Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sprint
+                </label>
+                <select
+                  value={selectedSprintId}
+                  onChange={(e) => handleSprintChange(e.target.value)}
+                  disabled={!selectedProjectId}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">
+                    {!selectedProjectId
+                      ? 'Select a project first'
+                      : sprints.length === 0
+                        ? 'No active sprints'
+                        : 'Select a sprint...'}
                   </option>
-                ))}
-              </select>
+                  {sprints.map((sprint) => (
+                    <option key={sprint.id} value={sprint.id}>
+                      {sprint.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         {error && (
@@ -200,11 +281,12 @@ export default function AssigneeListPage() {
                 <div
                   key={assignee.id}
                   className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 overflow-hidden cursor-pointer"
-                  onClick={() =>
-                    navigate(
-                      `/assignees/${assignee.id}?sprintId=${selectedSprintId}`,
-                    )
-                  }
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    if (selectedProjectId) params.set('projectId', selectedProjectId);
+                    if (selectedSprintId) params.set('sprintId', selectedSprintId);
+                    navigate(`/assignees/${assignee.id}?${params.toString()}`);
+                  }}
                 >
                   <div className="p-6">
                     {/* Avatar/Initials */}

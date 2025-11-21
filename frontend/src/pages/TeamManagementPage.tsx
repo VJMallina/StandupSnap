@@ -38,8 +38,10 @@ export default function TeamManagementPage() {
     }
   };
 
-  const loadTeamMembers = async () => {
-    setLoading(true);
+  const loadTeamMembers = async (showLoading = true) => {
+    if (showLoading) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -52,8 +54,8 @@ export default function TeamManagementPage() {
     }
   };
 
-  const handleAddSuccess = () => {
-    loadTeamMembers();
+  const handleAddSuccess = async () => {
+    await loadTeamMembers(false);
   };
 
   const handleRemoveMember = (member: TeamMember) => {
@@ -65,7 +67,8 @@ export default function TeamManagementPage() {
     if (!selectedMember) return;
     await teamMembersApi.removeFromProject(projectId!, selectedMember.id);
     setSelectedMember(null);
-    loadTeamMembers();
+    setIsRemoveModalOpen(false);
+    await loadTeamMembers(false);
   };
 
   if (loading) {

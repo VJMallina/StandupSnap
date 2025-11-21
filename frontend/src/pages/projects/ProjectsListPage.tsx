@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { projectsApi } from '../../services/api/projects';
 import { Project } from '../../types/project';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -18,22 +18,27 @@ export default function ProjectsListPage() {
     projectName: ''
   });
   const navigate = useNavigate();
+  const location = useLocation();
   const { hasPermission } = usePermissions();
 
   const canCreate = hasPermission(Permission.CREATE_PROJECT);
   const canEdit = hasPermission(Permission.EDIT_PROJECT);
   const canDelete = hasPermission(Permission.DELETE_PROJECT);
 
+  // Reload when page loads or when navigating back
   useEffect(() => {
     loadProjects();
-  }, [activeTab]);
+  }, [location.key]);
 
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const isArchived = activeTab === 'archived';
-      const data = await projectsApi.getAll(isArchived);
-      setProjects(data);
+      // Load all projects (both active and archived)
+      const [activeData, archivedData] = await Promise.all([
+        projectsApi.getAll(false),
+        projectsApi.getAll(true)
+      ]);
+      setProjects([...activeData, ...archivedData]);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -41,8 +46,10 @@ export default function ProjectsListPage() {
     }
   };
 
-  // Use projects directly instead of filtering
-  const filteredProjects = projects;
+  // Filter projects based on active tab
+  const filteredProjects = projects.filter(p =>
+    activeTab === 'archived' ? p.isArchived : !p.isArchived
+  );
 
   const handleDelete = async () => {
     try {

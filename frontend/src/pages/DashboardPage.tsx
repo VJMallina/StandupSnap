@@ -450,11 +450,7 @@ export default function DashboardPage() {
                     </div>
 
                     <button
-                      onClick={() =>
-                        navigate(
-                          `/snaps/sprint/${dashboardData.sprintHealth?.sprintId}`,
-                        )
-                      }
+                      onClick={() => navigate('/snaps')}
                       className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
                     >
                       Go to Snap Management
@@ -478,11 +474,7 @@ export default function DashboardPage() {
                       <h2 className="text-lg font-semibold text-gray-900">Daily Standup Summary</h2>
                     </div>
                     <button
-                      onClick={() =>
-                        navigate(
-                          `/snaps/sprint/${dashboardData.sprintHealth?.sprintId}`,
-                        )
-                      }
+                      onClick={() => navigate('/snaps')}
                       className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
                     >
                       View Full Summary

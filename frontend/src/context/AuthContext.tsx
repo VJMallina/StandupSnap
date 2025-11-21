@@ -73,7 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data: AuthResponse = await response.json();
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
-    setUser(data.user);
+
+    // Map roles to strings (role names) like in initAuth
+    setUser({
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      name: data.user.name,
+      roles: data.user.roles?.map((r: any) => typeof r === 'string' ? r : r.name) || [],
+    });
   };
 
   const register = async (registerData: RegisterData) => {
@@ -93,7 +101,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data: AuthResponse = await response.json();
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
-    setUser(data.user);
+
+    // Map roles to strings (role names) like in initAuth
+    setUser({
+      id: data.user.id,
+      username: data.user.username,
+      email: data.user.email,
+      name: data.user.name,
+      roles: data.user.roles?.map((r: any) => typeof r === 'string' ? r : r.name) || [],
+    });
   };
 
   const logout = async () => {

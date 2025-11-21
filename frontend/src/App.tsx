@@ -17,7 +17,6 @@ import TeamPage from './pages/TeamPage';
 import TeamManagementPage from './pages/TeamManagementPage';
 import ProfilePage from './pages/ProfilePage';
 import SnapsPage from './pages/SnapsPage';
-import DailySnapsPage from './pages/snaps/DailySnapsPage';
 import AssigneeListPage from './pages/assignees/AssigneeListPage';
 import AssigneeDetailsPage from './pages/assignees/AssigneeDetailsPage';
 import ReportsPage from './pages/ReportsPage';
@@ -152,11 +151,7 @@ function App() {
           />
           <Route
             path="/snaps/sprint/:sprintId"
-            element={
-              <ProtectedRoute>
-                <DailySnapsPage />
-              </ProtectedRoute>
-            }
+            element={<Navigate to="/snaps" replace />}
           />
           <Route
             path="/assignees"

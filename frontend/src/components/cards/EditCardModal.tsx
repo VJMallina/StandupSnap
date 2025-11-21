@@ -35,7 +35,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
 
   const loadSprints = async () => {
     try {
-      const data = await sprintsApi.getAll(card.project.id);
+      const data = await sprintsApi.getAll({ projectId: card.project.id });
       // Filter out closed sprints (except current sprint)
       const availableSprints = data.filter(s => !s.isClosed || s.id === card.sprint.id);
       setSprints(availableSprints);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { projectsApi } from '../../services/api/projects';
 import { Project } from '../../types/project';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -10,6 +10,7 @@ import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { hasPermission } = usePermissions();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,11 +21,12 @@ export default function ProjectDetailsPage() {
   const canEdit = hasPermission(Permission.EDIT_PROJECT);
   const canDelete = hasPermission(Permission.DELETE_PROJECT);
 
+  // Reload project when id changes or when navigating back (location.key changes)
   useEffect(() => {
     if (id) {
       loadProject();
     }
-  }, [id]);
+  }, [id, location.key]);
 
   const loadProject = async () => {
     try {
@@ -164,7 +166,10 @@ export default function ProjectDetailsPage() {
 
         {/* Project Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-blue-500">
+          <div
+            onClick={() => navigate(`/sprints?projectId=${id}`)}
+            className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-blue-500 cursor-pointer hover:shadow-xl transition-shadow"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Total Sprints</p>
@@ -178,12 +183,14 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-green-500">
+          <div
+            onClick={() => navigate(`/cards?projectId=${id}`)}
+            className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-green-500 cursor-pointer hover:shadow-xl transition-shadow"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Total Cards</p>
-                <p className="text-3xl font-bold text-gray-900">0</p>
-                <p className="text-xs text-gray-500 mt-1">Coming soon</p>
+                <p className="text-3xl font-bold text-gray-900">{project.cards?.length || 0}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -193,7 +200,10 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
 
-          <div className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-purple-500">
+          <div
+            onClick={() => navigate(`/projects/${id}/team`)}
+            className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-purple-500 cursor-pointer hover:shadow-xl transition-shadow"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Team Members</p>

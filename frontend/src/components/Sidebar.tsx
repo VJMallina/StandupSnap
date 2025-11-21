@@ -130,46 +130,45 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   };
 
   return (
-    <div
-      className={`${
-        isCollapsed ? 'w-20' : 'w-72'
-      } bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 min-h-screen text-white flex flex-col shadow-2xl border-r border-gray-800/50 transition-all duration-300 ease-in-out`}
-    >
-      {/* Logo Section */}
-      <div className="p-4 border-b border-gray-800/50">
-        <div className="flex items-center justify-between">
-          <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'space-x-3'}`}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            {!isCollapsed && (
-              <div className="overflow-hidden">
-                <h1 className="text-xl font-black text-white tracking-tight whitespace-nowrap">StandupSnap</h1>
-                <p className="text-xs text-gray-400 font-medium whitespace-nowrap">AI-Powered Manager</p>
+    <div className="relative">
+      {/* Toggle Button - Edge positioned like Claude */}
+      <button
+        onClick={onToggle}
+        className="absolute -right-3 top-7 z-50 w-6 h-6 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors shadow-lg"
+      >
+        <svg
+          className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div
+        className={`${
+          isCollapsed ? 'w-20' : 'w-72'
+        } bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 min-h-screen text-white flex flex-col shadow-2xl border-r border-gray-800/50 transition-all duration-300 ease-in-out`}
+      >
+        {/* Logo Section */}
+        <div className="p-4 border-b border-gray-800/50">
+          <div className="flex items-center justify-between">
+            <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'space-x-3'}`}>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-            )}
+              {!isCollapsed && (
+                <div className="overflow-hidden">
+                  <h1 className="text-xl font-black text-white tracking-tight whitespace-nowrap">StandupSnap</h1>
+                  <p className="text-xs text-gray-400 font-medium whitespace-nowrap">AI-Powered Manager</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Toggle Button */}
-      <div className="px-3 py-2">
-        <button
-          onClick={onToggle}
-          className="w-full flex items-center justify-center p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors group"
-        >
-          <svg
-            className={`w-5 h-5 text-gray-400 group-hover:text-white transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
-        </button>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -207,12 +206,13 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Footer */}
-      <div className={`p-4 border-t border-gray-800/50 ${isCollapsed ? 'px-2' : ''}`}>
-        <div className={`${isCollapsed ? 'flex justify-center' : 'text-center'}`}>
-          <div className={`inline-flex items-center ${isCollapsed ? 'p-2' : 'space-x-2 px-3 py-1.5'} rounded-lg bg-gray-800/50 border border-gray-700/50`}>
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            {!isCollapsed && <span className="text-xs text-gray-400 font-medium">v0.1.0 Beta</span>}
+        {/* Footer */}
+        <div className={`p-4 border-t border-gray-800/50 ${isCollapsed ? 'px-2' : ''}`}>
+          <div className={`${isCollapsed ? 'flex justify-center' : 'text-center'}`}>
+            <div className={`inline-flex items-center ${isCollapsed ? 'p-2' : 'space-x-2 px-3 py-1.5'} rounded-lg bg-gray-800/50 border border-gray-700/50`}>
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              {!isCollapsed && <span className="text-xs text-gray-400 font-medium">v0.1.0 Beta</span>}
+            </div>
           </div>
         </div>
       </div>

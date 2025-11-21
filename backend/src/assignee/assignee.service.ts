@@ -52,11 +52,22 @@ export class AssigneeService {
     projectId?: string,
     sprintId?: string,
   ): Promise<AssigneeListItem[]> {
-    // Get all team members
-    // Note: For now, we get all team members. Project filtering can be added later.
-    const teamMembers = await this.teamMemberRepository.find({
-      relations: ['projects'],
-    });
+    // Get team members - filter by project if provided
+    let teamMembers: TeamMember[];
+
+    if (projectId) {
+      // Get team members assigned to this project
+      teamMembers = await this.teamMemberRepository
+        .createQueryBuilder('tm')
+        .innerJoin('tm.projects', 'project')
+        .where('project.id = :projectId', { projectId })
+        .getMany();
+    } else {
+      // Get all team members
+      teamMembers = await this.teamMemberRepository.find({
+        relations: ['projects'],
+      });
+    }
 
     // For each team member, calculate stats
     const result: AssigneeListItem[] = [];
@@ -66,6 +77,11 @@ export class AssigneeService {
       const cardsQuery = this.cardRepository
         .createQueryBuilder('card')
         .where('card.assignee_id = :assigneeId', { assigneeId: tm.id });
+
+      // Filter by project if provided
+      if (projectId) {
+        cardsQuery.andWhere('card.project_id = :projectId', { projectId });
+      }
 
       // Filter by sprint if provided (active sprint)
       if (sprintId) {

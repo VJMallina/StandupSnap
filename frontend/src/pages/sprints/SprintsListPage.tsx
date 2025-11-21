@@ -36,11 +36,11 @@ export default function SprintsListPage() {
   const loadSprints = async () => {
     try {
       setLoading(true);
-      const data = await sprintsApi.getAll(
-        selectedProjectId || undefined,
-        selectedStatus || undefined,
-        searchQuery || undefined
-      );
+      const data = await sprintsApi.getAll({
+        projectId: selectedProjectId || undefined,
+        status: selectedStatus || undefined,
+        search: searchQuery || undefined
+      });
       setSprints(data);
     } catch (err: any) {
       setError(err.message);

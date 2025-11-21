@@ -66,7 +66,7 @@ export default function CardsListPage() {
 
   const loadSprints = async (projectId: string) => {
     try {
-      const data = await sprintsApi.getAll(projectId);
+      const data = await sprintsApi.getAll({ projectId });
       setSprints(data);
     } catch (err: any) {
       console.error('Failed to load sprints:', err);
@@ -85,15 +85,15 @@ export default function CardsListPage() {
   const loadCards = async () => {
     try {
       setLoading(true);
-      const data = await cardsApi.getAll(
-        selectedProjectId || undefined,
-        selectedSprintId || undefined,
-        selectedAssigneeId || undefined,
-        selectedRAG || undefined,
-        selectedStatus || undefined,
-        selectedPriority || undefined,
-        searchQuery || undefined,
-      );
+      const data = await cardsApi.getAll({
+        projectId: selectedProjectId || undefined,
+        sprintId: selectedSprintId || undefined,
+        assigneeId: selectedAssigneeId || undefined,
+        ragStatus: selectedRAG || undefined,
+        status: selectedStatus || undefined,
+        priority: selectedPriority || undefined,
+        search: searchQuery || undefined,
+      });
       setCards(data);
     } catch (err: any) {
       setError(err.message);

@@ -60,11 +60,10 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
 
     try {
       await teamMembersApi.addToProject(projectId, selectedMemberIds);
-      onSuccess();
+      await onSuccess();
       handleClose();
     } catch (err: any) {
       setError(err.message || 'Failed to add team members');
-    } finally {
       setLoading(false);
     }
   };
@@ -81,11 +80,10 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
     try {
       const newMember = await teamMembersApi.create(formData);
       await teamMembersApi.addToProject(projectId, [newMember.id]);
-      onSuccess();
+      await onSuccess();
       handleClose();
     } catch (err: any) {
       setError(err.message || 'Failed to create team member');
-    } finally {
       setLoading(false);
     }
   };

@@ -249,15 +249,19 @@ export class SprintService {
    * M6-UC02 & M6-UC07: Find all sprints with filtering and search
    */
   async findAll(
-    projectId: string,
+    projectId?: string,
     status?: SprintStatus,
     search?: string,
   ): Promise<Sprint[]> {
     const queryBuilder = this.sprintRepository
       .createQueryBuilder('sprint')
       .leftJoinAndSelect('sprint.project', 'project')
-      .where('sprint.project.id = :projectId', { projectId })
       .orderBy('sprint.startDate', 'ASC');
+
+    // Filter by project if provided
+    if (projectId) {
+      queryBuilder.andWhere('sprint.project.id = :projectId', { projectId });
+    }
 
     // Filter by status
     if (status) {

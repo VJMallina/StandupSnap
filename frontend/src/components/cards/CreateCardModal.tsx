@@ -36,7 +36,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
 
   const loadSprints = async () => {
     try {
-      const data = await sprintsApi.getAll(projectId);
+      const data = await sprintsApi.getAll({ projectId });
       // Filter out closed sprints
       const openSprints = data.filter(s => !s.isClosed);
       setSprints(openSprints);
