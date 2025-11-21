@@ -18,13 +18,19 @@ const getAuthHeaders = () => {
   };
 };
 
+interface GetSprintsOptions {
+  projectId?: string;
+  status?: SprintStatus;
+  search?: string;
+}
+
 export const sprintsApi = {
   // M6-UC02 & M6-UC07: Get all sprints with filtering and search
-  getAll: async (projectId?: string, status?: SprintStatus, search?: string): Promise<Sprint[]> => {
+  getAll: async (options?: GetSprintsOptions): Promise<Sprint[]> => {
     const params = new URLSearchParams();
-    if (projectId) params.append('projectId', projectId);
-    if (status) params.append('status', status);
-    if (search) params.append('search', search);
+    if (options?.projectId) params.append('projectId', options.projectId);
+    if (options?.status) params.append('status', options.status);
+    if (options?.search) params.append('search', options.search);
 
     const url = `${API_URL}/sprints${params.toString() ? `?${params.toString()}` : ''}`;
 

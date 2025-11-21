@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, In } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 import { Snap, SnapRAG } from '../entities/snap.entity';
 import { Card, CardStatus, CardRAG } from '../entities/card.entity';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
@@ -134,8 +135,7 @@ export class SnapService {
       // 10. Auto-transition card to IN_PROGRESS on first snap (if NOT_STARTED)
       if (card.status === CardStatus.NOT_STARTED) {
         console.log('[SnapService.create] Transitioning card to IN_PROGRESS');
-        card.status = CardStatus.IN_PROGRESS;
-        await this.cardRepository.save(card);
+        await this.cardRepository.update(card.id, { status: CardStatus.IN_PROGRESS });
       }
 
       // 11. Update card RAG status based on snap
@@ -351,14 +351,16 @@ export class SnapService {
       return [];
     }
 
-    return this.snapRepository.find({
-      where: {
-        cardId: cardIds.length === 1 ? cardIds[0] : In(cardIds),
-        snapDate: new Date(date),
-      },
-      relations: ['card', 'createdBy', 'card.assignee'],
-      order: { createdAt: 'ASC' },
-    });
+    // Use query builder to avoid date comparison issues
+    return this.snapRepository
+      .createQueryBuilder('snap')
+      .leftJoinAndSelect('snap.card', 'card')
+      .leftJoinAndSelect('snap.createdBy', 'createdBy')
+      .leftJoinAndSelect('card.assignee', 'assignee')
+      .where('snap.card_id IN (:...cardIds)', { cardIds })
+      .andWhere('snap.snapDate = :date', { date })
+      .orderBy('snap.createdAt', 'ASC')
+      .getMany();
   }
 
   /**
@@ -382,9 +384,11 @@ export class SnapService {
     }
 
     // 3. Check if already locked
-    const existingLock = await this.lockRepository.findOne({
-      where: { sprintId, lockDate: new Date(lockDate) },
-    });
+    const existingLock = await this.lockRepository
+      .createQueryBuilder('lock')
+      .where('lock.sprintId = :sprintId', { sprintId })
+      .andWhere('lock.lockDate = :lockDate', { lockDate })
+      .getOne();
 
     if (existingLock) {
       throw new BadRequestException('Daily snaps for this date are already locked');
@@ -426,9 +430,11 @@ export class SnapService {
     }
 
     // 2. Check if already locked
-    const existingLock = await this.lockRepository.findOne({
-      where: { sprintId, lockDate: new Date(lockDate) },
-    });
+    const existingLock = await this.lockRepository
+      .createQueryBuilder('lock')
+      .where('lock.sprintId = :sprintId', { sprintId })
+      .andWhere('lock.lockDate = :lockDate', { lockDate })
+      .getOne();
 
     if (existingLock) {
       return; // Already locked
@@ -465,9 +471,11 @@ export class SnapService {
    */
   async generateDailySummary(sprintId: string, date: string): Promise<DailySummary> {
     // 1. Check if already generated
-    const existing = await this.summaryRepository.findOne({
-      where: { sprintId, summaryDate: new Date(date) },
-    });
+    const existing = await this.summaryRepository
+      .createQueryBuilder('summary')
+      .where('summary.sprintId = :sprintId', { sprintId })
+      .andWhere('summary.summaryDate = :date', { date })
+      .getOne();
 
     if (existing) {
       return existing; // Already generated
@@ -572,10 +580,12 @@ export class SnapService {
    * Get daily summary for a sprint and date
    */
   async getDailySummary(sprintId: string, date: string): Promise<DailySummary> {
-    const summary = await this.summaryRepository.findOne({
-      where: { sprintId, summaryDate: new Date(date) },
-      relations: ['sprint'],
-    });
+    const summary = await this.summaryRepository
+      .createQueryBuilder('summary')
+      .leftJoinAndSelect('summary.sprint', 'sprint')
+      .where('summary.sprintId = :sprintId', { sprintId })
+      .andWhere('summary.summaryDate = :date', { date })
+      .getOne();
 
     if (!summary) {
       throw new NotFoundException('Daily summary not found for this date');
@@ -585,12 +595,45 @@ export class SnapService {
   }
 
   /**
+   * Get all summaries for a project with optional filters
+   */
+  async getSummariesByProject(
+    projectId: string,
+    sprintId?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<DailySummary[]> {
+    const query = this.summaryRepository
+      .createQueryBuilder('summary')
+      .leftJoinAndSelect('summary.sprint', 'sprint')
+      .where('sprint.project_id = :projectId', { projectId });
+
+    if (sprintId) {
+      query.andWhere('summary.sprintId = :sprintId', { sprintId });
+    }
+
+    if (startDate) {
+      query.andWhere('summary.summaryDate >= :startDate', { startDate });
+    }
+
+    if (endDate) {
+      query.andWhere('summary.summaryDate <= :endDate', { endDate });
+    }
+
+    return query
+      .orderBy('summary.summaryDate', 'DESC')
+      .getMany();
+  }
+
+  /**
    * Check if a specific date is locked for a sprint
    */
   async isDayLocked(sprintId: string, date: string): Promise<boolean> {
-    const lock = await this.lockRepository.findOne({
-      where: { sprintId, lockDate: new Date(date) },
-    });
+    const lock = await this.lockRepository
+      .createQueryBuilder('lock')
+      .where('lock.sprintId = :sprintId', { sprintId })
+      .andWhere('lock.lockDate = :date', { date })
+      .getOne();
 
     return !!lock;
   }
@@ -600,80 +643,113 @@ export class SnapService {
    */
   private async parseSnapWithAI(rawInput: string, card: Card): Promise<ParsedSnapData> {
     try {
-      const prompt = `You are an AI assistant helping to parse daily standup updates for agile project management.
+      const prompt = `Parse this standup update into JSON format.
 
-Card Information:
-- Title: ${card.title}
-- Description: ${card.description || 'N/A'}
-- Estimated Time: ${card.estimatedTime} hours
-- Current Status: ${card.status}
+Card: ${card.title}
+Update: ${rawInput}
 
-Standup Update (Raw Input):
-${rawInput}
+Return ONLY this JSON structure:
+{"done":"completed work","toDo":"next tasks","blockers":"issues or empty string","suggestedRAG":"green or amber or red"}
 
-Please analyze this update and extract the following in JSON format:
-{
-  "done": "What work was completed (be concise)",
-  "toDo": "What work is planned next (be concise)",
-  "blockers": "Any issues, blockers, or dependencies (empty string if none)",
-  "suggestedRAG": "green|amber|red"
-}
+Rules:
+- done: What was finished/completed
+- toDo: What will be done next
+- blockers: Problems or "" if none
+- suggestedRAG: green=on track, amber=minor issues, red=major problems`;
 
-RAG Status Guidelines:
-- GREEN: On track, making good progress, no blockers, aligned with ET
-- AMBER: Minor concerns, slight delays, manageable blockers, might need attention
-- RED: Major issues, significant blockers, way behind schedule, critical attention needed
+      console.log('[SnapService.parseSnapWithAI] Calling Ollama at:', this.ollamaUrl);
 
-Return ONLY valid JSON, no additional text.`;
-
-      console.log('[SnapService.parseSnapWithAI] Calling Ollama API...');
-
-      // Use axios for HTTP requests (Node.js compatible)
-      const axios = require('axios');
-
-      const response = await axios.post(`${this.ollamaUrl}/api/generate`, {
-        model: this.ollamaModel,
-        prompt: prompt,
-        stream: false,
-        options: {
-          temperature: 0.1, // Lower temperature for more consistent JSON output
+      const response = await axios.post(
+        `${this.ollamaUrl}/api/generate`,
+        {
+          model: this.ollamaModel,
+          prompt: prompt,
+          stream: false,
+          options: {
+            temperature: 0.1,
+            num_predict: 500,
+          },
         },
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 30000, // 30 second timeout
-      });
+        {
+          timeout: 60000,
+        }
+      );
 
-      const content = response.data.response;
-
-      console.log('[SnapService.parseSnapWithAI] Ollama response received');
+      const content = response.data?.response || '';
+      console.log('[SnapService.parseSnapWithAI] Raw response:', content);
 
       // Extract JSON from response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      const jsonMatch = content.match(/\{[\s\S]*?\}/);
       if (!jsonMatch) {
-        console.warn('[SnapService.parseSnapWithAI] No JSON found in response, using fallback');
-        throw new Error('No JSON found in AI response');
+        console.warn('[SnapService.parseSnapWithAI] No JSON found, attempting manual parse');
+        // Try to extract content manually
+        return this.manualParse(rawInput);
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
+      console.log('[SnapService.parseSnapWithAI] Parsed:', parsed);
+
+      // Validate and map RAG status
+      let rag = SnapRAG.AMBER;
+      if (parsed.suggestedRAG) {
+        const ragLower = parsed.suggestedRAG.toLowerCase();
+        if (ragLower === 'green') rag = SnapRAG.GREEN;
+        else if (ragLower === 'red') rag = SnapRAG.RED;
+        else rag = SnapRAG.AMBER;
+      }
 
       return {
         done: parsed.done || '',
-        toDo: parsed.toDo || '',
+        toDo: parsed.toDo || parsed.todo || '',
         blockers: parsed.blockers || '',
-        suggestedRAG: parsed.suggestedRAG as SnapRAG || SnapRAG.AMBER,
+        suggestedRAG: rag,
       };
-    } catch (error) {
-      console.error('[SnapService.parseSnapWithAI] AI parsing error:', error);
-      // Fallback to simple parsing
-      return {
-        done: rawInput,
-        toDo: '',
-        blockers: '',
-        suggestedRAG: SnapRAG.AMBER,
-      };
+    } catch (error: any) {
+      console.error('[SnapService.parseSnapWithAI] Error:', error.message);
+      if (error.code === 'ECONNREFUSED') {
+        console.error('[SnapService.parseSnapWithAI] Cannot connect to Ollama at', this.ollamaUrl);
+      }
+      // Fallback to manual parsing
+      return this.manualParse(rawInput);
     }
+  }
+
+  /**
+   * Manual parsing fallback when AI fails
+   */
+  private manualParse(rawInput: string): ParsedSnapData {
+    const lower = rawInput.toLowerCase();
+
+    // Simple keyword-based parsing
+    let done = '';
+    let toDo = '';
+    let blockers = '';
+
+    // Look for common patterns
+    if (lower.includes('completed') || lower.includes('finished') || lower.includes('done')) {
+      done = rawInput;
+    }
+    if (lower.includes('working on') || lower.includes('next') || lower.includes('will') || lower.includes('tomorrow')) {
+      toDo = rawInput;
+    }
+    if (lower.includes('blocked') || lower.includes('waiting') || lower.includes('issue') || lower.includes('problem')) {
+      blockers = rawInput;
+    }
+
+    // If no patterns matched, put in done
+    if (!done && !toDo && !blockers) {
+      done = rawInput;
+    }
+
+    // Determine RAG based on keywords
+    let rag = SnapRAG.GREEN;
+    if (lower.includes('blocked') || lower.includes('critical') || lower.includes('stuck')) {
+      rag = SnapRAG.RED;
+    } else if (lower.includes('issue') || lower.includes('delay') || lower.includes('waiting')) {
+      rag = SnapRAG.AMBER;
+    }
+
+    return { done, toDo, blockers, suggestedRAG: rag };
   }
 
   /**
@@ -681,12 +757,13 @@ Return ONLY valid JSON, no additional text.`;
    * Logic: Analyze snap frequency, content, and RAG trend
    */
   private async updateCardRAG(cardId: string): Promise<void> {
-    const card = await this.cardRepository.findOne({
-      where: { id: cardId },
-      relations: ['snaps', 'sprint'],
+    // Get snaps separately to avoid cascade issues
+    const snaps = await this.snapRepository.find({
+      where: { cardId },
+      order: { snapDate: 'DESC', createdAt: 'DESC' },
     });
 
-    if (!card || card.snaps.length === 0) {
+    if (snaps.length === 0) {
       return; // No snaps yet
     }
 
@@ -694,33 +771,32 @@ Return ONLY valid JSON, no additional text.`;
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentSnaps = card.snaps.filter(
+    const recentSnaps = snaps.filter(
       (s) => new Date(s.snapDate) >= sevenDaysAgo,
     );
 
+    let newRAG: CardRAG;
+
     if (recentSnaps.length === 0) {
-      card.ragStatus = CardRAG.RED; // No recent updates
-      await this.cardRepository.save(card);
-      return;
-    }
-
-    // Calculate RAG based on latest snap's finalRAG
-    const latestSnap = recentSnaps.sort(
-      (a, b) => new Date(b.snapDate).getTime() - new Date(a.snapDate).getTime(),
-    )[0];
-
-    // Map SnapRAG to CardRAG
-    if (latestSnap.finalRAG === SnapRAG.GREEN) {
-      card.ragStatus = CardRAG.GREEN;
-    } else if (latestSnap.finalRAG === SnapRAG.AMBER) {
-      card.ragStatus = CardRAG.AMBER;
-    } else if (latestSnap.finalRAG === SnapRAG.RED) {
-      card.ragStatus = CardRAG.RED;
+      newRAG = CardRAG.RED; // No recent updates
     } else {
-      card.ragStatus = CardRAG.AMBER; // Default
+      // Calculate RAG based on latest snap's finalRAG
+      const latestSnap = recentSnaps[0];
+
+      // Map SnapRAG to CardRAG
+      if (latestSnap.finalRAG === SnapRAG.GREEN) {
+        newRAG = CardRAG.GREEN;
+      } else if (latestSnap.finalRAG === SnapRAG.AMBER) {
+        newRAG = CardRAG.AMBER;
+      } else if (latestSnap.finalRAG === SnapRAG.RED) {
+        newRAG = CardRAG.RED;
+      } else {
+        newRAG = CardRAG.AMBER; // Default
+      }
     }
 
-    await this.cardRepository.save(card);
+    // Update only the RAG status field to avoid cascade issues
+    await this.cardRepository.update(cardId, { ragStatus: newRAG });
   }
 
   /**

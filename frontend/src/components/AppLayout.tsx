@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
@@ -14,14 +14,29 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const navigate = useNavigate();
   const { getRoleLabels } = usePermissions();
 
+  // Initialize from localStorage or default to false
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  // Save to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Sidebar />
+      <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Navigation Bar - Modern Glass Effect */}

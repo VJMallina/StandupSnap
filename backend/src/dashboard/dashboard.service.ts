@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Project } from '../entities/project.entity';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
 import { Card, CardRAG } from '../entities/card.entity';
@@ -235,8 +235,8 @@ export class DashboardService {
     return {
       sprintId: sprint.id,
       sprintName: sprint.name,
-      sprintStartDate: sprint.startDate.toISOString(),
-      sprintEndDate: sprint.endDate.toISOString(),
+      sprintStartDate: String(sprint.startDate),
+      sprintEndDate: String(sprint.endDate),
       currentDay,
       totalDays,
       sprintRAG,
@@ -322,20 +322,17 @@ export class DashboardService {
 
     // Get today's date (YYYY-MM-DD)
     const today = new Date().toISOString().split('T')[0];
-    const todayDate = new Date(today);
 
     // Get all snaps for today
-    const { In } = require('typeorm');
     const cardIds = cards.map((c) => c.id);
 
     let snapsToday: Snap[] = [];
     if (cardIds.length > 0) {
-      snapsToday = await this.snapRepository.find({
-        where: {
-          cardId: cardIds.length === 1 ? cardIds[0] : In(cardIds),
-          snapDate: todayDate,
-        },
-      });
+      snapsToday = await this.snapRepository
+        .createQueryBuilder('snap')
+        .where('snap.card_id IN (:...cardIds)', { cardIds })
+        .andWhere('snap.snapDate = :today', { today })
+        .getMany();
     }
 
     // Cards that have snaps today
@@ -374,23 +371,20 @@ export class DashboardService {
   ): Promise<DailyStandupSummaryWidget> {
     // Get today's snaps
     const today = new Date().toISOString().split('T')[0];
-    const todayDate = new Date(today);
 
     const cards = await this.cardRepository.find({
       where: { sprint: { id: sprintId } },
     });
 
-    const { In } = require('typeorm');
     const cardIds = cards.map((c) => c.id);
 
     let snapsToday: Snap[] = [];
     if (cardIds.length > 0) {
-      snapsToday = await this.snapRepository.find({
-        where: {
-          cardId: cardIds.length === 1 ? cardIds[0] : In(cardIds),
-          snapDate: todayDate,
-        },
-      });
+      snapsToday = await this.snapRepository
+        .createQueryBuilder('snap')
+        .where('snap.card_id IN (:...cardIds)', { cardIds })
+        .andWhere('snap.snapDate = :today', { today })
+        .getMany();
     }
 
     // Check if snaps are locked

@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -157,5 +158,22 @@ export class SnapController {
   ) {
     const isLocked = await this.snapService.isDayLocked(sprintId, date);
     return { isLocked };
+  }
+
+  /**
+   * Get all summaries for a project
+   * GET /api/snaps/summaries/project/:projectId
+   * Required Permission: VIEW_SNAP
+   * Optional query params: sprintId, startDate, endDate
+   */
+  @Get('summaries/project/:projectId')
+  @RequirePermissions(Permission.VIEW_SNAP)
+  getSummariesByProject(
+    @Param('projectId') projectId: string,
+    @Query('sprintId') sprintId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.snapService.getSummariesByProject(projectId, sprintId, startDate, endDate);
   }
 }

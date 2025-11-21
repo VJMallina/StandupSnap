@@ -17,25 +17,27 @@ const getAuthHeaders = () => {
   };
 };
 
+interface GetCardsOptions {
+  projectId?: string;
+  sprintId?: string;
+  assigneeId?: string;
+  ragStatus?: CardRAG;
+  status?: CardStatus;
+  priority?: CardPriority;
+  search?: string;
+}
+
 export const cardsApi = {
   // M7-UC05: Get all cards with filtering and search
-  getAll: async (
-    projectId?: string,
-    sprintId?: string,
-    assigneeId?: string,
-    ragStatus?: CardRAG,
-    status?: CardStatus,
-    priority?: CardPriority,
-    search?: string,
-  ): Promise<Card[]> => {
+  getAll: async (options?: GetCardsOptions): Promise<Card[]> => {
     const params = new URLSearchParams();
-    if (projectId) params.append('projectId', projectId);
-    if (sprintId) params.append('sprintId', sprintId);
-    if (assigneeId) params.append('assigneeId', assigneeId);
-    if (ragStatus) params.append('ragStatus', ragStatus);
-    if (status) params.append('status', status);
-    if (priority) params.append('priority', priority);
-    if (search) params.append('search', search);
+    if (options?.projectId) params.append('projectId', options.projectId);
+    if (options?.sprintId) params.append('sprintId', options.sprintId);
+    if (options?.assigneeId) params.append('assigneeId', options.assigneeId);
+    if (options?.ragStatus) params.append('ragStatus', options.ragStatus);
+    if (options?.status) params.append('status', options.status);
+    if (options?.priority) params.append('priority', options.priority);
+    if (options?.search) params.append('search', options.search);
 
     const url = `${API_URL}/cards${params.toString() ? `?${params.toString()}` : ''}`;
 
