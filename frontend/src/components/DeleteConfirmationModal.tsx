@@ -39,14 +39,22 @@ export default function DeleteConfirmationModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
-        <div className="flex items-center mb-4">
-          <svg className="w-8 h-8 text-red-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 backdrop-blur-sm">
+      <div className="relative top-10 mx-auto w-full max-w-md shadow-2xl rounded-xl bg-white mb-10 overflow-hidden">
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold text-white">{title}</h3>
+            <button
+              onClick={handleClose}
+              className="text-teal-100 hover:text-white transition-colors"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
+        <div className="p-6">
 
         <p className="text-gray-700 mb-4">{message}</p>
 
@@ -86,6 +94,7 @@ export default function DeleteConfirmationModal({
           >
             Delete
           </button>
+        </div>
         </div>
       </div>
     </div>

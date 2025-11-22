@@ -94,7 +94,7 @@ export default function ProjectsListPage() {
     <AppLayout>
       <div className="p-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-emerald-500 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <p className="text-teal-100 text-sm font-medium mb-1">Management</p>

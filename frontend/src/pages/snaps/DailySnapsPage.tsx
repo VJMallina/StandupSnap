@@ -211,19 +211,23 @@ Assignee Level:
     <AppLayout>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex justify-between items-start mb-4">
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Daily Snap Management</h1>
-              <p className="text-gray-600">{sprint.name}</p>
+              <p className="text-teal-100 text-sm font-medium mb-1">Daily Updates</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">Daily Snap Management</h1>
+              <p className="text-teal-100 mt-2 text-sm">{sprint.name}</p>
             </div>
             <button
               onClick={() => navigate(`/sprints/${sprintId}`)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all font-medium"
             >
               Back to Sprint
             </button>
           </div>
+        </div>
+
+        <div className="mb-6">
 
           {/* Date Selector */}
           <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow">

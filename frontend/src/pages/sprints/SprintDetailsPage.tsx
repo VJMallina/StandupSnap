@@ -137,7 +137,7 @@ export default function SprintDetailsPage() {
       case SprintStatus.ACTIVE:
         return 'bg-green-100 text-green-800 border-green-200';
       case SprintStatus.COMPLETED:
-        return 'bg-teal-100 text-blue-800 border-blue-200';
+        return 'bg-teal-100 text-teal-800 border-teal-200';
       case SprintStatus.CLOSED:
         return 'bg-gray-100 text-gray-800 border-gray-200';
       case SprintStatus.UPCOMING:
@@ -194,6 +194,17 @@ export default function SprintDetailsPage() {
   return (
     <AppLayout>
       <div className="p-6 max-w-6xl mx-auto">
+        {/* Back Navigation */}
+        <button
+          onClick={() => navigate('/sprints')}
+          className="flex items-center text-gray-600 hover:text-teal-600 transition-colors mb-4 group"
+        >
+          <svg className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Sprints
+        </button>
+
         {/* Header */}
         <div className="mb-6">
           <div className="flex justify-between items-start mb-4">
@@ -228,12 +239,6 @@ export default function SprintDetailsPage() {
                   Delete
                 </button>
               )}
-              <button
-                onClick={() => navigate('/sprints')}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300"
-              >
-                Back to List
-              </button>
             </div>
           </div>
 

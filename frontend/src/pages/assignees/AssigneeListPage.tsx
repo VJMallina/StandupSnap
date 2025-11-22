@@ -21,69 +21,107 @@ export default function AssigneeListPage() {
   const [selectedSprintId, setSelectedSprintId] = useState<string>(
     searchParams.get('sprintId') || '',
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
+  // Initial load - fetch all data in parallel
   useEffect(() => {
-    loadProjects();
+    const initialize = async () => {
+      try {
+        // Load projects first
+        const projectsData = await projectsApi.getAll(false);
+        setProjects(projectsData);
+
+        const projectId = selectedProjectId || (projectsData.length > 0 ? projectsData[0].id : '');
+
+        if (projectId) {
+          if (!selectedProjectId) setSelectedProjectId(projectId);
+
+          // Load sprints and assignees in parallel
+          const [sprintsData, assigneesData] = await Promise.all([
+            sprintsApi.getAll({ projectId }),
+            assigneesApi.getAll({ projectId })
+          ]);
+
+          const activeSprints = sprintsData.filter((s) => s.status === 'active');
+          setSprints(activeSprints);
+          setAssignees(assigneesData);
+
+          if (activeSprints.length > 0 && !selectedSprintId) {
+            setSelectedSprintId(activeSprints[0].id);
+          }
+        }
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setInitialized(true);
+      }
+    };
+
+    initialize();
   }, []);
 
+  // When project changes (after init)
   useEffect(() => {
-    if (selectedProjectId) {
-      loadSprints();
-    } else {
-      setSprints([]);
-      setSelectedSprintId('');
-    }
-  }, [selectedProjectId]);
+    if (!initialized) return;
 
-  useEffect(() => {
-    // Only load assignees when a project is selected
-    if (selectedProjectId) {
-      loadAssignees();
-    } else {
-      setAssignees([]);
-      setLoading(false);
-    }
-  }, [selectedSprintId, selectedProjectId]);
-
-  const loadProjects = async () => {
-    try {
-      const data = await projectsApi.getAll(false);
-      setProjects(data);
-
-      // Auto-select first project if none selected
-      if (!selectedProjectId && data.length > 0) {
-        setSelectedProjectId(data[0].id);
-      } else if (!selectedProjectId) {
-        setLoading(false);
-      }
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-    }
-  };
-
-  const loadSprints = async () => {
-    try {
-      const data = await sprintsApi.getAll({ projectId: selectedProjectId });
-      // Filter active sprints
-      const activeSprints = data.filter((s) => s.status === 'active');
-      setSprints(activeSprints);
-
-      // Auto-select first active sprint if none selected
-      if (activeSprints.length > 0) {
-        setSelectedSprintId(activeSprints[0].id);
-      } else {
+    const loadProjectData = async () => {
+      if (!selectedProjectId) {
+        setSprints([]);
         setSelectedSprintId('');
-        // No active sprints, but still load assignees
+        setAssignees([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const [sprintsData, assigneesData] = await Promise.all([
+          sprintsApi.getAll({ projectId: selectedProjectId }),
+          assigneesApi.getAll({ projectId: selectedProjectId })
+        ]);
+
+        const activeSprints = sprintsData.filter((s) => s.status === 'active');
+        setSprints(activeSprints);
+        setAssignees(assigneesData);
+
+        if (activeSprints.length > 0) {
+          setSelectedSprintId(activeSprints[0].id);
+        } else {
+          setSelectedSprintId('');
+        }
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
         setLoading(false);
       }
-    } catch (err: any) {
-      setError(err.message);
-      setLoading(false);
-    }
-  };
+    };
+
+    loadProjectData();
+  }, [selectedProjectId, initialized]);
+
+  // When only sprint changes (after init)
+  useEffect(() => {
+    if (!initialized || !selectedProjectId) return;
+
+    // Skip if this is triggered by project change
+    const loadSprintAssignees = async () => {
+      setLoading(true);
+      try {
+        const data = await assigneesApi.getAll({
+          projectId: selectedProjectId,
+          sprintId: selectedSprintId || undefined,
+        });
+        setAssignees(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSprintAssignees();
+  }, [selectedSprintId]);
 
   const loadAssignees = async () => {
     try {
@@ -138,33 +176,7 @@ export default function AssigneeListPage() {
     return configs[rag as keyof typeof configs] || configs.green;
   };
 
-  if (loading && assignees.length === 0) {
-    return (
-      <AppLayout>
-        <div className="flex justify-center items-center py-12">
-          <svg
-            className="animate-spin h-10 w-10 text-teal-600"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-              fill="none"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        </div>
-      </AppLayout>
-    );
-  }
+  const showContentLoader = !initialized || (loading && assignees.length === 0);
 
   return (
     <AppLayout>
@@ -227,7 +239,29 @@ export default function AssigneeListPage() {
         )}
 
         {/* Assignees List */}
-        {assignees.length === 0 && !loading ? (
+        {showContentLoader ? (
+          <div className="flex justify-center items-center py-12">
+            <svg
+              className="animate-spin h-10 w-10 text-teal-600"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          </div>
+        ) : assignees.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
             <svg
               className="mx-auto h-12 w-12 text-gray-400 mb-4"

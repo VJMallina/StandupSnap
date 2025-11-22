@@ -117,7 +117,27 @@ export default function SprintsListPage() {
   if (loading && sprints.length === 0) {
     return (
       <AppLayout>
-        <div className="p-6">Loading...</div>
+        <div className="flex justify-center items-center py-12">
+          <svg
+            className="animate-spin h-10 w-10 text-teal-600"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+        </div>
       </AppLayout>
     );
   }
@@ -126,12 +146,12 @@ export default function SprintsListPage() {
     <AppLayout>
       <div className="p-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-cyan-100 text-sm font-medium mb-1">Planning</p>
+              <p className="text-teal-100 text-sm font-medium mb-1">Planning</p>
               <h1 className="text-2xl md:text-3xl font-bold text-white">Sprints</h1>
-              <p className="text-cyan-100 mt-2 text-sm">Manage sprint cycles and iterations</p>
+              <p className="text-teal-100 mt-2 text-sm">Manage sprint cycles and iterations</p>
             </div>
             <button
               onClick={() => navigate('/sprints/new')}

@@ -28,8 +28,8 @@ export interface ParsedSnapData {
 
 @Injectable()
 export class SnapService {
-  private ollamaUrl: string;
-  private ollamaModel: string;
+  private groqApiKey: string;
+  private groqModel: string;
 
   constructor(
     @InjectRepository(Snap)
@@ -46,9 +46,9 @@ export class SnapService {
     private ragHistoryRepository: Repository<CardRAGHistory>,
     private configService: ConfigService,
   ) {
-    // Use Ollama (free, open-source) instead of paid APIs
-    this.ollamaUrl = this.configService.get<string>('OLLAMA_URL') || 'http://localhost:11434';
-    this.ollamaModel = this.configService.get<string>('OLLAMA_MODEL') || 'qwen2.5:7b';
+    // Use Groq API (fast, free tier available)
+    this.groqApiKey = this.configService.get<string>('GROQ_API_KEY') || '';
+    this.groqModel = this.configService.get<string>('GROQ_MODEL') || 'llama-3.3-70b-versatile';
   }
 
   /**
@@ -674,39 +674,80 @@ export class SnapService {
    */
   private async parseSnapWithAI(rawInput: string, card: Card): Promise<ParsedSnapData> {
     try {
-      const prompt = `Parse this standup update into JSON format.
+      const prompt = `You are a standup meeting assistant. Analyze the following update and extract structured information.
 
-Card: ${card.title}
-Update: ${rawInput}
+TASK: ${card.title}
+USER'S UPDATE: "${rawInput}"
 
-Return ONLY this JSON structure:
-{"done":"completed work","toDo":"next tasks","blockers":"issues or empty string","suggestedRAG":"green or amber or red"}
+INSTRUCTIONS:
+1. UNDERSTAND the update thoroughly - what work was mentioned, what's planned, any issues
+2. REPHRASE each section in clear, professional language (don't just copy the input)
+3. CATEGORIZE correctly:
+   - "done": Work that has been COMPLETED (past tense, finished tasks)
+   - "toDo": Work that is PLANNED or IN PROGRESS (future/ongoing tasks)
+   - "blockers": Any ISSUES, dependencies, or problems mentioned (or empty string if none)
+4. ASSESS the overall status for RAG
 
-Rules:
-- done: What was finished/completed
-- toDo: What will be done next
-- blockers: Problems or "" if none
-- suggestedRAG: green=on track, amber=minor issues, red=major problems`;
+REPHRASING GUIDELINES:
+- Convert casual language to professional standup format
+- Start "done" items with action verbs like "Completed", "Finished", "Implemented", "Fixed"
+- Start "toDo" items with "Will", "Planning to", "Working on", "Next steps include"
+- Keep each section concise but informative
+- NEVER leave fields empty. Use these defaults if nothing mentioned:
+  - done: "Continuing progress on current tasks" or "No specific completions to report"
+  - toDo: "Will continue with ongoing work" or "No new tasks planned"
+  - blockers: "No blockers reported"
 
-      console.log('[SnapService.parseSnapWithAI] Calling Ollama at:', this.ollamaUrl);
+EXAMPLES:
+Input: "finished the login page yesterday, today working on dashboard, waiting for API docs from backend team"
+Output: {"done":"Completed the login page implementation","toDo":"Working on dashboard development","blockers":"Waiting for API documentation from backend team","suggestedRAG":"amber"}
+
+Input: "all good, completed testing and deployment"
+Output: {"done":"Completed testing and successfully deployed the changes","toDo":"Will continue with ongoing work","blockers":"No blockers reported","suggestedRAG":"green"}
+
+Input: "everything is good, nothing to discuss"
+Output: {"done":"All tasks progressing smoothly with no issues","toDo":"Will continue with ongoing work","blockers":"No blockers reported","suggestedRAG":"green"}
+
+Input: "still working on the same task"
+Output: {"done":"No specific completions to report","toDo":"Continuing work on current task","blockers":"No blockers reported","suggestedRAG":"green"}
+
+RAG STATUS:
+- green: Good progress, no issues, on track
+- amber: Minor delays, dependencies, or small issues
+- red: Major blockers, stuck, significant problems
+
+Return ONLY valid JSON:
+{"done":"...","toDo":"...","blockers":"...","suggestedRAG":"green|amber|red"}`;
+
+      console.log('[SnapService.parseSnapWithAI] Calling Groq API');
 
       const response = await axios.post(
-        `${this.ollamaUrl}/api/generate`,
+        'https://api.groq.com/openai/v1/chat/completions',
         {
-          model: this.ollamaModel,
-          prompt: prompt,
-          stream: false,
-          options: {
-            temperature: 0.1,
-            num_predict: 500,
-          },
+          model: this.groqModel,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a standup meeting assistant. You analyze updates and return ONLY valid JSON with no additional text.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 500,
         },
         {
-          timeout: 60000,
+          headers: {
+            'Authorization': `Bearer ${this.groqApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000,
         }
       );
 
-      const content = response.data?.response || '';
+      const content = response.data?.choices?.[0]?.message?.content || '';
       console.log('[SnapService.parseSnapWithAI] Raw response:', content);
 
       // Extract JSON from response
@@ -737,8 +778,8 @@ Rules:
       };
     } catch (error: any) {
       console.error('[SnapService.parseSnapWithAI] Error:', error.message);
-      if (error.code === 'ECONNREFUSED') {
-        console.error('[SnapService.parseSnapWithAI] Cannot connect to Ollama at', this.ollamaUrl);
+      if (error.response?.data) {
+        console.error('[SnapService.parseSnapWithAI] Groq API error:', error.response.data);
       }
       // Fallback to manual parsing
       return this.manualParse(rawInput);
@@ -749,34 +790,38 @@ Rules:
    * Manual parsing fallback when AI fails
    */
   private manualParse(rawInput: string): ParsedSnapData {
-    const lower = rawInput.toLowerCase();
+    console.warn('[SnapService.manualParse] AI failed, using fallback parsing');
 
-    // Simple keyword-based parsing
+    // Split by common separators and keywords
+    const sentences = rawInput.split(/[.,;]\s*/).filter(s => s.trim());
+
     let done = '';
     let toDo = '';
     let blockers = '';
 
-    // Look for common patterns
-    if (lower.includes('completed') || lower.includes('finished') || lower.includes('done')) {
-      done = rawInput;
-    }
-    if (lower.includes('working on') || lower.includes('next') || lower.includes('will') || lower.includes('tomorrow')) {
-      toDo = rawInput;
-    }
-    if (lower.includes('blocked') || lower.includes('waiting') || lower.includes('issue') || lower.includes('problem')) {
-      blockers = rawInput;
+    for (const sentence of sentences) {
+      const lower = sentence.toLowerCase().trim();
+
+      // Categorize each sentence individually
+      if (lower.includes('blocked') || lower.includes('waiting') || lower.includes('stuck') || lower.includes('issue') || lower.includes('problem')) {
+        blockers = blockers ? `${blockers}. ${sentence.trim()}` : sentence.trim();
+      } else if (lower.includes('will') || lower.includes('working on') || lower.includes('next') || lower.includes('planning') || lower.includes('tomorrow') || lower.includes('today')) {
+        toDo = toDo ? `${toDo}. ${sentence.trim()}` : sentence.trim();
+      } else if (lower.includes('completed') || lower.includes('finished') || lower.includes('done') || lower.includes('fixed') || lower.includes('implemented')) {
+        done = done ? `${done}. ${sentence.trim()}` : sentence.trim();
+      }
     }
 
-    // If no patterns matched, put in done
+    // If nothing was categorized, put everything in done
     if (!done && !toDo && !blockers) {
       done = rawInput;
     }
 
-    // Determine RAG based on keywords
+    // Determine RAG based on content
     let rag = SnapRAG.GREEN;
-    if (lower.includes('blocked') || lower.includes('critical') || lower.includes('stuck')) {
+    if (blockers) {
       rag = SnapRAG.RED;
-    } else if (lower.includes('issue') || lower.includes('delay') || lower.includes('waiting')) {
+    } else if (!done && toDo) {
       rag = SnapRAG.AMBER;
     }
 

@@ -230,7 +230,7 @@ export default function ProjectDetailsPage() {
         {/* Project Details Card */}
         <div className="bg-white shadow-lg rounded-xl overflow-hidden mb-6">
           <div
-            className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-colors"
+            className="px-8 py-6 bg-gradient-to-r from-teal-50 to-cyan-50 border-b cursor-pointer hover:from-teal-100 hover:to-cyan-100 transition-colors"
             onClick={() => setIsInfoExpanded(!isInfoExpanded)}
           >
             <div className="flex items-center justify-between">
@@ -387,7 +387,7 @@ export default function ProjectDetailsPage() {
         {/* Team Members Section */}
         <div className="bg-white shadow-lg rounded-xl overflow-hidden">
           <div
-            className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-colors"
+            className="px-8 py-6 bg-gradient-to-r from-teal-50 to-cyan-50 border-b cursor-pointer hover:from-teal-100 hover:to-cyan-100 transition-colors"
             onClick={() => setIsTeamExpanded(!isTeamExpanded)}
           >
             <div className="flex items-center justify-between">
@@ -425,7 +425,7 @@ export default function ProjectDetailsPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-blue-800">
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-800">
                           {member.designationRole}
                         </span>
                       </div>

@@ -473,10 +473,10 @@ Assignee-Level Status:
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-600 via-slate-500 to-teal-600 rounded-2xl p-6 md:p-8 shadow-lg">
-          <p className="text-slate-200 text-sm font-medium mb-1">Analytics</p>
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg">
+          <p className="text-teal-100 text-sm font-medium mb-1">Analytics</p>
           <h1 className="text-2xl md:text-3xl font-bold text-white">Reports</h1>
-          <p className="text-slate-200 mt-2 text-sm">View and download daily standup summaries</p>
+          <p className="text-teal-100 mt-2 text-sm">View and download daily standup summaries</p>
         </div>
 
         {/* Filters */}

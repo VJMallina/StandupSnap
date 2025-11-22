@@ -106,7 +106,7 @@ export default function AssigneeDetailsPage() {
   const getStatusBadge = (status: CardStatus) => {
     const configs = {
       [CardStatus.NOT_STARTED]: { color: 'bg-gray-100 text-gray-800', label: 'Not Started' },
-      [CardStatus.IN_PROGRESS]: { color: 'bg-teal-100 text-blue-800', label: 'In Progress' },
+      [CardStatus.IN_PROGRESS]: { color: 'bg-teal-100 text-teal-800', label: 'In Progress' },
       [CardStatus.COMPLETED]: { color: 'bg-green-100 text-green-800', label: 'Completed' },
       [CardStatus.CLOSED]: { color: 'bg-gray-100 text-gray-600', label: 'Closed' },
     };
@@ -341,7 +341,7 @@ export default function AssigneeDetailsPage() {
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cardRAGBadge.color}`}>
                               RAG: {cardRAGBadge.label}
                             </span>
-                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-blue-700">
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
                               ET: {card.estimatedTime}h
                             </span>
                           </div>

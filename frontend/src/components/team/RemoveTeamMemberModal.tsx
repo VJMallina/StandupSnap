@@ -31,12 +31,17 @@ export default function RemoveTeamMemberModal({ isOpen, onClose, onConfirm, memb
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
-        <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-6 py-4 rounded-t-xl">
-          <div className="flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <h2 className="text-xl font-bold">Remove Team Member</h2>
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold text-white">Remove Team Member</h3>
+            <button
+              onClick={onClose}
+              className="text-teal-100 hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -76,7 +81,7 @@ export default function RemoveTeamMemberModal({ isOpen, onClose, onConfirm, memb
             <button
               onClick={handleConfirm}
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-red-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+              className="flex-1 bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-teal-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
             >
               {loading ? 'Removing...' : 'Remove'}
             </button>

@@ -307,7 +307,7 @@ export default function RegisterPage() {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="font-semibold text-teal-600 hover:text-blue-500 transition-colors"
+                className="font-semibold text-teal-600 hover:text-teal-700 transition-colors"
               >
                 Sign in
               </Link>

@@ -101,12 +101,12 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-xl">
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Add Team Member</h2>
+            <h3 className="text-xl font-semibold text-white">Add Team Member</h3>
             <button
               onClick={handleClose}
-              className="text-white hover:text-gray-200 transition-colors"
+              className="text-teal-100 hover:text-white transition-colors"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -237,7 +237,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
           <button
             onClick={mode === 'select' ? handleAddExisting : handleCreateNew}
             disabled={loading}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+            className="flex-1 bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-teal-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
             {loading ? 'Adding...' : mode === 'select' ? `Add Selected (${selectedMemberIds.length})` : 'Create & Add'}
           </button>

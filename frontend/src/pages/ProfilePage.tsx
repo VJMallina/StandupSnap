@@ -94,10 +94,10 @@ export default function ProfilePage() {
     <AppLayout>
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-600 via-slate-500 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
-          <p className="text-slate-200 text-sm font-medium mb-1">Settings</p>
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
+          <p className="text-teal-100 text-sm font-medium mb-1">Settings</p>
           <h1 className="text-2xl md:text-3xl font-bold text-white">Profile Settings</h1>
-          <p className="text-slate-200 mt-2 text-sm">Manage your account information and security</p>
+          <p className="text-teal-100 mt-2 text-sm">Manage your account information and security</p>
         </div>
 
         {/* Success/Error Message */}
@@ -255,7 +255,7 @@ export default function ProfilePage() {
             {!showPasswordForm && (
               <button
                 onClick={() => setShowPasswordForm(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
               >
                 Change Password
               </button>
@@ -273,7 +273,7 @@ export default function ProfilePage() {
                   id="currentPassword"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -286,7 +286,7 @@ export default function ProfilePage() {
                   id="newPassword"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                   minLength={8}
                 />
@@ -303,7 +303,7 @@ export default function ProfilePage() {
                   id="confirmPassword"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -311,7 +311,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Changing...' : 'Change Password'}
                 </button>

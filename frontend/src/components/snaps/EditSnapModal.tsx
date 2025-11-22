@@ -61,23 +61,25 @@ export default function EditSnapModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-6 border w-full max-w-4xl shadow-lg rounded-md bg-white mb-10">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">
-            Edit Snap ({new Date(snap.snapDate).toLocaleDateString()})
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-            disabled={loading}
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 backdrop-blur-sm">
+      <div className="relative top-10 mx-auto w-full max-w-4xl shadow-2xl rounded-xl bg-white mb-10 overflow-hidden">
+        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xl font-semibold text-white">
+              Edit Snap ({new Date(snap.snapDate).toLocaleDateString()})
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-teal-100 hover:text-white transition-colors"
+              disabled={loading}
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
+        <div className="p-6">
 
         {/* Lock Warning */}
         {snap.isLocked && (
@@ -286,6 +288,7 @@ export default function EditSnapModal({
             )}
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
