@@ -19,7 +19,7 @@ import { UpdateSnapDto } from './dto/update-snap.dto';
 import { LockDailySnapsDto } from './dto/lock-daily-snaps.dto';
 import { OverrideRAGDto } from './dto/override-rag.dto';
 
-interface ParsedSnapData {
+export interface ParsedSnapData {
   done: string;
   toDo: string;
   blockers: string;
@@ -160,6 +160,27 @@ export class SnapService {
       console.error('[SnapService.create] Error creating snap:', error);
       throw error;
     }
+  }
+
+  /**
+   * Parse snap input with AI without saving
+   * Returns the parsed data for user review
+   */
+  async parseOnly(cardId: string, rawInput: string): Promise<ParsedSnapData> {
+    // 1. Find card
+    const card = await this.cardRepository.findOne({
+      where: { id: cardId },
+      relations: ['sprint'],
+    });
+
+    if (!card) {
+      throw new NotFoundException('Card not found');
+    }
+
+    // 2. Parse with AI
+    const parsedData = await this.parseSnapWithAI(rawInput, card);
+
+    return parsedData;
   }
 
   /**

@@ -66,7 +66,7 @@ export default function ProjectsListPage() {
       <AppLayout>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <svg className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-12 w-12 text-teal-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -93,22 +93,26 @@ export default function ProjectsListPage() {
   return (
     <AppLayout>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-            <p className="text-gray-600 mt-1">Manage and track all your projects</p>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-teal-600 via-emerald-600 to-emerald-500 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-teal-100 text-sm font-medium mb-1">Management</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">Projects</h1>
+              <p className="text-teal-100 mt-2 text-sm">Manage and track all your projects</p>
+            </div>
+            {canCreate && (
+              <button
+                onClick={() => navigate('/projects/new')}
+                className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all font-medium"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Project
+              </button>
+            )}
           </div>
-          {canCreate && (
-            <button
-              onClick={() => navigate('/projects/new')}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Create Project
-            </button>
-          )}
         </div>
 
         {/* Tabs */}
@@ -119,14 +123,14 @@ export default function ProjectsListPage() {
                 onClick={() => setActiveTab('active')}
                 className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
                   activeTab === 'active'
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-teal-600 text-teal-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Active Projects
                 <span className={`ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium ${
                   activeTab === 'active'
-                    ? 'bg-blue-100 text-blue-600'
+                    ? 'bg-teal-100 text-teal-600'
                     : 'bg-gray-100 text-gray-600'
                 }`}>
                   {projects.filter(p => !p.isArchived).length}
@@ -136,14 +140,14 @@ export default function ProjectsListPage() {
                 onClick={() => setActiveTab('archived')}
                 className={`py-4 px-1 border-b-2 font-semibold text-sm transition-colors ${
                   activeTab === 'archived'
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-teal-600 text-teal-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 Archived Projects
                 <span className={`ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium ${
                   activeTab === 'archived'
-                    ? 'bg-blue-100 text-blue-600'
+                    ? 'bg-teal-100 text-teal-600'
                     : 'bg-gray-100 text-gray-600'
                 }`}>
                   {projects.filter(p => p.isArchived).length}
@@ -170,7 +174,7 @@ export default function ProjectsListPage() {
               {canCreate && activeTab === 'active' && (
                 <button
                   onClick={() => navigate('/projects/new')}
-                  className="inline-flex items-center px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center px-6 py-2.5 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -220,7 +224,7 @@ export default function ProjectsListPage() {
                         <div className="flex items-center space-x-3">
                           <button
                             onClick={() => navigate(`/projects/${project.id}`)}
-                            className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center"
+                            className="text-teal-600 hover:text-teal-800 font-medium inline-flex items-center"
                           >
                             <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

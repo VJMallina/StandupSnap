@@ -40,19 +40,30 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Navigation Bar - Modern Glass Effect */}
-        <nav className="backdrop-blur-lg bg-white/80 border-b border-gray-200/50 shadow-sm">
+        <nav className="bg-gradient-to-r from-teal-50 via-white to-cyan-50 border-b border-teal-200 shadow-sm">
           <div className="px-6 py-3">
             <div className="flex items-center justify-between">
-              <div className="flex-1"></div>
+              <div className={`flex items-center space-x-3 transition-opacity duration-300 ${sidebarCollapsed ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                    StandupSnap<sup className="text-[8px] ml-0.5">™</sup>
+                  </h1>
+                </div>
+              </div>
 
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-3">
                   {/* User Avatar - clickable to go to profile */}
                   <button
                     onClick={() => navigate('/profile')}
-                    className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 hover:from-blue-100 hover:to-indigo-100 transition-colors"
+                    className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-100 hover:from-teal-100 hover:to-cyan-100 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg">
                       {user?.name?.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex flex-col text-left">
@@ -68,7 +79,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   {/* Logout Button */}
                   <button
                     onClick={handleLogout}
-                    className="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 shadow-lg hover:shadow-xl transition-all duration-200"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

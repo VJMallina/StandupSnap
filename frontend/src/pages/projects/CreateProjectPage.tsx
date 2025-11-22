@@ -203,14 +203,14 @@ export default function CreateProjectPage() {
                 setFormData({ ...formData, name: e.target.value });
                 if (errors.name) setErrors({ ...errors, name: '' });
               }}
-              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Enter project name"
             />
             {checkingName && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-5 w-5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -230,7 +230,7 @@ export default function CreateProjectPage() {
               setFormData({ ...formData, description: e.target.value });
               if (errors.description) setErrors({ ...errors, description: '' });
             }}
-            className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
               errors.description ? 'border-red-500' : 'border-gray-300'
             }`}
             rows={4}
@@ -252,7 +252,7 @@ export default function CreateProjectPage() {
                 setFormData({ ...formData, startDate: e.target.value });
                 if (errors.startDate) setErrors({ ...errors, startDate: '' });
               }}
-              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                 errors.startDate ? 'border-red-500' : 'border-gray-300'
               }`}
             />
@@ -270,7 +270,7 @@ export default function CreateProjectPage() {
                 setFormData({ ...formData, endDate: e.target.value });
                 if (errors.endDate) setErrors({ ...errors, endDate: '' });
               }}
-              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                 errors.endDate ? 'border-red-500' : 'border-gray-300'
               }`}
             />
@@ -296,7 +296,7 @@ export default function CreateProjectPage() {
                 }}
                 className={`text-xs px-2 py-1 rounded ${
                   invitePO
-                    ? 'bg-blue-100 text-blue-700'
+                    ? 'bg-teal-100 text-blue-700'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -312,7 +312,7 @@ export default function CreateProjectPage() {
                     setPoEmail(e.target.value);
                     if (errors.poEmail) setErrors({ ...errors, poEmail: '' });
                   }}
-                  className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                     errors.poEmail ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter email to invite"
@@ -327,7 +327,7 @@ export default function CreateProjectPage() {
                 <select
                   value={formData.productOwnerId}
                   onChange={(e) => setFormData({ ...formData, productOwnerId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="">Not assigned</option>
                   {productOwners.map(user => (
@@ -356,7 +356,7 @@ export default function CreateProjectPage() {
                 }}
                 className={`text-xs px-2 py-1 rounded ${
                   invitePMO
-                    ? 'bg-blue-100 text-blue-700'
+                    ? 'bg-teal-100 text-blue-700'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -372,7 +372,7 @@ export default function CreateProjectPage() {
                     setPmoEmail(e.target.value);
                     if (errors.pmoEmail) setErrors({ ...errors, pmoEmail: '' });
                   }}
-                  className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                     errors.pmoEmail ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter email to invite"
@@ -387,7 +387,7 @@ export default function CreateProjectPage() {
                 <select
                   value={formData.pmoId}
                   onChange={(e) => setFormData({ ...formData, pmoId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="">Not assigned</option>
                   {pmos.map(user => (
@@ -408,7 +408,7 @@ export default function CreateProjectPage() {
             id="isActive"
             checked={formData.isActive}
             onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
           />
           <label htmlFor="isActive" className="text-sm font-medium text-gray-700">Mark project as active</label>
         </div>

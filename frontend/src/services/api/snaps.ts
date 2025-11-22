@@ -18,7 +18,32 @@ const getAuthHeaders = () => {
   };
 };
 
+export interface ParsedSnapData {
+  done: string;
+  toDo: string;
+  blockers: string;
+  suggestedRAG: string;
+}
+
 export const snapsApi = {
+  /**
+   * Parse snap input with AI (without saving)
+   */
+  parse: async (cardId: string, rawInput: string): Promise<ParsedSnapData> => {
+    const response = await fetch(`${API_URL}/snaps/parse`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ cardId, rawInput }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to parse snap');
+    }
+
+    return response.json();
+  },
+
   /**
    * M8-UC01: Create a new snap
    */

@@ -128,7 +128,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                 onClick={() => setMode('select')}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                   mode === 'select'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-teal-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -138,7 +138,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                 onClick={() => setMode('create')}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                   mode === 'create'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-teal-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -162,7 +162,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                       type="checkbox"
                       checked={selectedMemberIds.includes(member.id)}
                       onChange={() => handleSelectMember(member.id)}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
                     />
                     <div className="ml-3">
                       <p className="font-medium text-gray-900">{member.fullName}</p>
@@ -191,7 +191,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   placeholder="Enter full name"
                 />
               </div>
@@ -203,7 +203,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                 <select
                   value={formData.designationRole}
                   onChange={(e) => setFormData({ ...formData, designationRole: e.target.value as DesignationRole })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   {Object.values(DesignationRole).map(role => (
                     <option key={role} value={role}>{role}</option>
@@ -219,7 +219,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   placeholder="Enter nickname or display name"
                 />
               </div>

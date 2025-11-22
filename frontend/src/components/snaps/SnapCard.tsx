@@ -62,7 +62,7 @@ export default function SnapCard({
               </span>
             )}
             {isToday && !snap.isLocked && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800">
                 Today
               </span>
             )}
@@ -80,7 +80,7 @@ export default function SnapCard({
             {onEdit && (
               <button
                 onClick={onEdit}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                className="text-teal-600 hover:text-teal-800 text-sm font-medium"
               >
                 Edit
               </button>
@@ -109,8 +109,8 @@ export default function SnapCard({
 
         {/* To Do */}
         {snap.toDo && (
-          <div className="border-l-4 border-blue-500 pl-3">
-            <div className="text-xs font-semibold text-blue-700 uppercase mb-1">To Do</div>
+          <div className="border-l-4 border-teal-500 pl-3">
+            <div className="text-xs font-semibold text-teal-700 uppercase mb-1">To Do</div>
             <div className="text-sm text-gray-700">{snap.toDo}</div>
           </div>
         )}
@@ -138,7 +138,7 @@ export default function SnapCard({
       <div className="mt-4 flex items-center gap-4 text-sm">
         {snap.suggestedRAG && (
           <div className="flex items-center gap-2">
-            <span className="text-gray-600">AI Suggested:</span>
+            <span className="text-gray-600">Snap Suggested:</span>
             <span className={`px-2 py-1 rounded text-xs font-semibold ${getRAGColor(snap.suggestedRAG)}`}>
               {snap.suggestedRAG.toUpperCase()}
             </span>

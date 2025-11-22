@@ -22,9 +22,9 @@ export default function CardsPage() {
           <p className="text-lg text-gray-600 mb-8">
             Manage task cards and track progress
           </p>
-          <div className="inline-flex items-center px-6 py-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="inline-flex items-center px-6 py-3 bg-teal-50 rounded-lg border border-teal-200">
             <svg
-              className="h-5 w-5 text-blue-500 mr-2"
+              className="h-5 w-5 text-teal-500 mr-2"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -34,7 +34,7 @@ export default function CardsPage() {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-blue-700 font-medium">
+            <span className="text-teal-700 font-medium">
               This feature is coming soon
             </span>
           </div>

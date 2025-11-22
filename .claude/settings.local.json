@@ -57,7 +57,8 @@
       "Bash(docker restart:*)",
       "Bash(powershell -Command \"Stop-Process -Id 3688 -Force\")",
       "Bash(powershell -Command \"Stop-Process -Id 1688 -Force\")",
-      "Bash(powershell -Command \"Stop-Process -Id 9496 -Force\")"
+      "Bash(powershell -Command \"Stop-Process -Id 9496 -Force\")",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

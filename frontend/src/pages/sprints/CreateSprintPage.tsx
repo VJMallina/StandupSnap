@@ -156,7 +156,7 @@ export default function CreateSprintPage() {
               }}
               className={`${
                 mode === 'manual'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-teal-500 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
@@ -169,7 +169,7 @@ export default function CreateSprintPage() {
               }}
               className={`${
                 mode === 'auto'
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-teal-500 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
@@ -195,7 +195,7 @@ export default function CreateSprintPage() {
                 required
                 value={manualFormData.projectId}
                 onChange={(e) => setManualFormData({ ...manualFormData, projectId: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               >
                 <option value="">Select a project</option>
                 {projects.map((project) => (
@@ -215,7 +215,7 @@ export default function CreateSprintPage() {
                 required
                 value={manualFormData.name}
                 onChange={(e) => setManualFormData({ ...manualFormData, name: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 placeholder="e.g., Sprint 1, Q1 Sprint, Feature Development Sprint"
               />
             </div>
@@ -227,7 +227,7 @@ export default function CreateSprintPage() {
               <textarea
                 value={manualFormData.goal}
                 onChange={(e) => setManualFormData({ ...manualFormData, goal: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 rows={3}
                 placeholder="What is the goal or objective for this sprint?"
               />
@@ -243,7 +243,7 @@ export default function CreateSprintPage() {
                   required
                   value={manualFormData.startDate}
                   onChange={(e) => setManualFormData({ ...manualFormData, startDate: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
 
@@ -256,7 +256,7 @@ export default function CreateSprintPage() {
                   required
                   value={manualFormData.endDate}
                   onChange={(e) => setManualFormData({ ...manualFormData, endDate: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -265,7 +265,7 @@ export default function CreateSprintPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? 'Creating Sprint...' : 'Create Sprint'}
               </button>
@@ -307,7 +307,7 @@ export default function CreateSprintPage() {
                   required
                   value={autoFormData.projectId}
                   onChange={(e) => setAutoFormData({ ...autoFormData, projectId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="">Select a project</option>
                   {projects.map((project) => (
@@ -332,7 +332,7 @@ export default function CreateSprintPage() {
                     required
                     value={autoFormData.sprintDurationWeeks}
                     onChange={(e) => setAutoFormData({ ...autoFormData, sprintDurationWeeks: parseInt(e.target.value) })}
-                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   >
                     <option value={1}>1 Week</option>
                     <option value={2}>2 Weeks (Recommended)</option>
@@ -352,7 +352,7 @@ export default function CreateSprintPage() {
                     type="text"
                     value={autoFormData.namePrefix}
                     onChange={(e) => setAutoFormData({ ...autoFormData, namePrefix: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     placeholder="e.g., Sprint, Iteration"
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -437,7 +437,7 @@ export default function CreateSprintPage() {
                   <button
                     onClick={handleGenerateAll}
                     disabled={loading}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Creating Sprints...' : 'Create All'}
                   </button>

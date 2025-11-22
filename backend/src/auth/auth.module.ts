@@ -11,10 +11,11 @@ import { User } from '../entities/user.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { Role } from '../entities/role.entity';
 import { Invitation } from '../entities/invitation.entity';
+import { Project } from '../entities/project.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RefreshToken, Role, Invitation]),
+    TypeOrmModule.forFeature([User, RefreshToken, Role, Invitation, Project]),
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

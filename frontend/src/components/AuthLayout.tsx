@@ -1,29 +1,68 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 
 interface AuthLayoutProps {
   children: ReactNode;
   showTagline?: boolean;
 }
 
+const carouselSlides = [
+  {
+    title: "AI-Powered Standups",
+    description: "Transform your daily updates into structured, actionable insights with intelligent parsing.",
+    icon: (
+      <svg className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+      </svg>
+    )
+  },
+  {
+    title: "Sprint Management",
+    description: "Track progress across sprints with real-time RAG status and comprehensive reporting.",
+    icon: (
+      <svg className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    )
+  },
+  {
+    title: "Team Collaboration",
+    description: "Keep your entire team aligned with shared visibility into blockers and progress.",
+    icon: (
+      <svg className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    )
+  }
+];
+
 export default function AuthLayout({ children, showTagline = false }: AuthLayoutProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="min-h-screen flex">
       {/* Left side - Illustration and branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800">
         {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 via-transparent to-indigo-500/30 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/30 via-transparent to-cyan-500/30 animate-pulse"></div>
 
         {/* Decorative floating blobs */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl animate-blob"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-indigo-400/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-teal-400/20 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-emerald-400/20 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
         </div>
 
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
           {/* Logo and branding */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <div className="inline-flex items-center space-x-3 mb-6">
               <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-xl flex items-center justify-center shadow-2xl">
                 <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -31,20 +70,50 @@ export default function AuthLayout({ children, showTagline = false }: AuthLayout
                 </svg>
               </div>
               <h1 className="text-5xl font-black text-white tracking-tight drop-shadow-2xl">
-                StandupSnap
+                StandupSnap<sup className="text-sm ml-1">™</sup>
               </h1>
             </div>
-            {showTagline && (
-              <p className="text-xl text-white/90 leading-relaxed drop-shadow-lg font-medium max-w-md mx-auto">
-                Smarter standups. Better sprints.<br />
-                Stronger teams — with AI-crafted snaps.
-              </p>
-            )}
+            <p className="text-xl text-white/90 leading-relaxed drop-shadow-lg font-medium max-w-md mx-auto">
+              Smarter standups. Better sprints.<br />
+              Stronger teams — with AI-crafted snaps.
+            </p>
           </div>
 
-          {/* Vector illustration */}
-          <div className="w-full max-w-lg">
-            <StandupIllustration />
+          {/* Carousel */}
+          <div className="w-full max-w-md">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-6 p-4 bg-white/10 rounded-xl">
+                  {carouselSlides[currentSlide].icon}
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-3">
+                  {carouselSlides[currentSlide].title}
+                </h3>
+                <p className="text-white/80 text-sm leading-relaxed">
+                  {carouselSlides[currentSlide].description}
+                </p>
+              </div>
+            </div>
+
+            {/* Carousel indicators */}
+            <div className="flex justify-center space-x-2 mt-6">
+              {carouselSlides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentSlide
+                      ? 'w-8 bg-white'
+                      : 'bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Version */}
+            <div className="flex items-center justify-center mt-8">
+              <span className="text-white/60 text-sm font-medium">v0.1.0 Beta</span>
+            </div>
           </div>
 
           {/* Floating icons */}
@@ -79,7 +148,7 @@ export default function AuthLayout({ children, showTagline = false }: AuthLayout
         {/* Mobile logo for small screens */}
         <div className="lg:hidden absolute top-6 left-6">
           <div className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -110,111 +179,5 @@ function FloatingIcon({ children, delay = "0s" }: { children: ReactNode; delay?:
     >
       {children}
     </div>
-  );
-}
-
-// Vector illustration component
-function StandupIllustration() {
-  return (
-    <svg
-      viewBox="0 0 600 500"
-      className="w-full drop-shadow-2xl"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Background decorative elements */}
-      <defs>
-        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: '#60A5FA', stopOpacity: 0.3 }} />
-          <stop offset="100%" style={{ stopColor: '#A78BFA', stopOpacity: 0.3 }} />
-        </linearGradient>
-      </defs>
-
-      {/* Large decorative circles */}
-      <circle cx="300" cy="250" r="200" fill="url(#grad1)" opacity="0.3" />
-      <circle cx="300" cy="250" r="150" fill="#ffffff" opacity="0.1" />
-
-      {/* Main kanban board / screen */}
-      <rect x="150" y="100" width="300" height="220" rx="12" fill="#ffffff" opacity="0.95" stroke="#E5E7EB" strokeWidth="2" />
-
-      {/* Board columns */}
-      <line x1="250" y1="130" x2="250" y2="300" stroke="#E5E7EB" strokeWidth="2" />
-      <line x1="350" y1="130" x2="350" y2="300" stroke="#E5E7EB" strokeWidth="2" />
-
-      {/* Column headers */}
-      <text x="200" y="125" textAnchor="middle" fill="#6B7280" fontSize="14" fontWeight="bold">TODO</text>
-      <text x="300" y="125" textAnchor="middle" fill="#6B7280" fontSize="14" fontWeight="bold">DOING</text>
-      <text x="400" y="125" textAnchor="middle" fill="#6B7280" fontSize="14" fontWeight="bold">DONE</text>
-
-      {/* Task cards - TODO column */}
-      <rect x="165" y="140" width="70" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="1.5" />
-      <line x1="172" y1="155" x2="228" y2="155" stroke="#B45309" strokeWidth="2" opacity="0.4" />
-      <line x1="172" y1="165" x2="220" y2="165" stroke="#B45309" strokeWidth="2" opacity="0.4" />
-
-      <rect x="165" y="195" width="70" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="1.5" />
-      <line x1="172" y1="210" x2="228" y2="210" stroke="#B45309" strokeWidth="2" opacity="0.4" />
-      <line x1="172" y1="220" x2="215" y2="220" stroke="#B45309" strokeWidth="2" opacity="0.4" />
-
-      <rect x="165" y="250" width="70" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" strokeWidth="1.5" />
-      <line x1="172" y1="265" x2="228" y2="265" stroke="#B45309" strokeWidth="2" opacity="0.4" />
-
-      {/* Task cards - DOING column */}
-      <rect x="265" y="140" width="70" height="45" rx="6" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="1.5" />
-      <line x1="272" y1="155" x2="328" y2="155" stroke="#1E40AF" strokeWidth="2" opacity="0.4" />
-      <line x1="272" y1="165" x2="320" y2="165" stroke="#1E40AF" strokeWidth="2" opacity="0.4" />
-
-      <rect x="265" y="195" width="70" height="45" rx="6" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="1.5" />
-      <line x1="272" y1="210" x2="328" y2="210" stroke="#1E40AF" strokeWidth="2" opacity="0.4" />
-
-      {/* Task cards - DONE column */}
-      <rect x="365" y="140" width="70" height="45" rx="6" fill="#D1FAE5" stroke="#10B981" strokeWidth="1.5" />
-      <line x1="372" y1="155" x2="428" y2="155" stroke="#065F46" strokeWidth="2" opacity="0.4" />
-      <line x1="372" y1="165" x2="420" y2="165" stroke="#065F46" strokeWidth="2" opacity="0.4" />
-
-      <rect x="365" y="195" width="70" height="45" rx="6" fill="#D1FAE5" stroke="#10B981" strokeWidth="1.5" />
-      <line x1="372" y1="210" x2="428" y2="210" stroke="#065F46" strokeWidth="2" opacity="0.4" />
-
-      <rect x="365" y="250" width="70" height="45" rx="6" fill="#D1FAE5" stroke="#10B981" strokeWidth="1.5" />
-      <line x1="372" y1="265" x2="428" y2="265" stroke="#065F46" strokeWidth="2" opacity="0.4" />
-
-      {/* Team members - bottom */}
-      {/* Person 1 - Left */}
-      <circle cx="120" cy="380" r="30" fill="#DBEAFE" stroke="#3B82F6" strokeWidth="3" />
-      <circle cx="120" cy="375" r="12" fill="#3B82F6" />
-      <path d="M 105 390 Q 120 395 135 390" stroke="#3B82F6" strokeWidth="3" fill="none" strokeLinecap="round" />
-
-      {/* Person 2 - Center left */}
-      <circle cx="220" cy="400" r="35" fill="#F3E8FF" stroke="#A78BFA" strokeWidth="3" />
-      <circle cx="220" cy="395" r="14" fill="#A78BFA" />
-      <path d="M 203 412 Q 220 418 237 412" stroke="#A78BFA" strokeWidth="3" fill="none" strokeLinecap="round" />
-
-      {/* Person 3 - Center right */}
-      <circle cx="380" cy="400" r="35" fill="#FED7AA" stroke="#F59E0B" strokeWidth="3" />
-      <circle cx="380" cy="395" r="14" fill="#F59E0B" />
-      <path d="M 363 412 Q 380 418 397 412" stroke="#F59E0B" strokeWidth="3" fill="none" strokeLinecap="round" />
-
-      {/* Person 4 - Right */}
-      <circle cx="480" cy="380" r="30" fill="#D1FAE5" stroke="#10B981" strokeWidth="3" />
-      <circle cx="480" cy="375" r="12" fill="#10B981" />
-      <path d="M 465 390 Q 480 395 495 390" stroke="#10B981" strokeWidth="3" fill="none" strokeLinecap="round" />
-
-      {/* AI sparkle icon */}
-      <g transform="translate(500, 80)">
-        <circle cx="0" cy="0" r="35" fill="#FEF3C7" opacity="0.5" />
-        <path d="M 0 -18 L 4 -4 L 18 0 L 4 4 L 0 18 L -4 4 L -18 0 L -4 -4 Z" fill="#F59E0B" />
-        <circle cx="0" cy="0" r="5" fill="#ffffff" />
-        <text x="0" y="55" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">AI</text>
-      </g>
-
-      {/* Connection lines showing collaboration */}
-      <path d="M 150 380 Q 185 360 220 365" stroke="#A78BFA" strokeWidth="2" fill="none" opacity="0.4" strokeDasharray="5,5" />
-      <path d="M 255 395 Q 320 380 350 395" stroke="#F59E0B" strokeWidth="2" fill="none" opacity="0.4" strokeDasharray="5,5" />
-      <path d="M 415 395 Q 445 360 470 375" stroke="#10B981" strokeWidth="2" fill="none" opacity="0.4" strokeDasharray="5,5" />
-
-      {/* Small decorative dots */}
-      <circle cx="100" cy="120" r="6" fill="#ffffff" opacity="0.6" />
-      <circle cx="500" cy="320" r="6" fill="#ffffff" opacity="0.6" />
-      <circle cx="80" cy="250" r="8" fill="#ffffff" opacity="0.6" />
-      <circle cx="520" cy="200" r="7" fill="#ffffff" opacity="0.6" />
-    </svg>
   );
 }

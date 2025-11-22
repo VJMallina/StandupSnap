@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
+import Select from '../components/ui/Select';
 import { useAuth } from '../context/AuthContext';
 import {
   dashboardApi,
@@ -154,7 +155,7 @@ export default function DashboardPage() {
       <AppLayout>
         <div className="flex justify-center items-center min-h-[60vh]">
           <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center animate-pulse">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center animate-pulse">
               <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -170,33 +171,33 @@ export default function DashboardPage() {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              Dashboard
-            </h1>
-            <p className="text-gray-500 mt-1">
-              Welcome back, <span className="font-medium text-gray-700">{user?.name}</span>
-            </p>
-          </div>
-
-          {/* Project Selector */}
-          {userProjects.length > 1 && (
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-600">Project:</label>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => handleProjectChange(e.target.value)}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium text-gray-700 min-w-[200px]"
-              >
-                {userProjects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
+        <div className="bg-gradient-to-r from-teal-600 via-teal-500 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-teal-100 text-sm font-medium mb-1">Dashboard</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">
+                Welcome back, {user?.name}
+              </h1>
+              <p className="text-teal-100 mt-2 text-sm">
+                Here's what's happening with your projects today
+              </p>
             </div>
-          )}
+
+            {/* Project Selector */}
+            {userProjects.length > 1 && (
+              <div className="min-w-[200px]">
+                <Select
+                  value={selectedProjectId}
+                  onChange={handleProjectChange}
+                  variant="dark"
+                  options={userProjects.map((project) => ({
+                    value: project.id,
+                    label: project.name,
+                  }))}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -221,7 +222,7 @@ export default function DashboardPage() {
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
@@ -248,13 +249,13 @@ export default function DashboardPage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-600">Progress</span>
-                        <span className="text-sm font-bold text-blue-600">
+                        <span className="text-sm font-bold text-teal-600">
                           Day {dashboardData.sprintHealth.currentDay}/{dashboardData.sprintHealth.totalDays}
                         </span>
                       </div>
                       <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full transition-all duration-500"
                           style={{
                             width: `${(dashboardData.sprintHealth.currentDay / dashboardData.sprintHealth.totalDays) * 100}%`,
                           }}
@@ -326,7 +327,7 @@ export default function DashboardPage() {
                     </div>
                     <button
                       onClick={() => navigate('/assignees')}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                      className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
                     >
                       View All
                     </button>
@@ -351,11 +352,11 @@ export default function DashboardPage() {
                                 `/assignees/${member.id}?sprintId=${dashboardData.sprintHealth?.sprintId}`,
                               )
                             }
-                            className="p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 cursor-pointer transition-all duration-200 group"
+                            className="p-4 rounded-xl border border-gray-100 hover:border-teal-200 hover:bg-teal-50/50 cursor-pointer transition-all duration-200 group"
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center text-teal-600 font-bold text-sm">
                                   {member.fullName
                                     .split(' ')
                                     .map((n) => n[0])
@@ -364,7 +365,7 @@ export default function DashboardPage() {
                                     .slice(0, 2)}
                                 </div>
                                 <div>
-                                  <p className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                  <p className="font-semibold text-gray-900 group-hover:text-teal-600 transition-colors">
                                     {member.fullName}
                                   </p>
                                   <p className="text-xs text-gray-500">
@@ -374,7 +375,7 @@ export default function DashboardPage() {
                               </div>
                               <div className="flex items-center gap-3">
                                 <div className="text-center">
-                                  <p className="text-lg font-bold text-blue-600">
+                                  <p className="text-lg font-bold text-teal-600">
                                     {member.activeCardsCount}
                                   </p>
                                   <p className="text-xs text-gray-500">Cards</p>
@@ -417,16 +418,16 @@ export default function DashboardPage() {
 
                   <div className="p-6 space-y-4">
                     {/* Main Stat */}
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-100">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-gray-600 mb-1">Snaps Added Today</p>
-                          <p className="text-3xl font-bold text-blue-600">
+                          <p className="text-3xl font-bold text-teal-600">
                             {dashboardData.dailySnapSummary.snapsAddedToday}
                           </p>
                         </div>
-                        <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
@@ -451,7 +452,7 @@ export default function DashboardPage() {
 
                     <button
                       onClick={() => navigate('/snaps')}
-                      className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl font-medium hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 shadow-sm hover:shadow-md"
                     >
                       Go to Snap Management
                     </button>
@@ -475,7 +476,7 @@ export default function DashboardPage() {
                     </div>
                     <button
                       onClick={() => navigate('/snaps')}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                      className="text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
                     >
                       View Full Summary
                     </button>
@@ -491,9 +492,9 @@ export default function DashboardPage() {
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 text-center">
+                    <div className="p-4 rounded-xl bg-teal-50 border border-teal-100 text-center">
                       <p className="text-sm text-gray-600 mb-2">To-Do</p>
-                      <p className="text-3xl font-bold text-blue-600">
+                      <p className="text-3xl font-bold text-teal-600">
                         {dashboardData.dailyStandupSummary.todoCount}
                       </p>
                     </div>

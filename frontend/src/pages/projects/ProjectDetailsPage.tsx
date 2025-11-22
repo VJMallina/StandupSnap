@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { projectsApi } from '../../services/api/projects';
+import { invitationsApi, Invitation } from '../../services/api/invitations';
 import { Project } from '../../types/project';
 import { usePermissions } from '../../hooks/usePermissions';
 import { Permission } from '../../constants/roles';
@@ -13,6 +14,7 @@ export default function ProjectDetailsPage() {
   const location = useLocation();
   const { hasPermission } = usePermissions();
   const [project, setProject] = useState<Project | null>(null);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -33,8 +35,13 @@ export default function ProjectDetailsPage() {
   const loadProject = async () => {
     try {
       setLoading(true);
-      const data = await projectsApi.getById(id!);
+      const [data, projectInvitations] = await Promise.all([
+        projectsApi.getById(id!),
+        invitationsApi.getAll(id!)
+      ]);
       setProject(data);
+      // Filter for pending invitations only
+      setInvitations(projectInvitations.filter(inv => inv.status === 'pending'));
     } catch (err: any) {
       setError(err.message || 'Failed to load project');
     } finally {
@@ -73,7 +80,7 @@ export default function ProjectDetailsPage() {
       <AppLayout>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <svg className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-12 w-12 text-teal-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -94,7 +101,7 @@ export default function ProjectDetailsPage() {
           </div>
           <button
             onClick={() => navigate('/projects')}
-            className="mt-4 text-blue-600 hover:text-blue-800 font-medium"
+            className="mt-4 text-teal-600 hover:text-teal-800 font-medium"
           >
             ← Back to Projects
           </button>
@@ -111,7 +118,7 @@ export default function ProjectDetailsPage() {
           <div>
             <button
               onClick={() => navigate('/projects')}
-              className="text-blue-600 hover:text-blue-800 font-medium mb-2 inline-flex items-center"
+              className="text-teal-600 hover:text-teal-800 font-medium mb-2 inline-flex items-center"
             >
               <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -133,7 +140,7 @@ export default function ProjectDetailsPage() {
             {canEdit && !project.isArchived && (
               <button
                 onClick={() => navigate(`/projects/${id}/edit`)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors inline-flex items-center"
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium transition-colors inline-flex items-center"
               >
                 <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -170,15 +177,15 @@ export default function ProjectDetailsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div
             onClick={() => navigate(`/sprints?projectId=${id}`)}
-            className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-blue-500 cursor-pointer hover:shadow-xl transition-shadow"
+            className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-teal-500 cursor-pointer hover:shadow-xl transition-shadow"
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Total Sprints</p>
                 <p className="text-3xl font-bold text-gray-900">{project.sprints?.length || 0}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -292,25 +299,45 @@ export default function ProjectDetailsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
               <div>
                 <label className="block text-sm font-semibold text-gray-500 mb-1">Product Owner</label>
-                <p className="text-lg text-gray-900">
-                  {project.productOwner
-                    ? project.productOwner.name
-                    : 'Not assigned'}
-                </p>
-                {project.productOwner && (
-                  <p className="text-sm text-gray-600">{project.productOwner.email}</p>
+                {project.productOwner ? (
+                  <>
+                    <p className="text-lg text-gray-900">{project.productOwner.name}</p>
+                    <p className="text-sm text-gray-600">{project.productOwner.email}</p>
+                  </>
+                ) : (
+                  (() => {
+                    const poInvitation = invitations.find(inv => inv.assignedRole === 'product_owner');
+                    return poInvitation ? (
+                      <>
+                        <p className="text-lg text-yellow-600">Invited</p>
+                        <p className="text-sm text-gray-600">{poInvitation.email}</p>
+                      </>
+                    ) : (
+                      <p className="text-lg text-gray-900">Not assigned</p>
+                    );
+                  })()
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-500 mb-1">PMO</label>
-                <p className="text-lg text-gray-900">
-                  {project.pmo
-                    ? project.pmo.name
-                    : 'Not assigned'}
-                </p>
-                {project.pmo && (
-                  <p className="text-sm text-gray-600">{project.pmo.email}</p>
+                {project.pmo ? (
+                  <>
+                    <p className="text-lg text-gray-900">{project.pmo.name}</p>
+                    <p className="text-sm text-gray-600">{project.pmo.email}</p>
+                  </>
+                ) : (
+                  (() => {
+                    const pmoInvitation = invitations.find(inv => inv.assignedRole === 'pmo');
+                    return pmoInvitation ? (
+                      <>
+                        <p className="text-lg text-yellow-600">Invited</p>
+                        <p className="text-sm text-gray-600">{pmoInvitation.email}</p>
+                      </>
+                    ) : (
+                      <p className="text-lg text-gray-900">Not assigned</p>
+                    );
+                  })()
                 )}
               </div>
             </div>
@@ -387,7 +414,7 @@ export default function ProjectDetailsPage() {
                   {project.teamMembers.map((member: any) => (
                     <div key={member.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold mr-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-white font-semibold mr-3">
                           {member.fullName?.charAt(0) || '?'}
                         </div>
                         <div>
@@ -398,7 +425,7 @@ export default function ProjectDetailsPage() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-blue-800">
                           {member.designationRole}
                         </span>
                       </div>
@@ -413,7 +440,7 @@ export default function ProjectDetailsPage() {
                   <p>No team members assigned</p>
                   <button
                     onClick={() => navigate(`/projects/${id}/team`)}
-                    className="mt-3 text-blue-600 hover:text-blue-800 font-medium"
+                    className="mt-3 text-teal-600 hover:text-teal-800 font-medium"
                   >
                     Add Team Members
                   </button>

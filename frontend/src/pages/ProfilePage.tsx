@@ -93,9 +93,11 @@ export default function ProfilePage() {
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-          <p className="text-gray-600 mt-2">Manage your account information and security</p>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-slate-600 via-slate-500 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
+          <p className="text-slate-200 text-sm font-medium mb-1">Settings</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">Profile Settings</h1>
+          <p className="text-slate-200 mt-2 text-sm">Manage your account information and security</p>
         </div>
 
         {/* Success/Error Message */}
@@ -139,7 +141,7 @@ export default function ProfilePage() {
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
               >
                 Edit Profile
               </button>
@@ -166,7 +168,7 @@ export default function ProfilePage() {
                   {user?.roles.map((role) => (
                     <span
                       key={role}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800"
                     >
                       {ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role}
                     </span>
@@ -185,7 +187,7 @@ export default function ProfilePage() {
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -198,7 +200,7 @@ export default function ProfilePage() {
                   id="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -211,7 +213,7 @@ export default function ProfilePage() {
                   id="username"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-gray-50"
                   disabled
                 />
                 <p className="mt-1 text-sm text-gray-500">Username cannot be changed</p>
@@ -220,7 +222,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
                 </button>

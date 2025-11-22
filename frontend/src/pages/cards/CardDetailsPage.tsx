@@ -76,7 +76,7 @@ export default function CardDetailsPage() {
   const getStatusBadge = (status: CardStatus) => {
     const configs = {
       [CardStatus.NOT_STARTED]: { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'Not Started' },
-      [CardStatus.IN_PROGRESS]: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'In Progress' },
+      [CardStatus.IN_PROGRESS]: { color: 'bg-teal-100 text-teal-800 border-teal-200', label: 'In Progress' },
       [CardStatus.COMPLETED]: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Completed' },
       [CardStatus.CLOSED]: { color: 'bg-gray-100 text-gray-600 border-gray-200', label: 'Closed' },
     };
@@ -97,7 +97,7 @@ export default function CardDetailsPage() {
   const getPriorityBadge = (priority: CardPriority) => {
     const configs = {
       [CardPriority.LOW]: { color: 'bg-gray-100 text-gray-600', label: 'Low', icon: '↓' },
-      [CardPriority.MEDIUM]: { color: 'bg-blue-100 text-blue-700', label: 'Medium', icon: '−' },
+      [CardPriority.MEDIUM]: { color: 'bg-teal-100 text-teal-700', label: 'Medium', icon: '−' },
       [CardPriority.HIGH]: { color: 'bg-orange-100 text-orange-700', label: 'High', icon: '↑' },
       [CardPriority.CRITICAL]: { color: 'bg-red-100 text-red-700', label: 'Critical', icon: '⚠' },
     };
@@ -173,7 +173,7 @@ export default function CardDetailsPage() {
               {canEdit && (
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                  className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700"
                 >
                   Edit Card
                 </button>
@@ -237,7 +237,7 @@ export default function CardDetailsPage() {
                 <p className="text-gray-900 font-medium">{card.project.name}</p>
                 <button
                   onClick={() => navigate(`/projects/${card.project.id}`)}
-                  className="text-blue-600 hover:underline text-sm mt-1"
+                  className="text-teal-600 hover:underline text-sm mt-1"
                 >
                   View Project →
                 </button>
@@ -248,7 +248,7 @@ export default function CardDetailsPage() {
                 <p className="text-gray-900 font-medium">{card.sprint.name}</p>
                 <button
                   onClick={() => navigate(`/sprints/${card.sprint.id}`)}
-                  className="text-blue-600 hover:underline text-sm mt-1"
+                  className="text-teal-600 hover:underline text-sm mt-1"
                 >
                   View Sprint →
                 </button>

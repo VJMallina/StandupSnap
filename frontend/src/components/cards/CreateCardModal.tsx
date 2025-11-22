@@ -123,7 +123,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               placeholder="e.g., Implement user authentication"
             />
           </div>
@@ -137,7 +137,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
               required
               value={formData.sprintId}
               onChange={(e) => setFormData({ ...formData, sprintId: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             >
               <option value="">Select a sprint</option>
               {sprints.map((sprint) => (
@@ -157,7 +157,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
               required
               value={formData.assigneeId}
               onChange={(e) => setFormData({ ...formData, assigneeId: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             >
               <option value="">Select a team member</option>
               {teamMembers.map((member) => (
@@ -180,7 +180,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
               step="0.5"
               value={formData.estimatedTime}
               onChange={(e) => setFormData({ ...formData, estimatedTime: parseFloat(e.target.value) })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             />
             <p className="text-xs text-gray-500 mt-1">
               ET (Estimated Time) is mandatory and drives RAG calculations
@@ -196,7 +196,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
               type="text"
               value={formData.externalId}
               onChange={(e) => setFormData({ ...formData, externalId: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               placeholder="e.g., JIRA-1234, TASK-567"
             />
           </div>
@@ -209,7 +209,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
             <select
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: e.target.value as CardPriority })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             >
               <option value={CardPriority.LOW}>Low</option>
               <option value={CardPriority.MEDIUM}>Medium</option>
@@ -226,7 +226,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               rows={4}
               placeholder="Card details, acceptance criteria, notes..."
             />
@@ -237,7 +237,7 @@ export default function CreateCardModal({ projectId, onClose, onSuccess, preSele
             <button
               type="submit"
               disabled={loading || !canSubmit}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating...' : 'Create Card'}
             </button>

@@ -9,6 +9,7 @@ import { Sprint } from '../../types/sprint';
 import { TeamMember } from '../../types/teamMember';
 import { Project } from '../../types/project';
 import AppLayout from '../../components/AppLayout';
+import Select from '../../components/ui/Select';
 import CreateCardModal from '../../components/cards/CreateCardModal';
 
 export default function CardsListPage() {
@@ -128,7 +129,7 @@ export default function CardsListPage() {
   const getStatusBadge = (status: CardStatus) => {
     const colors = {
       [CardStatus.NOT_STARTED]: 'bg-gray-100 text-gray-800',
-      [CardStatus.IN_PROGRESS]: 'bg-blue-100 text-blue-800',
+      [CardStatus.IN_PROGRESS]: 'bg-teal-100 text-teal-800',
       [CardStatus.COMPLETED]: 'bg-green-100 text-green-800',
       [CardStatus.CLOSED]: 'bg-gray-100 text-gray-600',
     };
@@ -164,7 +165,7 @@ export default function CardsListPage() {
   const getPriorityBadge = (priority: CardPriority) => {
     const colors = {
       [CardPriority.LOW]: 'bg-gray-100 text-gray-600',
-      [CardPriority.MEDIUM]: 'bg-blue-100 text-blue-700',
+      [CardPriority.MEDIUM]: 'bg-teal-100 text-teal-700',
       [CardPriority.HIGH]: 'bg-orange-100 text-orange-700',
       [CardPriority.CRITICAL]: 'bg-red-100 text-red-700',
     };
@@ -187,15 +188,25 @@ export default function CardsListPage() {
   return (
     <AppLayout>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Cards</h1>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            disabled={!canCreateCard}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            Create Card
-          </button>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-teal-100 text-sm font-medium mb-1">Work Items</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">Cards</h1>
+              <p className="text-teal-100 mt-2 text-sm">Manage task cards and track progress</p>
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              disabled={!canCreateCard}
+              className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Card
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -205,134 +216,137 @@ export default function CardsListPage() {
         )}
 
         {/* Filters Section - M7-UC05 */}
-        <div className="bg-white shadow rounded-lg p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            {/* Project Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Project</label>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => {
-                  setSelectedProjectId(e.target.value);
-                  setSelectedSprintId('');
-                  setSelectedAssigneeId('');
-                }}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">All Projects</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Sprint Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Sprint</label>
-              <select
-                value={selectedSprintId}
-                onChange={(e) => setSelectedSprintId(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                disabled={!selectedProjectId}
-              >
-                <option value="">All Sprints</option>
-                {sprints.map((sprint) => (
-                  <option key={sprint.id} value={sprint.id}>
-                    {sprint.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Assignee Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Assignee</label>
-              <select
-                value={selectedAssigneeId}
-                onChange={(e) => setSelectedAssigneeId(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                disabled={!selectedProjectId}
-              >
-                <option value="">All Assignees</option>
-                {teamMembers.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.fullName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* RAG Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-2">RAG Status</label>
-              <select
-                value={selectedRAG}
-                onChange={(e) => setSelectedRAG(e.target.value as CardRAG | '')}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">All RAG</option>
-                <option value={CardRAG.GREEN}>Green</option>
-                <option value={CardRAG.AMBER}>Amber</option>
-                <option value={CardRAG.RED}>Red</option>
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Card Status</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as CardStatus | '')}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">All Statuses</option>
-                <option value={CardStatus.NOT_STARTED}>Not Started</option>
-                <option value={CardStatus.IN_PROGRESS}>In Progress</option>
-                <option value={CardStatus.COMPLETED}>Completed</option>
-                <option value={CardStatus.CLOSED}>Closed</option>
-              </select>
-            </div>
-
-            {/* Priority Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Priority</label>
-              <select
-                value={selectedPriority}
-                onChange={(e) => setSelectedPriority(e.target.value as CardPriority | '')}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">All Priorities</option>
-                <option value={CardPriority.LOW}>Low</option>
-                <option value={CardPriority.MEDIUM}>Medium</option>
-                <option value={CardPriority.HIGH}>High</option>
-                <option value={CardPriority.CRITICAL}>Critical</option>
-              </select>
-            </div>
-
-            {/* Search */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-2">Search</label>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title or external ID..."
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
+        <div className="flex flex-wrap items-end gap-4 mb-6">
+          {/* Project Filter */}
+          <div className="flex-1 min-w-[150px]">
+            <Select
+              label="Project"
+              value={selectedProjectId}
+              onChange={(value) => {
+                setSelectedProjectId(value);
+                setSelectedSprintId('');
+                setSelectedAssigneeId('');
+              }}
+              placeholder="All Projects"
+              options={[
+                { value: '', label: 'All Projects' },
+                ...projects.map((project) => ({
+                  value: project.id,
+                  label: project.name,
+                })),
+              ]}
+            />
           </div>
 
-          {hasActiveFilters && (
+          {/* Sprint Filter */}
+          <div className="flex-1 min-w-[150px]">
+            <Select
+              label="Sprint"
+              value={selectedSprintId}
+              onChange={setSelectedSprintId}
+              disabled={!selectedProjectId}
+              placeholder="All Sprints"
+              options={[
+                { value: '', label: 'All Sprints' },
+                ...sprints.map((sprint) => ({
+                  value: sprint.id,
+                  label: sprint.name,
+                })),
+              ]}
+            />
+          </div>
+
+          {/* Assignee Filter */}
+          <div className="flex-1 min-w-[150px]">
+            <Select
+              label="Assignee"
+              value={selectedAssigneeId}
+              onChange={setSelectedAssigneeId}
+              disabled={!selectedProjectId}
+              placeholder="All Assignees"
+              options={[
+                { value: '', label: 'All Assignees' },
+                ...teamMembers.map((member) => ({
+                  value: member.id,
+                  label: member.fullName,
+                })),
+              ]}
+            />
+          </div>
+
+          {/* RAG Filter */}
+          <div className="flex-1 min-w-[120px]">
+            <Select
+              label="RAG"
+              value={selectedRAG}
+              onChange={(value) => setSelectedRAG(value as CardRAG | '')}
+              placeholder="All RAG"
+              options={[
+                { value: '', label: 'All RAG' },
+                { value: CardRAG.GREEN, label: 'Green' },
+                { value: CardRAG.AMBER, label: 'Amber' },
+                { value: CardRAG.RED, label: 'Red' },
+              ]}
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex-1 min-w-[130px]">
+            <Select
+              label="Status"
+              value={selectedStatus}
+              onChange={(value) => setSelectedStatus(value as CardStatus | '')}
+              placeholder="All Statuses"
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: CardStatus.NOT_STARTED, label: 'Not Started' },
+                { value: CardStatus.IN_PROGRESS, label: 'In Progress' },
+                { value: CardStatus.COMPLETED, label: 'Completed' },
+                { value: CardStatus.CLOSED, label: 'Closed' },
+              ]}
+            />
+          </div>
+
+          {/* Priority Filter */}
+          <div className="flex-1 min-w-[120px]">
+            <Select
+              label="Priority"
+              value={selectedPriority}
+              onChange={(value) => setSelectedPriority(value as CardPriority | '')}
+              placeholder="All Priorities"
+              options={[
+                { value: '', label: 'All Priorities' },
+                { value: CardPriority.LOW, label: 'Low' },
+                { value: CardPriority.MEDIUM, label: 'Medium' },
+                { value: CardPriority.HIGH, label: 'High' },
+                { value: CardPriority.CRITICAL, label: 'Critical' },
+              ]}
+            />
+          </div>
+
+          {/* Search */}
+          <div className="flex-[2] min-w-[200px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Search</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by title or external ID..."
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+            />
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="mb-6">
             <button
               onClick={clearFilters}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-teal-600 hover:underline"
             >
               Clear all filters
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Cards Table */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -397,7 +411,7 @@ export default function CardsListPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => navigate(`/cards/${card.id}`)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
+                          className="text-teal-600 hover:text-teal-900 mr-3"
                         >
                           View
                         </button>
@@ -434,7 +448,7 @@ export default function CardsListPage() {
                 <div className="mt-6">
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700"
                   >
                     Create Card
                   </button>

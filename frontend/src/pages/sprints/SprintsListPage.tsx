@@ -5,6 +5,7 @@ import { projectsApi } from '../../services/api/projects';
 import { Sprint, SprintStatus } from '../../types/sprint';
 import { Project } from '../../types/project';
 import AppLayout from '../../components/AppLayout';
+import Select from '../../components/ui/Select';
 
 export default function SprintsListPage() {
   const [sprints, setSprints] = useState<Sprint[]>([]);
@@ -80,7 +81,7 @@ export default function SprintsListPage() {
       case SprintStatus.ACTIVE:
         return 'bg-green-100 text-green-800';
       case SprintStatus.COMPLETED:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-teal-100 text-blue-800';
       case SprintStatus.CLOSED:
         return 'bg-gray-100 text-gray-800';
       case SprintStatus.UPCOMING:
@@ -124,14 +125,24 @@ export default function SprintsListPage() {
   return (
     <AppLayout>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Sprints</h1>
-          <button
-            onClick={() => navigate('/sprints/new')}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Create Sprint
-          </button>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-cyan-100 text-sm font-medium mb-1">Planning</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">Sprints</h1>
+              <p className="text-cyan-100 mt-2 text-sm">Manage sprint cycles and iterations</p>
+            </div>
+            <button
+              onClick={() => navigate('/sprints/new')}
+              className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all font-medium"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Sprint
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -140,60 +151,61 @@ export default function SprintsListPage() {
           </div>
         )}
 
-        {/* Filters Section - M6-UC07 */}
-        <div className="bg-white shadow rounded p-4 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Project Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Filter by Project</label>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">All Projects</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Filter by Status</label>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as SprintStatus | '')}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">All Statuses</option>
-                <option value={SprintStatus.UPCOMING}>Upcoming</option>
-                <option value={SprintStatus.ACTIVE}>Active</option>
-                <option value={SprintStatus.COMPLETED}>Completed</option>
-                <option value={SprintStatus.CLOSED}>Closed</option>
-              </select>
-            </div>
-
-            {/* Search */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Search by Name</label>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search sprints..."
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
+        {/* Filters */}
+        <div className="flex flex-wrap items-end gap-4 mb-6">
+          {/* Project Filter */}
+          <div className="flex-1 min-w-[180px]">
+            <Select
+              label="Project"
+              value={selectedProjectId}
+              onChange={setSelectedProjectId}
+              placeholder="All Projects"
+              options={[
+                { value: '', label: 'All Projects' },
+                ...projects.map((project) => ({
+                  value: project.id,
+                  label: project.name,
+                })),
+              ]}
+            />
           </div>
+
+          {/* Status Filter */}
+          <div className="flex-1 min-w-[150px]">
+            <Select
+              label="Status"
+              value={selectedStatus}
+              onChange={(value) => setSelectedStatus(value as SprintStatus | '')}
+              placeholder="All Statuses"
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: SprintStatus.UPCOMING, label: 'Upcoming' },
+                { value: SprintStatus.ACTIVE, label: 'Active' },
+                { value: SprintStatus.COMPLETED, label: 'Completed' },
+                { value: SprintStatus.CLOSED, label: 'Closed' },
+              ]}
+            />
+          </div>
+
+          {/* Search */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Search</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search sprints..."
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+            />
+          </div>
+        </div>
+        <div className="mb-6">
 
           {hasActiveFilters && (
             <div className="mt-3">
               <button
                 onClick={clearFilters}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm text-teal-600 hover:underline"
               >
                 Clear all filters
               </button>
@@ -269,7 +281,7 @@ export default function SprintsListPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => navigate(`/sprints/${sprint.id}`)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      className="text-teal-600 hover:text-teal-900 mr-3"
                     >
                       View
                     </button>
@@ -313,7 +325,7 @@ export default function SprintsListPage() {
                 <div className="mt-6">
                   <button
                     onClick={() => navigate('/sprints/new')}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700"
                   >
                     Create Sprint
                   </button>

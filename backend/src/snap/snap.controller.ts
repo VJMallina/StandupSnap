@@ -39,6 +39,18 @@ export class SnapController {
   }
 
   /**
+   * Parse snap input with AI (without saving)
+   * POST /api/snaps/parse
+   * Required Permission: CREATE_SNAP (SM only)
+   * Returns parsed done/toDo/blockers/suggestedRAG without creating the snap
+   */
+  @Post('parse')
+  @RequirePermissions(Permission.CREATE_SNAP)
+  parseOnly(@Body() dto: { cardId: string; rawInput: string }) {
+    return this.snapService.parseOnly(dto.cardId, dto.rawInput);
+  }
+
+  /**
    * Get snap by ID
    * GET /api/snaps/:id
    * Required Permission: VIEW_SNAP

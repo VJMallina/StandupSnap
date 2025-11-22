@@ -43,7 +43,7 @@ export class Invitation {
   @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
 
-  @ManyToOne(() => Project, { nullable: true })
+  @ManyToOne(() => Project, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
   project: Project;
 

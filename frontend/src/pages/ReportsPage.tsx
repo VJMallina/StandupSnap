@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import AppLayout from '../components/AppLayout';
+import Select from '../components/ui/Select';
 import { reportsApi } from '../services/api/reports';
 import { dashboardApi, ProjectSummary } from '../services/api/dashboard';
 import { sprintsApi } from '../services/api/sprints';
@@ -472,80 +473,75 @@ Assignee-Level Status:
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-            Reports
-          </h1>
-          <p className="text-gray-500 mt-1">View and download daily standup summaries</p>
+        <div className="bg-gradient-to-r from-slate-600 via-slate-500 to-teal-600 rounded-2xl p-6 md:p-8 shadow-lg">
+          <p className="text-slate-200 text-sm font-medium mb-1">Analytics</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">Reports</h1>
+          <p className="text-slate-200 mt-2 text-sm">View and download daily standup summaries</p>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Project Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">Project</label>
-              <select
-                value={selectedProjectId}
-                onChange={(e) => handleProjectChange(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              >
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="flex flex-wrap items-end gap-4 mb-6">
+          {/* Project Selector */}
+          <div className="flex-1 min-w-[180px]">
+            <Select
+              label="Project"
+              value={selectedProjectId}
+              onChange={handleProjectChange}
+              placeholder="Select Project"
+              options={projects.map((project) => ({
+                value: project.id,
+                label: project.name,
+              }))}
+            />
+          </div>
 
-            {/* Sprint Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">Sprint</label>
-              <select
-                value={selectedSprintId}
-                onChange={(e) => setSelectedSprintId(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              >
-                <option value="">All Sprints</option>
-                {sprints.map((sprint) => (
-                  <option key={sprint.id} value={sprint.id}>
-                    {sprint.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Sprint Filter */}
+          <div className="flex-1 min-w-[150px]">
+            <Select
+              label="Sprint"
+              value={selectedSprintId}
+              onChange={setSelectedSprintId}
+              placeholder="All Sprints"
+              options={[
+                { value: '', label: 'All Sprints' },
+                ...sprints.map((sprint) => ({
+                  value: sprint.id,
+                  label: sprint.name,
+                })),
+              ]}
+            />
+          </div>
 
-            {/* Start Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">From Date</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-            </div>
+          {/* Start Date */}
+          <div className="flex-1 min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">From Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+            />
+          </div>
 
-            {/* End Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-2">To Date</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-            </div>
+          {/* End Date */}
+          <div className="flex-1 min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">To Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+            />
+          </div>
 
-            {/* Clear Filters */}
-            <div className="flex items-end">
-              <button
-                onClick={clearFilters}
-                className="w-full px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                Clear Filters
-              </button>
-            </div>
+          {/* Clear Filters */}
+          <div>
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
 
@@ -558,7 +554,7 @@ Assignee-Level Status:
         {/* Summaries List */}
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center animate-pulse">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center animate-pulse">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -596,8 +592,8 @@ Assignee-Level Status:
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
@@ -715,7 +711,7 @@ Assignee-Level Status:
                       {/* Card-Level Snaps */}
                       <div className="space-y-4">
                         <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                          <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                           </svg>
                           Card-Level Updates
@@ -763,8 +759,8 @@ Assignee-Level Status:
                                             <p className="font-medium text-emerald-700 mb-1">Done</p>
                                             <p className="text-gray-700 whitespace-pre-wrap">{snap.done || '-'}</p>
                                           </div>
-                                          <div className="bg-blue-50 rounded-lg p-3">
-                                            <p className="font-medium text-blue-700 mb-1">To Do</p>
+                                          <div className="bg-teal-50 rounded-lg p-3">
+                                            <p className="font-medium text-teal-700 mb-1">To Do</p>
                                             <p className="text-gray-700 whitespace-pre-wrap">{snap.toDo || '-'}</p>
                                           </div>
                                           <div className="bg-red-50 rounded-lg p-3">

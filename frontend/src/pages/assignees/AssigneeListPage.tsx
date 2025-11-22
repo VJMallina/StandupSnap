@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppLayout from '../../components/AppLayout';
+import Select from '../../components/ui/Select';
 import { assigneesApi, AssigneeListItem } from '../../services/api/assignees';
 import { projectsApi } from '../../services/api/projects';
 import { sprintsApi } from '../../services/api/sprints';
@@ -142,7 +143,7 @@ export default function AssigneeListPage() {
       <AppLayout>
         <div className="flex justify-center items-center py-12">
           <svg
-            className="animate-spin h-10 w-10 text-blue-600"
+            className="animate-spin h-10 w-10 text-teal-600"
             viewBox="0 0 24 24"
           >
             <circle
@@ -169,79 +170,53 @@ export default function AssigneeListPage() {
     <AppLayout>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <svg
-                className="h-10 w-10 text-blue-600 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              <div>
-                <h1 className="text-3xl font-bold">Team Members</h1>
-                <p className="text-gray-600">
-                  View all assignees and their work status
-                </p>
-              </div>
-            </div>
+        <div className="bg-gradient-to-r from-teal-600 via-slate-600 to-slate-700 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
+          <p className="text-teal-100 text-sm font-medium mb-1">Team</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">Team Members</h1>
+          <p className="text-teal-100 mt-2 text-sm">View all assignees and their work status</p>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-end gap-4 mb-6">
+          {/* Project Selector */}
+          <div className="flex-1 min-w-[200px]">
+            <Select
+              label="Project"
+              value={selectedProjectId}
+              onChange={handleProjectChange}
+              placeholder="Select a project..."
+              options={[
+                { value: '', label: 'Select a project...' },
+                ...projects.map((project) => ({
+                  value: project.id,
+                  label: project.name,
+                })),
+              ]}
+            />
           </div>
 
-          {/* Filters */}
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Project Selector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Project
-                </label>
-                <select
-                  value={selectedProjectId}
-                  onChange={(e) => handleProjectChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select a project...</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Sprint Selector */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sprint
-                </label>
-                <select
-                  value={selectedSprintId}
-                  onChange={(e) => handleSprintChange(e.target.value)}
-                  disabled={!selectedProjectId}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-                  <option value="">
-                    {!selectedProjectId
-                      ? 'Select a project first'
-                      : sprints.length === 0
-                        ? 'No active sprints'
-                        : 'Select a sprint...'}
-                  </option>
-                  {sprints.map((sprint) => (
-                    <option key={sprint.id} value={sprint.id}>
-                      {sprint.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          {/* Sprint Selector */}
+          <div className="flex-1 min-w-[200px]">
+            <Select
+              label="Sprint"
+              value={selectedSprintId}
+              onChange={handleSprintChange}
+              disabled={!selectedProjectId}
+              placeholder={
+                !selectedProjectId
+                  ? 'Select a project first'
+                  : sprints.length === 0
+                    ? 'No active sprints'
+                    : 'Select a sprint...'
+              }
+              options={[
+                { value: '', label: !selectedProjectId ? 'Select a project first' : sprints.length === 0 ? 'No active sprints' : 'All Sprints' },
+                ...sprints.map((sprint) => ({
+                  value: sprint.id,
+                  label: sprint.name,
+                })),
+              ]}
+            />
           </div>
         </div>
 
@@ -291,7 +266,7 @@ export default function AssigneeListPage() {
                   <div className="p-6">
                     {/* Avatar/Initials */}
                     <div className="flex items-center mb-4">
-                      <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg mr-3">
+                      <div className="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-lg mr-3">
                         {assignee.fullName
                           .split(' ')
                           .map((n) => n[0])
@@ -319,7 +294,7 @@ export default function AssigneeListPage() {
                     {/* Stats */}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-600">
+                        <p className="text-2xl font-bold text-teal-600">
                           {assignee.assignedCardsCount}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -340,7 +315,7 @@ export default function AssigneeListPage() {
 
                   {/* View Details Link */}
                   <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
-                    <button className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    <button className="text-sm font-medium text-teal-600 hover:text-teal-800">
                       View Details →
                     </button>
                   </div>

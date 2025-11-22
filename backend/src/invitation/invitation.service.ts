@@ -10,6 +10,7 @@ import { Invitation, InvitationStatus } from '../entities/invitation.entity';
 import { User } from '../entities/user.entity';
 import { Project } from '../entities/project.entity';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class InvitationService {
@@ -20,6 +21,7 @@ export class InvitationService {
     private userRepository: Repository<User>,
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
+    private mailService: MailService,
   ) {}
 
   /**
@@ -78,7 +80,24 @@ export class InvitationService {
       status: InvitationStatus.PENDING,
     });
 
-    return await this.invitationRepository.save(invitation);
+    const savedInvitation = await this.invitationRepository.save(invitation);
+    console.log('Invitation saved, now sending email...');
+
+    // Send invitation email
+    try {
+      await this.mailService.sendInvitation(
+        email,
+        token,
+        assignedRole,
+        project?.name,
+      );
+      console.log('Email sent successfully');
+    } catch (error) {
+      console.error('Failed to send invitation email:', error.message || error);
+      // Don't throw - invitation is still created, email can be resent
+    }
+
+    return savedInvitation;
   }
 
   /**

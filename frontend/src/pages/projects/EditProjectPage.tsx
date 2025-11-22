@@ -169,7 +169,7 @@ export default function EditProjectPage() {
       <AppLayout>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <svg className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin h-12 w-12 text-teal-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -186,7 +186,7 @@ export default function EditProjectPage() {
         <div className="mb-6">
           <button
             onClick={() => navigate(`/projects/${id}`)}
-            className="text-blue-600 hover:text-blue-800 font-medium mb-2 inline-flex items-center"
+            className="text-teal-600 hover:text-teal-800 font-medium mb-2 inline-flex items-center"
           >
             <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -218,14 +218,14 @@ export default function EditProjectPage() {
                   setFormData({ ...formData, name: e.target.value });
                   if (errors.name) setErrors({ ...errors, name: '' });
                 }}
-                className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Enter project name"
               />
               {checkingName && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-5 w-5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -245,7 +245,7 @@ export default function EditProjectPage() {
                 setFormData({ ...formData, description: e.target.value });
                 if (errors.description) setErrors({ ...errors, description: '' });
               }}
-              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                 errors.description ? 'border-red-500' : 'border-gray-300'
               }`}
               rows={4}
@@ -267,7 +267,7 @@ export default function EditProjectPage() {
                   setFormData({ ...formData, startDate: e.target.value });
                   if (errors.startDate) setErrors({ ...errors, startDate: '' });
                 }}
-                className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                   errors.startDate ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -285,7 +285,7 @@ export default function EditProjectPage() {
                   setFormData({ ...formData, endDate: e.target.value });
                   if (errors.endDate) setErrors({ ...errors, endDate: '' });
                 }}
-                className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                   errors.endDate ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -301,7 +301,7 @@ export default function EditProjectPage() {
               <select
                 value={formData.productOwnerId}
                 onChange={(e) => setFormData({ ...formData, productOwnerId: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               >
                 <option value="">Not assigned</option>
                 {productOwners.map(user => (
@@ -318,7 +318,7 @@ export default function EditProjectPage() {
               <select
                 value={formData.pmoId}
                 onChange={(e) => setFormData({ ...formData, pmoId: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               >
                 <option value="">Not assigned</option>
                 {pmos.map(user => (
@@ -337,7 +337,7 @@ export default function EditProjectPage() {
               id="isActive"
               checked={formData.isActive}
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
             />
             <label htmlFor="isActive" className="text-sm font-medium text-gray-700">Mark project as active</label>
           </div>
