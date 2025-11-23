@@ -117,12 +117,13 @@ export class CardService {
     status?: CardStatus,
     priority?: CardPriority,
     search?: string,
-  ): Promise<Card[]> {
+  ): Promise<any[]> {
     const queryBuilder = this.cardRepository
       .createQueryBuilder('card')
       .leftJoinAndSelect('card.project', 'project')
       .leftJoinAndSelect('card.sprint', 'sprint')
       .leftJoinAndSelect('card.assignee', 'assignee')
+      .loadRelationCountAndMap('card.snapsCount', 'card.snaps')
       .orderBy('sprint.startDate', 'ASC')
       .addOrderBy('card.title', 'ASC');
 

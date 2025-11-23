@@ -51,7 +51,7 @@ export const UnauthorizedPage = () => {
             onClick={() => navigate('/dashboard')}
             className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
           >
-            Go to Dashboard
+            Go to Snapboard
           </button>
         </div>
       </div>

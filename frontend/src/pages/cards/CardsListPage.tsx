@@ -348,115 +348,154 @@ export default function CardsListPage() {
           </div>
         )}
 
-        {/* Cards Table */}
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          {loading && cards.length === 0 ? (
-            <div className="p-6 text-center">Loading...</div>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sprint</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assignee</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ET (hrs)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RAG</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {cards.map((card) => {
-                  const statusBadge = getStatusBadge(card.status);
-                  const ragBadge = getRAGBadge(card.ragStatus);
-                  const priorityBadge = getPriorityBadge(card.priority);
-                  const isLocked = card.sprint.isClosed || card.status === CardStatus.CLOSED;
+        {/* Cards Grid */}
+        {loading && cards.length === 0 ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+          </div>
+        ) : cards.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No cards found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {hasActiveFilters
+                ? 'Try adjusting your filters or search query.'
+                : selectedProjectId
+                ? 'Get started by creating a new card.'
+                : 'Select a project to view or create cards.'}
+            </p>
+            {canCreateCard && !hasActiveFilters && (
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700"
+                >
+                  Create Card
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {cards.map((card, index) => {
+              const statusBadge = getStatusBadge(card.status);
+              const ragBadge = getRAGBadge(card.ragStatus);
+              const priorityBadge = getPriorityBadge(card.priority);
+              const isLocked = card.sprint.isClosed || card.status === CardStatus.CLOSED;
 
-                  return (
-                    <tr key={card.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
+              // RAG color for card accent
+              const ragAccent = {
+                [CardRAG.RED]: 'from-red-500 to-red-600',
+                [CardRAG.AMBER]: 'from-amber-500 to-amber-600',
+                [CardRAG.GREEN]: 'from-emerald-500 to-emerald-600',
+              };
+
+              return (
+                <div
+                  key={card.id}
+                  onClick={() => navigate(`/cards/${card.id}`)}
+                  className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer
+                    transform transition-all duration-300 ease-out
+                    hover:shadow-xl hover:-translate-y-2 hover:border-teal-200
+                    animate-[fadeInUp_0.4s_ease-out_forwards]"
+                  style={{
+                    animationDelay: `${index * 50}ms`,
+                    opacity: 0,
+                  }}
+                >
+                  {/* RAG Status Bar */}
+                  <div className={`h-1.5 bg-gradient-to-r ${card.ragStatus ? ragAccent[card.ragStatus] : 'from-gray-300 to-gray-400'}`} />
+
+                  {/* Card Content */}
+                  <div className="p-5">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
                           {isLocked && (
-                            <svg className="h-4 w-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                           )}
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{card.title}</div>
-                            {card.externalId && (
-                              <div className="text-sm text-gray-500">{card.externalId}</div>
-                            )}
-                          </div>
+                          <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-teal-600 transition-colors">
+                            {card.title}
+                          </h3>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{card.sprint.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{card.assignee.fullName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{card.estimatedTime}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${priorityBadge.color}`}>
-                          {priorityBadge.label}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${ragBadge.color}`}>
-                          {ragBadge.label}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusBadge.color}`}>
+                        {card.externalId && (
+                          <p className="text-xs text-gray-500 mt-0.5 font-mono">{card.externalId}</p>
+                        )}
+                      </div>
+                      <span className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full flex-shrink-0 ${priorityBadge.color}`}>
+                        {priorityBadge.label}
+                      </span>
+                    </div>
+
+                    {/* Meta Info with Snaps Count */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center text-xs text-gray-600">
+                          <svg className="w-3.5 h-3.5 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          {card.sprint.name}
+                        </div>
+                        <div className="flex items-center text-xs text-gray-600">
+                          <svg className="w-3.5 h-3.5 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          {card.assignee.fullName}
+                        </div>
+                        <div className="flex items-center text-xs text-gray-600">
+                          <svg className="w-3.5 h-3.5 mr-1.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {card.estimatedTime} hrs
+                        </div>
+                      </div>
+                      {/* Snaps Count - Middle Right */}
+                      <div className="relative flex items-center justify-center">
+                        <svg className="w-12 h-12 text-teal-100" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h6v6h6v10H6z" />
+                        </svg>
+                        <span className="absolute text-3xl font-bold text-teal-600">{card.snapsCount || 0}</span>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${statusBadge.color}`}>
                           {statusBadge.label}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => navigate(`/cards/${card.id}`)}
-                          className="text-teal-600 hover:text-teal-900 mr-3"
-                        >
-                          View
-                        </button>
+                        <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${ragBadge.color}`}>
+                          {ragBadge.label}
+                        </span>
                         {!isLocked && (
                           <button
-                            onClick={() => handleDelete(card)}
-                            className="text-red-600 hover:text-red-900"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(card);
+                            }}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                           >
-                            Delete
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
                           </button>
                         )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
+                      </div>
+                    </div>
+                  </div>
 
-          {cards.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No cards found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {hasActiveFilters
-                  ? 'Try adjusting your filters or search query.'
-                  : selectedProjectId
-                  ? 'Get started by creating a new card.'
-                  : 'Select a project to view or create cards.'}
-              </p>
-              {canCreateCard && !hasActiveFilters && (
-                <div className="mt-6">
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700"
-                  >
-                    Create Card
-                  </button>
+                  {/* Hover Glow Effect */}
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-teal-500/5 to-cyan-500/5" />
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Create Card Modal */}

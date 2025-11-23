@@ -8,6 +8,15 @@ import {
   DashboardData,
   ProjectSummary,
 } from '../services/api/dashboard';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -174,7 +183,7 @@ export default function DashboardPage() {
         <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-teal-100 text-sm font-medium mb-1">Dashboard</p>
+              <p className="text-teal-100 text-sm font-medium mb-1">Snapboard</p>
               <h1 className="text-2xl md:text-3xl font-bold text-white">
                 Welcome back, {user?.name}
               </h1>
@@ -213,9 +222,218 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Quick Actions */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">Snap Corner</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              onClick={() => navigate('/snaps')}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-100 hover:from-teal-100 hover:to-cyan-100 transition-all duration-200"
+            >
+              <div className="w-10 h-10 rounded-lg bg-teal-500 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700">Add Snap</span>
+            </button>
+            <button
+              onClick={() => navigate('/reports')}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 hover:from-violet-100 hover:to-purple-100 transition-all duration-200"
+            >
+              <div className="w-10 h-10 rounded-lg bg-violet-500 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700">View Reports</span>
+            </button>
+            <button
+              onClick={() => navigate('/cards')}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 hover:from-amber-100 hover:to-orange-100 transition-all duration-200"
+            >
+              <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700">View Cards</span>
+            </button>
+            <button
+              onClick={() => navigate('/standups')}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 hover:from-emerald-100 hover:to-teal-100 transition-all duration-200"
+            >
+              <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium text-gray-700">Standups</span>
+            </button>
+          </div>
+        </div>
+
         {/* Dashboard Widgets */}
         {dashboardData && (
           <div className="space-y-6">
+            {/* Sprint Progress Chart & Calendar Row */}
+            {dashboardData.sprintHealth && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Sprint Progress Chart */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900">Sprint Progress</h2>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="h-48">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={Array.from({ length: dashboardData.sprintHealth.totalDays }, (_, i) => ({
+                            day: i + 1,
+                            progress: i < dashboardData.sprintHealth!.currentDay
+                              ? Math.round(((i + 1) / dashboardData.sprintHealth!.totalDays) * 100)
+                              : null,
+                            ideal: Math.round(((i + 1) / dashboardData.sprintHealth!.totalDays) * 100),
+                          }))}
+                          margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis
+                            dataKey="day"
+                            tick={{ fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={{ stroke: '#e5e7eb' }}
+                          />
+                          <YAxis
+                            tick={{ fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={{ stroke: '#e5e7eb' }}
+                            domain={[0, 100]}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              borderRadius: '8px',
+                              border: 'none',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                            }}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="ideal"
+                            stroke="#e5e7eb"
+                            fill="#f9fafb"
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            name="Ideal"
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="progress"
+                            stroke="#0d9488"
+                            fill="url(#progressGradient)"
+                            strokeWidth={2}
+                            name="Actual"
+                          />
+                          <defs>
+                            <linearGradient id="progressGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mini Calendar */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900">Sprint Timeline</h2>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">Start</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {new Date(dashboardData.sprintHealth.sprintStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="flex-1 mx-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full transition-all duration-500"
+                          style={{ width: `${(dashboardData.sprintHealth.currentDay / dashboardData.sprintHealth.totalDays) * 100}%` }}
+                        />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500">End</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {new Date(dashboardData.sprintHealth.sprintEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {Array.from({ length: dashboardData.sprintHealth.totalDays }, (_, i) => {
+                        const dayNum = i + 1;
+                        const isToday = dayNum === dashboardData.sprintHealth!.currentDay;
+                        const isPast = dayNum < dashboardData.sprintHealth!.currentDay;
+                        const isFuture = dayNum > dashboardData.sprintHealth!.currentDay;
+
+                        return (
+                          <div
+                            key={i}
+                            className={`
+                              aspect-square rounded-lg flex items-center justify-center text-xs font-medium
+                              ${isToday ? 'bg-teal-500 text-white ring-2 ring-teal-300' : ''}
+                              ${isPast ? 'bg-teal-100 text-teal-700' : ''}
+                              ${isFuture ? 'bg-gray-50 text-gray-400' : ''}
+                            `}
+                          >
+                            {dayNum}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-4 flex items-center justify-center gap-4 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded bg-teal-100"></div>
+                        <span className="text-gray-600">Completed</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded bg-teal-500"></div>
+                        <span className="text-gray-600">Today</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-3 h-3 rounded bg-gray-50 border border-gray-200"></div>
+                        <span className="text-gray-600">Remaining</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Sprint Health Widget */}
             {dashboardData.sprintHealth ? (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

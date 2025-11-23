@@ -37,6 +37,7 @@ export interface Card {
   completedAt?: string;
   createdAt: string;
   updatedAt: string;
+  snapsCount?: number;
 }
 
 export interface CreateCardRequest {
