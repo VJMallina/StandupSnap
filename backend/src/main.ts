@@ -1,5 +1,6 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { JwtAuthGlobalGuard } from './auth/guards/jwt-auth-global.guard';
 import { DataSource } from 'typeorm';
@@ -47,8 +48,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: allowedOrigins,
     credentials: true,
   });
 
@@ -68,13 +75,29 @@ async function bootstrap() {
   // API prefix
   app.setGlobalPrefix('api');
 
+  // Swagger setup
+  const config = new DocumentBuilder()
+    .setTitle('StandupSnap API')
+    .setDescription('API documentation for StandupSnap - Quick Standup Generator')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
+
   // Run database seeders
   const dataSource = app.get(DataSource);
   await runSeeders(dataSource);
 
   const port = Number(process.env.PORT) || 3000;
-  await killPortProcess(port);
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}/api`);
+
+  // Only kill port in development
+  if (process.env.NODE_ENV !== 'production') {
+    await killPortProcess(port);
+  }
+
+  // Listen on 0.0.0.0 for container environments
+  await app.listen(port, '0.0.0.0');
+  console.log(`Application is running on port ${port}`);
 }
 bootstrap();

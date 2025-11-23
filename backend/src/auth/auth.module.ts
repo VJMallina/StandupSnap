@@ -12,11 +12,13 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 import { Role } from '../entities/role.entity';
 import { Invitation } from '../entities/invitation.entity';
 import { Project } from '../entities/project.entity';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, RefreshToken, Role, Invitation, Project]),
     PassportModule,
+    MailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

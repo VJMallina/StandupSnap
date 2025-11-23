@@ -19,6 +19,8 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponse } from './interfaces/auth-response.interface';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { MailService } from '../mail/mail.service';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +37,56 @@ export class AuthService {
     private projectRepository: Repository<Project>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private mailService: MailService,
   ) {}
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      // Don't reveal if email exists
+      return { message: 'If this email is registered, you will receive a password reset link' };
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    // Save token and expiry (1 hour)
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await this.userRepository.save(user);
+
+    // Send email
+    await this.mailService.sendPasswordReset(email, resetToken);
+
+    return { message: 'If this email is registered, you will receive a password reset link' };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    // Hash the token to compare with stored hash
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await this.userRepository.findOne({
+      where: { passwordResetToken: hashedToken },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    if (user.passwordResetExpires < new Date()) {
+      throw new BadRequestException('Reset token has expired');
+    }
+
+    // Update password
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
+    await this.userRepository.save(user);
+
+    return { message: 'Password has been reset successfully' };
+  }
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
     const { username, email, password, name, roleName, invitationToken } = registerDto;

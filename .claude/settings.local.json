@@ -58,7 +58,9 @@
       "Bash(powershell -Command \"Stop-Process -Id 3688 -Force\")",
       "Bash(powershell -Command \"Stop-Process -Id 1688 -Force\")",
       "Bash(powershell -Command \"Stop-Process -Id 9496 -Force\")",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(C:Usersuser.flybinflyctl.exe logs)",
+      "Bash(C:Usersuser.flybinflyctl.exe ssh console -a standupsnap-backend -C \"printenv GROQ_API_KEY && printenv GROQ_MODEL\")"
     ],
     "deny": [],
     "ask": []

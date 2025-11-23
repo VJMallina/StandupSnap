@@ -24,17 +24,34 @@ import { DashboardModule } from './dashboard/dashboard.module';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DATABASE_HOST'),
-        port: +configService.get('DATABASE_PORT'),
-        username: configService.get('DATABASE_USER'),
-        password: configService.get('DATABASE_PASSWORD'),
-        database: configService.get('DATABASE_NAME'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: process.env.NODE_ENV === 'development',
-        logging: process.env.NODE_ENV === 'development',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+
+        if (databaseUrl) {
+          // Use DATABASE_URL (Fly.io format)
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true, // Enable for initial deployment, disable later
+            logging: process.env.NODE_ENV === 'development',
+            ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+          };
+        }
+
+        // Fallback to individual env vars (local development)
+        return {
+          type: 'postgres',
+          host: configService.get('DATABASE_HOST'),
+          port: +configService.get('DATABASE_PORT'),
+          username: configService.get('DATABASE_USER'),
+          password: configService.get('DATABASE_PASSWORD'),
+          database: configService.get('DATABASE_NAME'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: process.env.NODE_ENV === 'development',
+          logging: process.env.NODE_ENV === 'development',
+        };
+      },
       inject: [ConfigService],
     }),
     AuthModule,

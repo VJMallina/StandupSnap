@@ -35,4 +35,23 @@ export class MailService {
 
     console.log(`Email sent successfully to ${email}`, result);
   }
+
+  async sendPasswordReset(email: string, token: string): Promise<void> {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+
+    console.log(`Attempting to send password reset email to ${email}`);
+
+    const result = await this.mailerService.sendMail({
+      to: email,
+      subject: 'Reset your StandupSnap password',
+      template: 'password-reset',
+      context: {
+        resetUrl,
+        email,
+      },
+    });
+
+    console.log(`Password reset email sent successfully to ${email}`, result);
+  }
 }
