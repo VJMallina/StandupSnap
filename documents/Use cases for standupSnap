@@ -1107,3 +1107,275 @@ Supporting Actors	System
 Business Validations	No project data or widgets may load.
 Notes	Prevents confusion for new users.
 
+12. Standup Book
+12.1 Open Standup Book for Sprint
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC01
+Use Case Name	Open Standup Book for Sprint
+Trigger	User selects “Standup Book” from side navigation or from sprint-level actions
+Pre-conditions	1. User is authenticated 2. User has role SM/PO/PMO on the project 3. A sprint exists with valid start and end dates 4. User has an active project context selected
+Basic Path (Main Flow)	1. User clicks “Standup Book” 2. System loads the selected project’s currently active sprint (if any) 3. If no sprint is active → system displays message “No active sprint found. Please create or select a sprint.” 4. If sprint exists → system opens the Standup Book interface 5. System highlights the current sprint day based on today’s date 6. System displays the day navigation (previous/next) and daily status indicators 7. User views standup book for the selected sprint day
+Alternative Paths	Condition 1 — No sprint created System shows “No sprints available. Create a sprint to access Standup Book.” Condition 2 — Sprint exists but user not mapped to project System shows “You do not have access to view Standup Book for this project.” Condition 3 — Sprint exists but today falls outside sprint dates System lands on first sprint day (upcoming) or last sprint day (past)
+Post-conditions	1. Standup Book screen is displayed 2. User can navigate between sprint days 3. System maintains project + sprint context until changed
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Only users mapped to the project may access the Standup Book 2. Sprint must have valid start and end dates 3. If multiple sprints exist, Standup Book must open only for the selected sprint 4. Display must default to today’s date if within sprint duration
+Notes	Standup Book is always sprint-specific and cannot open without selecting a sprint.
+
+12.2 Navigate Between Days in Sprint
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC02
+Use Case Name	Navigate Between Days in Sprint
+Trigger	User clicks “Next Day”, “Previous Day”, selects a date, or uses day list inside Standup Book
+Pre-conditions	1. Standup Book is open 2. Sprint exists with valid start and end dates 3. User is SM/PO/PMO and mapped to the project
+Basic Path (Main Flow)	1. User opens Standup Book 2. System displays navigation controls: Previous Day, Next Day, Day Selector 3. User selects a day within past or current sprint-day range 4. System validates day selection:   • Must be ≥ sprint start date   • Must be ≤ today   • Must be ≤ sprint end date 5. System loads selected day’s Standup Book page 6. Active day is highlighted
+Alternative Paths	Condition 1 — User tries to navigate before sprint start System blocks and remains on Day 1. Condition 2 — User tries to navigate beyond sprint end System blocks and stays at sprint end date (if sprint ended) OR stays at today (if sprint still ongoing). Condition 3 — User tries to navigate to future days (tomorrow or later) System blocks and shows: “Future standups cannot be viewed. Select a valid sprint day.” Condition 4 — Invalid sprint dates System shows: “Sprint dates invalid. Please update sprint configuration.”
+Post-conditions	1. System displays selected (valid) sprint day 2. Day context is updated for all other Standup Book functions
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. User cannot navigate outside sprint boundaries 2. User cannot access future days (strict rule) 3. “Next Day” disabled if on latest allowable day 4. “Previous Day” disabled if on start day 5. Active day must always be clearly highlighted
+Notes	Navigation must be seamless across all valid sprint days only. Future standups are strictly inaccessible.
+
+12.3 View Daily Standup Metadata
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC03
+Use Case Name	View Daily Standup Metadata
+Trigger	User navigates to a specific day inside Standup Book
+Pre-conditions	1. Standup Book is open 2. A valid sprint day (past or current) is selected 3. User is SM/PO/PMO mapped to the project
+Basic Path (Main Flow)	1. User selects a day within the sprint’s accessible range (past or today) 2. System loads the day's metadata section 3. System displays the following metadata for the selected day:   • Day number (Day 1, Day 2…)   • Actual date (e.g., Feb 5, 2025)   • Standup count for the day (configured in sprint)   • Standup Slots: Slot 1 / Slot 2 / Slot 3 (if applicable)   • Day status: Not Started / In Progress / Completed / Cancelled   • Lock Status: Locked / Not Locked   • Summary availability: Generated / Not Generated   • Total cards with snaps   • Total snaps created today 4. System updates this metadata dynamically as snaps or locks occur
+Alternative Paths	Condition 1 — No snaps recorded today System shows “No snaps recorded yet” but still displays day metadata. Condition 2 — Daily Snap Lock applied Metadata displays:   • Day Status = Completed   • Lock Status = Locked   • Summary = Available Condition 3 — Sprint Completed or Closed Metadata shown in read-only mode. 
+Post-conditions	1. User views all daily metadata required for understanding standup progress 2. Day-level context is set for viewing snaps, summary, MOM, and slot-level details
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Only past and current dates allowed; future metadata must not be shown 2. Day status rules:   • “Not Started” if date is before today   • “In Progress” if today and not locked   • “Completed” after lock or sprint closed 3. Standup slot count must follow sprint configuration 4. Metadata must auto-update when snaps or locks occur
+Notes	Metadata must always be visible at the top of the Standup Book Day page for quick reference.
+
+12.4 View Cards & Snap Activity for Selected Day
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC04
+Use Case Name	View Cards & Snap Activity for Selected Day
+Trigger	User opens a sprint day inside the Standup Book
+Pre-conditions	1. Standup Book is open 2. A valid sprint day (past or current) is selected 3. User is SM/PO/PMO mapped to the project 4. Cards exist in the sprint
+Basic Path (Main Flow)	1. User selects a valid sprint day from the Standup Book 2. System identifies all cards belonging to the sprint 3. System filters snaps created on this selected day only 4. System displays cards in structured order:   • Cards with snaps today → shown first   • Cards without snaps today → shown under “No updates today” (optional) 5. For each card, system shows:   • Card title / ID   • Assignee   • Final RAG for today (if snaps exist)   • Number of snaps for today   • Quick preview (first snippet of Done/To Do/Blocker) 6. Cards are grouped under respective standup slots (auto-clustered) 7. User clicks a card to expand full snaps related to that card for the day
+Alternative Paths	Condition 1 — No snaps created today System shows: “No updates recorded for any card on this day.” Condition 2 — Card was deleted later Snaps remain visible (history preserved), card marked as “Deleted” in UI. Condition 3 — Sprint Day is locked All snap activity is shown in read-only mode.
+Post-conditions	1. User gets complete visibility of card activity for the selected day 2. Cards remain clickable for deeper snap inspection 3. Assignee-level contribution is clearly visible
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Card list must reflect sprint’s actual card set 2. Only snaps created on the selected day must appear 3. Snaps must be grouped under correct slots using clustering logic 4. Both the RAGs are displayed from that day 5. Cards must be displayed in a stable, predictable order
+Notes	This is the “core visibility” use case of Standup Book — it connects cards, snaps, slots, and the day’s context.
+
+12.5 View Snaps for Selected Day
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC05
+Use Case Name	View Snaps for Selected Day
+Trigger	User clicks a card or expands a standup slot on a given sprint day
+Pre-conditions	1. Standup Book is open 2. A valid day (past or current) is selected 3. Card(s) exist for the sprint 4. Snaps may or may not exist for that day
+Basic Path (Main Flow)	1. User navigates to a valid sprint day within the Standup Book 2. User clicks on a standup slot (Slot 1 / Slot 2 / Slot 3) or expands a card entry 3. System retrieves all snaps created on the selected day for that specific card 4. System displays snaps in reverse chronological order (newest first) 5. For each snap, system displays:   • Timestamp   • Raw snap content (user input)   • Structured AI output (Done / To Do / Blockers)   • Final RAG assigned by SM 6. Snaps from that day are grouped automatically under the standup slot they belong to (slot = time-clustered) 7. User can continue expanding/collapsing card or slot sections to view associated snaps
+Alternative Paths	Condition 1 — No snaps exist for the selected day System displays: “No snaps recorded on this day.” Condition 2 — Sprint Day is locked Snaps appear in read-only mode, but still grouped by slot. Condition 3 — Card deleted later Snaps stay intact but card header shows “(Card Deleted)”.
+Post-conditions	1. User can view all snaps created for that day 2. Snaps are clearly grouped by slot (time clusters) 3. Snap order and integrity remains preserved
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Only snaps from the same day must be shown (no mixing dates) 2. Snaps must always be displayed newest → oldest 3. Slot grouping must be based on time clustering logic 4. All previous-day snaps must remain hidden for this UC (only today’s/day-specific snaps) 5. Snap content is immutable after lock
+Notes	This use case ensures full transparency of daily work, enabling accurate summary and MOM generation.
+
+12.6 View Daily Standup Summary (Post-Lock Summary)
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC06
+Use Case Name	View Daily Standup Summary (Post-Lock Summary)
+Trigger	User selects a sprint day after Daily Snap Lock has been applied
+Pre-conditions	1. Standup Book is open 2. A valid sprint day is selected (past or current) 3. Daily Snap Lock is completed for that day (manual or auto-lock) 4. User is SM/PO/PMO mapped to the project
+Basic Path (Main Flow)	1. User navigates to a locked sprint day in the Standup Book 2. System displays the “Daily Standup Summary” section for that day 3. Summary content is shown as generated during snap lock:   • Done (all completed work across all cards)   • To Do (upcoming planned work)   • Blockers (any blockers identified in snaps) 4. System displays RAG summaries:   • Per-card final RAG   • Optional: Assignee-level RAG   • Sprint-level daily RAG (system-derived) 5. Summary is shown in read-only mode for all roles 6. User may expand/collapse sections for readability
+Alternative Paths	Condition 1 — Summary not yet generated (snap lock pending) System shows: “Summary will be available once snaps for this day are locked.” Condition 2 — No snaps recorded for the day System generates and shows a valid empty-form summary:   • Done: (No updates)   • To Do: (No updates)   • Blockers: (None) RAG roll-up shown as “No Data”. Condition 3 — Sprint closed Summary remains viewable in read-only mode.
+Post-conditions	1. User sees the official, finalized summary for that day 2. No content can be edited or overridden after lock 3. Summary remains available for future reference and download
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Summary can only be viewed if snap lock has been applied 2. Summary must be generated exactly once per day (no re-generation) 3. Summary must be immutable after generation 4. Summary must incorporate all snaps from all standup slots (Slot 1, Slot 2, Slot 3…) 5. System must not display any placeholder or editable fields after lock
+Notes	Daily summary is the “official record” of the standup and ties into RAG trends, MOM, and sprint health.
+12.7 Handle Read-Only Logic (Sprint/Day Lock Protection)
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC07
+Use Case Name	Handle Read-Only Logic (Sprint/Day Lock Protection)
+Trigger	User views any sprint day where the sprint or snaps for the day may be locked or the sprint is closed
+Pre-conditions	1. Standup Book is open 2. A valid sprint day (past or current) is selected 3. User is SM/PO/PMO mapped to the project
+Basic Path (Main Flow)	1. User opens or navigates to a sprint day inside the Standup Book 2. System checks lock state for that day:   • Daily Snap Lock = Locked OR Not Locked 3. System checks sprint state:   • Sprint Active / Completed / Closed 4. If daily lock is Applied OR sprint is Completed/Closed, system enforces read-only mode:   • No new snaps allowed   • No snap editing or deletion allowed   • No RAG changes allowed   • MOM for that day becomes read-only 5. UI updates to reflect locked status:   • “Locked” label displayed   • Buttons hidden (Add Snap/Edit/Delete/Lock)   • Summary visible in view-only mode
+Alternative Paths	Condition 1 — Day is not locked & sprint is active System shows editable UI for SM: Add Snap, Edit Snap, Delete Snap, Lock Snaps. Condition 2 — PO or PMO opens an unlocked day System still shows read-only mode even if SM can edit. Condition 3 — Day has no snaps but sprint is closed Day remains read-only with no option to add snaps.
+Post-conditions	1. User sees correct access levels for that day 2. Editing features are completely removed/hidden when locked or sprint closed 3. System prevents accidental modifications to finalized standup data
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. No updates possible after daily lock 2. No updates possible after sprint is completed/closed 3. Only SM sees edit options when allowed 4. PO/PMO always read-only regardless of sprint state 5. Summary, snaps, MOM remain visible at all times
+Notes	Read-only enforcement is crucial for data integrity and forms the backbone of your daily lock system.
+
+12.8 Display Standup Slots for Selected Day
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC08
+Use Case Name	Display Standup Slots for Selected Day
+Trigger	User opens a valid sprint day inside the Standup Book
+Pre-conditions	1. Standup Book is open 2. A valid sprint day (past or current) is selected 3. Sprint has configured number of standups per day (default = 1, optionally >1)
+Basic Path (Main Flow)	1. User selects a sprint day within allowed date range 2. System fetches the number of configured standups per day from sprint settings 3. System displays standup slots for that day:   • If 1 standup → Show “Standup Slot 1”   • If >1 standups → Show Slot 1, Slot 2, Slot 3… as configured 4. For each slot, system prepares a section/container for grouping snaps 5. If snaps exist → snaps appear under their respective slots (as grouped by clustering logic) 6. If no snaps exist → slot shows “No updates yet” 7. User can expand/collapse each slot to view underlying snaps & associated cards
+Alternative Paths	Condition 1 — No snaps recorded for any slot All slots show “No updates yet”. Condition 2 — Only some slots have snaps Slots with snaps show grouped content, others show “Pending updates”. Condition 3 — Sprint day is locked All slots remain visible, but appear in read-only mode.
+Post-conditions	1. User sees a clear visual separation of standup slots for that day 2. System groups snaps correctly by slot 3. Standup Book reflects multi-standup structure clearly
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Slot count must always match sprint configuration 2. Snap-to-slot mapping must be consistent based on time clustering logic 3. Slot containers must appear even if empty 4. No slot-level locking; single daily lock applies to entire day 5. PO/PMO access is always read-only
+Notes	These slots are visual/organizational divisions — not individually lockable units. A single daily lock governs the entire day.
+
+12.9 Display Slot-Level Snap Grouping
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC09
+Use Case Name	Display Slot-Level Snap Grouping
+Trigger	System loads snaps for a selected sprint day OR user expands a standup slot
+Pre-conditions	1. Standup Book is open 2. A valid sprint day is selected (past or current) 3. Standup slots exist for that day (configured during sprint creation) 4. Snaps may or may not exist for that day
+Basic Path (Main Flow)	1. System detects snaps created on the selected day 2. System applies snap clustering logic to group snaps into slots:   • Slot 1 → earliest cluster   • Slot 2 → next cluster (if >2hr gap)   • Slot 3 → next cluster, etc. 3. System maps each snap to its determined slot 4. User expands a standup slot (Slot 1 / Slot 2 / Slot 3) 5. System displays snaps under that slot in reverse chronological order 6. For each grouped snap, system shows:   • Timestamp   • Raw entry   • Structured Done/To Do/Blockers   • Final RAG 7. Cards appear grouped under the slot, showing per-card snaps in that slot
+Alternative Paths	Condition 1 — No snaps exist for the day All slots show “No updates yet”. Condition 2 — Only some slots have snaps Filled slots show grouped snaps; Remaining slots show “Pending updates”. Condition 3 — All snaps occur in one cluster Only Slot 1 appears with content; other slots stay empty but visible. Condition 4 — Sprint day is locked Slot grouping remains visible but all content is read-only.
+Post-conditions	1. Snaps for the day are cleanly grouped under appropriate standup slots 2. User understands which snaps belong to which standup session 3. Card-level snaps are fully contextualised per slot
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Snap-to-slot grouping must follow clustering rules strictly (time-gap based) 2. All snaps must belong to exactly one slot 3. Slots cannot be manually modified or merged by the user (system-driven) 4. Read-only rules apply when day or sprint is locked 5. Order of display: Slot-level → Card-level → Snap-level
+Notes	Slot grouping is purely system-driven; users cannot choose slot while adding snaps. It maintains Standup Book integrity.
+
+12.10 Create MOM for Selected Sprint Day
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC10
+Use Case Name	Create MOM for Selected Sprint Day
+Trigger	User clicks “Create MOM” on a selected sprint day inside the Standup Book
+Pre-conditions	1. Standup Book is open 2. A valid sprint day (past or current) is selected 3. Sprint day is not locked (MOM creation allowed even if snaps not present) 4. User role: SM or PO (PMO is view-only) 5. System supports AI MOM generation
+Basic Path (Main Flow)	1. User opens a specific sprint day inside the Standup Book 2. User clicks the “Create MOM” button for that day 3. System opens the MOM creation interface containing:   • Raw input text area (manual notes)   • Upload section for transcript/file (optional)   • “Generate MOM using AI” button 4. User enters raw notes or uploads a transcript 5. User clicks “Generate MOM using AI” 6. System sends content to AI engine to generate structured MOM:   • Agenda   • Key Discussion Points   • Decisions Taken   • Action Items (with owner + due date if detectable) 7. System displays the generated MOM preview to the user 8. User reviews the MOM and clicks “Save MOM” 9. System stores the MOM for that sprint day
+Alternative Paths	Condition 1 — AI fails to generate MOM System shows: “Unable to process the input. Please revise or try again.” User may manually edit and save MOM. Condition 2 — No raw text or transcript provided System blocks MOM generation: “Please enter notes or upload a transcript.” Condition 3 — PMO attempts to create MOM MOM creation options hidden; MOM read-only view only. Condition 4 — Sprint day is locked System allows MOM view/edit only if created before lock, and prevents new MOM creation.
+Post-conditions	1. MOM is saved and tied to the selected sprint day 2. MOM becomes visible in Standup Book under that day’s section 3. MOM is available for download or further edits (until lock applied)
+Primary Actor	SM / PO
+Supporting Actors	System (AI Model), PMO (view-only)
+Business Validations	1. MOM must be associated with exactly one sprint day 2. One MOM per day per sprint (no duplicates) 3. AI-generated content must be editable before saving 4. MOM must be saved before daily lock; after lock, read-only applies 5. All MOM data must be stored securely and versioned (if required later)
+Notes	Standup-day MOM stays inside the Standup Book, creating a historical record of daily discussions for retrospectives and audits.
+
+12.11 Edit MOM for Selected Sprint Day
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC11
+Use Case Name	Edit MOM for Selected Sprint Day
+Trigger	User (SM or PO) clicks “Edit MOM” on the MOM section of a sprint day inside Standup Book
+Pre-conditions	1. Standup Book is open 2. A valid sprint day (past or current) is selected 3. A MOM already exists for that day 4. User has edit permissions (SM or PO) 5. Sprint day is not locked (editing allowed only before lock)
+Basic Path (Main Flow)	1. User navigates to a sprint day that already has a saved MOM 2. User clicks “Edit MOM” 3. System opens the MOM editing screen displaying:   • Agenda   • Key Discussion Points   • Decisions Taken   • Action Items (with owners) 4. User edits any sections as needed 5. User clicks “Save Changes” 6. System updates the existing MOM entry for that day 7. System confirms: “MOM updated successfully.”
+Alternative Paths	Condition 1 — Day is locked “Edit MOM” button is hidden; MOM is read-only. Condition 2 — PMO attempts to edit MOM Edit option not visible; MOM displayed in view-only mode. Condition 3 — AI re-generation requested (optional enhancement) If user clicks “Re-generate using AI”:   • System reprocesses raw input (if stored)   • Updates MOM preview (user still must save manually)
+Post-conditions	1. MOM content is updated and stored for the day 2. Updated MOM appears instantly inside Standup Book 3. Modified MOM becomes part of daily standup record
+Primary Actor	SM / PO
+Supporting Actors	System
+Business Validations	1. MOM editing allowed only before snap lock 2. Only SM/PO may edit MOM 3. PMO has no edit permissions, ever 4. One MOM per day; editing replaces the same record 5. MOM must remain fully read-only after lock
+Notes	Editing is allowed only until the daily lock occurs — consistent with snap edit rules and day-wide immutability.
+
+12.12 Download MOM for Selected Sprint Day
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC12
+Use Case Name	Download MOM for Selected Sprint Day
+Trigger	User clicks “Download MOM” from the MOM section of the selected sprint day
+Pre-conditions	1. Standup Book is open 2. A valid sprint day is selected (past or current) 3. A MOM already exists for that selected day 4. User is SM/PO/PMO mapped to the project (all can download)
+Basic Path (Main Flow)	1. User opens the Standup Book and navigates to a sprint day that contains a MOM entry 2. User clicks “Download MOM” 3. System displays download format options:   • Download as TXT   • Download as Word (DOCX) 4. User selects a format 5. System generates the MOM file with:   • Sprint Name   • Sprint Day (Date)   • MOM sections: Agenda, Discussion, Decisions, Action Items 6. System initiates the file download 7. User successfully receives downloaded file
+Alternative Paths	Condition 1 — No MOM exists for the day “Download MOM” button is hidden or disabled. Condition 2 — File generation error System shows: “Unable to generate file. Please try again.” Condition 3 — Unsupported file type request System defaults to TXT or shows error message.
+Post-conditions	1. User successfully downloads the MOM for the selected day 2. MOM format remains consistent regardless of day state (locked/unlocked)
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. MOM data must be identical across all formats 2. File must include complete metadata (date, sprint, card references if any) 3. MOM must remain downloadable even after sprint is closed 4. Download must never allow editing the stored MOM (MOM in system stays immutable)
+Notes	This enables sharing MOM outside the platform, improving collaboration with external stakeholders.
+
+12.13 View MOM History for Selected Sprint Day
+Section	Details
+Module #	10 – Standup Book
+Use Case ID	SB-UC13
+Use Case Name	View MOM History for Selected Sprint Day
+Trigger	User opens the MOM section for a sprint day that has an existing MOM
+Pre-conditions	1. Standup Book is open 2. A valid sprint day is selected (past or current) 3. A MOM entry exists for that day 4. User is SM/PO/PMO mapped to the project
+Basic Path (Main Flow)	1. User selects a sprint day that contains a MOM 2. System loads the MOM panel for that day 3. System displays the latest saved version of the MOM 4. If versioning is enabled (later enhancement), system displays version history:   • Version timestamp   • Author (SM/PO)   • Changes summary (optional future enhancement) 5. User can select any past version to preview it 6. System displays selected MOM version in read-only mode
+Alternative Paths	Condition 1 — MOM versioning not implemented (MVP) System displays only the most recent MOM, without version controls. Condition 2 — No MOM exists for the day System hides the MOM History section entirely. Condition 3 — PMO views MOM history All versions shown in view-only mode (no edit option).
+Post-conditions	1. User views complete MOM history for the selected day (if enabled) 2. No modifications are made to stored MOM versions 3. System preserves auditability and transparency
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Versioning is optional; if ON, system must preserve every saved MOM iteration 2. Historical MOM entries must remain immutable 3. Only latest MOM version is editable (before lock) 4. After daily lock, all MOM versions become read-only
+Notes	Version history enhances auditability and is optional for MVP but defines future scalability of the MOM module.
+
+13. Standup configuration
+13.1 Configure Number of Standups Per Day (During Sprint Creation)
+Section	Details
+Module #	9 – Multi-Standup Enhancements
+Use Case ID	MS-UC01
+Use Case Name	Configure Number of Standups Per Day (During Sprint Creation)
+Trigger	SM selects “Create Sprint” and enters sprint configuration details
+Pre-conditions	1. User authenticated 2. User has Scrum Master role 3. A project exists and is selected 4. Sprint creation UI is available
+Basic Path (Main Flow)	1. SM opens “Create Sprint” screen 2. System displays sprint configuration fields including:   • Sprint Name   • Start Date   • End Date   • (NEW) Number of standups per day 3. “Number of standups per day” defaults to 1 4. SM may select any value from 1 to N (configurable, default max = 3) 5. SM completes other sprint fields and clicks “Create Sprint” 6. System validates:   • Value ≥ 1   • Value ≤ system limit (default 3) 7. System saves the sprint along with the daily standup count 8. Standup Book and Snap Management modules reference this value automatically during day rendering
+Alternative Paths	Condition 1 — SM leaves standup count empty System auto-defaults to 1. Condition 2 — SM enters invalid number (0 or negative) System shows: “Number of standups must be at least 1.” Condition 3 — SM enters number above allowed upper limit System shows: “Maximum allowed standups per day is 3.”
+Post-conditions	1. Sprint is created with standup frequency for each day 2. Standup Book displays correct number of slots for each day 3. Snap grouping logic references the configured slot count
+Primary Actor	Scrum Master
+Supporting Actors	System
+Business Validations	1. Only SM can configure number of standups 2. Value must be an integer ≥ 1 3. System upper limit must be enforced 4. Standup count applies uniformly to all days of the sprint
+Notes	Standups per day drives slot creation but does NOT force snaps per slot. Slots remain logical/visual divisions.
+
+13.2 Auto-Cluster Snaps Into Standup Slots
+Section	Details
+Module #	9 – Multi-Standup Enhancements
+Use Case ID	MS-UC02
+Use Case Name	Auto-Cluster Snaps Into Standup Slots
+Trigger	System retrieves snaps for a selected sprint day inside Standup Book or Snap Management
+Pre-conditions	1. Standup Book is open OR Snap Management module is loading snaps 2. Sprint has a configured number of standups per day (1 or more) 3. Snaps exist for that day (0-or-more snaps) 4. Snaps have timestamps (captured during creation)
+Basic Path (Main Flow)	1. User opens a sprint day in Standup Book OR Snap Management loads snaps for summary 2. System retrieves all snaps created on that specific day 3. System sorts snaps chronologically (oldest → newest) 4. System applies time-gap clustering logic:   • First snap begins Slot 1 cluster   • If a snap is >2 hours apart from the previous snap, system starts Slot 2   • Continue for Slot 3, Slot 4, etc. (up to configured limit) 5. System maps each snap to a corresponding standup slot 6. If number of clusters < configured slots → empty slots remain visible as placeholders 7. Standup Book displays snaps under each slot accordingly
+Alternative Paths	Condition 1 — No snaps recorded today All slots appear but show “No updates yet.” Condition 2 — All snaps fall within one cluster Only Slot 1 contains snaps; remaining slots remain empty. Condition 3 — More clusters formed than configured slots System merges extra clusters into the last slot (rare case). Condition 4 — Snap timestamps missing or corrupted (system error) System cannot cluster; displays all snaps under Slot 1 with error message: “Unable to determine standup slots.”
+Post-conditions	1. All snaps for the day are grouped under the correct standup slots 2. Grouping is consistent and deterministic 3. Slot view becomes foundation for summary and daily lock
+Primary Actor	System (auto-process)
+Supporting Actors	SM / PO / PMO (view results)
+Business Validations	1. Snap-to-slot clustering must be automated; user cannot manually select slots 2. Clustering must always respect sprint's configured standup count 3. Time-gap rule must be consistent (default 2 hours, configurable) 4. All snaps must belong to exactly one slot 5. Empty slots must still appear for UI consistency
+Notes	This UC ensures that multi-standup capability integrates seamlessly with snap creation without changing SM workflow.
+
+13.3 Display Standup Slots on Day View
+Section	Details
+Module #	9 – Multi-Standup Enhancements
+Use Case ID	MS-UC03
+Use Case Name	Display Standup Slots on Day View
+Trigger	User opens a valid sprint day inside the Standup Book
+Pre-conditions	1. Standup Book is open 2. A valid sprint day (past or current) is selected 3. Sprint is configured with 1 or more standups per day
+Basic Path (Main Flow)	1. User selects a sprint day within allowed date range 2. System retrieves sprint configuration to determine standup count for the day 3. System displays standup slots for that day:   • Slot 1   • Slot 2   • Slot 3 (if applicable) 4. Each slot appears as a collapsible section or container 5. System auto-populates slot headers dynamically:   • “Slot 1 (Morning Standup)” (optional label)   • “Slot 2 (Evening Standup)” (optional) 6. Slots remain visible even if empty (“No updates yet”) 7. Snaps belonging to each slot (from clustering logic in MS-UC02) appear inside the slot section
+Alternative Paths	Condition 1 — No snaps for the day All slots appear but show: “No updates yet.” Condition 2 — Snaps present but only for Slot 1 Slot 1 shows content; other slots remain empty. Condition 3 — Day is locked Slots still appear but with read-only UI.
+Post-conditions	1. Standup slots are visible and correctly rendered for the selected day 2. Snaps appear under their correct slots 3. The structure enables the Standup Book to serve as a “multi-standup diary”
+Primary Actor	SM / PO / PMO
+Supporting Actors	System
+Business Validations	1. Slot count must match sprint configuration exactly 2. Slots must appear even if empty (visual consistency) 3. Order must always be Slot 1 → Slot 2 → Slot 3 4. No slot-level locking is allowed (lock applies to whole day) 5. Only SM can perform actions inside unlocked slots (add/edit snaps)
+Notes	This use case ensures the visual representation of multiple standups per day exactly as per sprint configuration. It does not manage slot logic — that’s covered in MS-UC02.
+
+13.4 Warn SM When Locking Early on Multi-Standup Day
+Section	Details
+Module #	9 – Multi-Standup Enhancements
+Use Case ID	MS-UC04
+Use Case Name	Warn SM When Locking Early on Multi-Standup Day
+Trigger	SM attempts to apply Daily Snap Lock on a sprint day that has multiple standups configured (≥2 standups/day)
+Pre-conditions	1. Standup Book or Snap Management is open 2. A sprint day with ≥2 standups is selected 3. At least one snap exists OR day is unlockable 4. Daily Lock NOT already applied 5. User is Scrum Master
+Basic Path (Main Flow)	1. SM opens the standup day and clicks “Lock Snaps for Today” 2. System checks sprint configuration: standups per day > 1 3. System checks if all standup slots have at least one snap:   • Slot 1 → Snaps present?   • Slot 2 → Snaps present?   • Slot 3 → Snaps present? 4. If one or more slots have 0 snaps, system triggers a warning modal: “You have multiple standups configured today. Locking now will close remaining standups and no snaps can be added for those slots. Proceed?” 5. SM chooses either: • Confirm Lock → proceed to apply lock • Cancel → return to day view
+Alternative Paths	Condition 1 — All slots already have snaps No warning needed; lock proceeds normally. Condition 2 — SM cancels System returns to day view without locking. Condition 3 — Sprint is Completed/Closed Lock button hidden; day is auto-read-only. Condition 4 — PO/PMO attempts lock Lock button hidden.
+Post-conditions	If SM confirms: 1. Daily Snap Lock is applied 2. All standup slots for that day are marked as locked 3. No further snaps can be added/edited/deleted 4. Daily Summary is generated automatically If SM cancels: • No lock applied; day remains editable
+Primary Actor	Scrum Master
+Supporting Actors	System
+Business Validations	1. Early-lock warning must appear only on multi-standup days 2. Warning is required if any slot is empty 3. SM has full freedom to proceed or cancel 4. PO/PMO cannot lock 5. Locking must freeze all slots together — not individually
+Notes	This prevents accidental early lock when multiple standups exist but gives control to SM when intentionally finishing early.
+
+13.5 Apply Single Daily Lock Across All Standup Slots
+Section	Details
+Module #	9 – Multi-Standup Enhancements
+Use Case ID	MS-UC05
+Use Case Name	Apply Single Daily Lock Across All Standup Slots
+Trigger	SM manually clicks “Lock Snaps for Today” OR system auto-locks after 24 hours
+Pre-conditions	1. Standup Book or Snap Management is open 2. Valid sprint day is selected 3. Sprint day is not already locked 4. User is Scrum Master (manual lock only) 5. Sprint is Active
+Basic Path (Main Flow)	1. SM clicks “Lock Snaps for Today” 2. System checks if standups per day ≥ 2 3. System checks if any slot is empty → if yes, MS-UC04 warning triggers 4. SM confirms lock 5. System applies ONE global daily lock for the entire day:   • Slot 1 → Locked   • Slot 2 → Locked   • Slot 3 → Locked 6. System disables all snap interactions:   • Add Snap → disabled   • Edit Snap → hidden   • Delete Snap → hidden 7. RAG values freeze for all cards in that day 8. System automatically generates the Daily Standup Summary 9. UI displays: “Snaps locked for today.”
+Alternative Paths	Condition 1 — Auto-lock triggered System automatically locks all slots at midnight or 24-hour window without SM interaction. Condition 2 — Lock attempted after sprint is Completed/Closed Lock button hidden; day is auto read-only. Condition 3 — PO/PMO attempts lock Lock button hidden. Condition 4 — Day already locked Lock button replaced with lock status indicator.
+Post-conditions	1. Entire day (all slots) is locked permanently 2. No more snaps can be created for that day 3. Daily Summary is available for download/view 4. MOM for that day becomes read-only
+Primary Actor	Scrum Master
+Supporting Actors	System
+Business Validations	1. Only one lock event per day (manual or automatic) 2. Entire day must be locked uniformly — slot-level locking is not allowed 3. PO/PMO always read-only 4. System must prevent partial locks (e.g., locking only slot 1) 5. Summary must reflect snaps from all slots combined
+Notes	This use case keeps multi-standup functionality unified: one day = one lock, regardless of number of standups.
+
+
