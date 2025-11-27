@@ -14,6 +14,7 @@ import { CardModule } from './card/card.module';
 import { SnapModule } from './snap/snap.module';
 import { AssigneeModule } from './assignee/assignee.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { StandupBookModule } from './standup-book/standup-book.module';
 
 // Team Management Module for non-login team members
 @Module({
@@ -65,6 +66,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     SnapModule,
     AssigneeModule,
     DashboardModule,
+    StandupBookModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,6 +6,7 @@ interface SnapCardProps {
   onDelete?: () => void;
   showCardTitle?: boolean;
   isToday?: boolean;
+  slotTimes?: Record<string, string>;
 }
 
 export default function SnapCard({
@@ -14,6 +15,7 @@ export default function SnapCard({
   onDelete,
   showCardTitle = false,
   isToday = false,
+  slotTimes,
 }: SnapCardProps) {
   const getRAGColor = (rag: SnapRAG | null) => {
     if (!rag) return 'bg-gray-100 text-gray-800';
@@ -56,6 +58,16 @@ export default function SnapCard({
             <span className="text-sm text-gray-500">
               {formatDate(snap.snapDate)} at {formatTime(snap.createdAt)}
             </span>
+            {snap.slotNumber && snap.slotNumber > 0 && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                Slot {snap.slotNumber}
+                {slotTimes?.[snap.slotNumber.toString()] && (
+                  <span className="ml-1 text-blue-700">
+                    ({slotTimes[snap.slotNumber.toString()]})
+                  </span>
+                )}
+              </span>
+            )}
             {snap.isLocked && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-800">
                 🔒 Locked

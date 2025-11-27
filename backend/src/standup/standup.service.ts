@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
 export interface GenerateStandupDto {
   rawInput: string;
@@ -14,13 +15,13 @@ export interface StandupResponse {
 
 @Injectable()
 export class StandupService {
-  private ollamaUrl: string;
-  private ollamaModel: string;
+  private groqApiKey: string;
+  private groqModel: string;
 
   constructor(private configService: ConfigService) {
-    this.ollamaUrl = this.configService.get<string>('OLLAMA_URL') || 'http://localhost:11434';
-    this.ollamaModel = this.configService.get<string>('OLLAMA_MODEL') || 'qwen2.5:7b';
-    console.log(`✓ Using Ollama at ${this.ollamaUrl} with model ${this.ollamaModel}`);
+    this.groqApiKey = this.configService.get<string>('GROQ_API_KEY') || '';
+    this.groqModel = this.configService.get<string>('GROQ_MODEL') || 'llama-3.3-70b-versatile';
+    console.log(`✓ Using Groq with model ${this.groqModel}`);
   }
 
   async generateStandup(dto: GenerateStandupDto): Promise<StandupResponse> {
@@ -44,25 +45,34 @@ Respond in JSON format:
 }`;
 
     try {
-      // Call Ollama API
-      const response = await fetch(`${this.ollamaUrl}/api/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Call Groq API
+      const response = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          model: this.groqModel,
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful assistant that converts free-form work updates into structured standup format. Return ONLY valid JSON with no additional text.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 500,
         },
-        body: JSON.stringify({
-          model: this.ollamaModel,
-          prompt: prompt,
-          stream: false,
-        }),
-      });
+        {
+          headers: {
+            'Authorization': `Bearer ${this.groqApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 30000,
+        }
+      );
 
-      if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const text = data.response;
+      const text = response.data?.choices?.[0]?.message?.content || '';
 
       // Parse the JSON response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -85,8 +95,11 @@ Respond in JSON format:
         blockers: parsed.blockers,
         formattedOutput,
       };
-    } catch (error) {
-      console.error('Error generating standup:', error);
+    } catch (error: any) {
+      console.error('Error generating standup:', error.message);
+      if (error.response?.data) {
+        console.error('Groq API error:', error.response.data);
+      }
       throw new Error(`Failed to generate standup: ${error.message}`);
     }
   }

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsUUID, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID, IsOptional, IsEnum, IsInt, Min, Max } from 'class-validator';
 import { SnapRAG } from '../../entities/snap.entity';
 
 export class CreateSnapDto {
@@ -9,6 +9,12 @@ export class CreateSnapDto {
   @IsString()
   @IsNotEmpty()
   rawInput: string;
+
+  @IsInt()
+  @IsNotEmpty()
+  @Min(1)
+  @Max(3)
+  slotNumber: number;
 
   @IsString()
   @IsOptional()

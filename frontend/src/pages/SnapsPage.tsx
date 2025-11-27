@@ -1225,6 +1225,7 @@ export default function SnapsPage() {
         <CreateSnapModal
           cardId={selectedCard.id}
           cardTitle={selectedCard.title}
+          dailyStandupCount={selectedCard.sprint.dailyStandupCount || 1}
           yesterdaySnap={yesterdaySnap}
           olderSnaps={olderSnaps}
           onClose={() => {

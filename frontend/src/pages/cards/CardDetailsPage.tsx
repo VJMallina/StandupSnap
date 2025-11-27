@@ -320,6 +320,8 @@ export default function CardDetailsPage() {
           <SnapsList
             cardId={card.id}
             cardTitle={card.title}
+            sprintId={card.sprint.id}
+            dailyStandupCount={card.sprint.dailyStandupCount || 1}
             isLocked={isLocked}
           />
         </div>

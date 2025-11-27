@@ -68,6 +68,10 @@ export class Snap {
   @Column({ type: 'date' })
   snapDate: Date;
 
+  // Slot number (which standup slot this snap belongs to)
+  @Column({ type: 'int', nullable: true })
+  slotNumber: number;
+
   // Whether this snap is locked (after daily lock)
   @Column({ default: false })
   isLocked: boolean;

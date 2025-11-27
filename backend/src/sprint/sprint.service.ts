@@ -20,6 +20,7 @@ export interface SprintPreview {
   startDate: Date;
   endDate: Date;
   durationDays: number;
+  dailyStandupCount: number;
 }
 
 @Injectable()
@@ -42,7 +43,7 @@ export class SprintService {
    * - Sprint name unique
    */
   async create(createSprintDto: CreateSprintDto): Promise<Sprint> {
-    const { projectId, name, goal, startDate, endDate } = createSprintDto;
+    const { projectId, name, goal, startDate, endDate, dailyStandupCount, slotTimes } = createSprintDto;
 
     // Find the project
     const project = await this.projectRepository.findOne({
@@ -81,6 +82,8 @@ export class SprintService {
       status: this.calculateSprintStatus(start, end),
       creationType: SprintCreationType.MANUAL,
       isClosed: false,
+      dailyStandupCount: dailyStandupCount || 1,
+      slotTimes: slotTimes || null,
       project,
     });
 
@@ -92,7 +95,7 @@ export class SprintService {
    * Returns a preview of sprints that would be created
    */
   async previewSprints(previewDto: PreviewSprintsDto): Promise<SprintPreview[]> {
-    const { projectId, sprintDurationWeeks, namePrefix } = previewDto;
+    const { projectId, sprintDurationWeeks, namePrefix, dailyStandupCount } = previewDto;
 
     // Find the project
     const project = await this.projectRepository.findOne({
@@ -130,6 +133,7 @@ export class SprintService {
         startDate: new Date(currentStartDate),
         endDate: finalEndDate,
         durationDays,
+        dailyStandupCount: dailyStandupCount || 1,
       });
 
       // Move to next sprint start date
@@ -155,7 +159,7 @@ export class SprintService {
    * - Project has valid end date
    */
   async generateSprints(generateDto: GenerateSprintsDto): Promise<Sprint[]> {
-    const { projectId, sprintDurationWeeks, namePrefix } = generateDto;
+    const { projectId, sprintDurationWeeks, namePrefix, dailyStandupCount, slotTimes } = generateDto;
 
     // Find the project
     const project = await this.projectRepository.findOne({
@@ -219,6 +223,8 @@ export class SprintService {
         status: this.calculateSprintStatus(currentStartDate, finalEndDate),
         creationType: SprintCreationType.AUTO_GENERATED,
         isClosed: false,
+        dailyStandupCount: dailyStandupCount || 1,
+        slotTimes: slotTimes || null,
         project,
       });
 
@@ -323,7 +329,7 @@ export class SprintService {
       throw new BadRequestException('Closed sprint cannot be edited');
     }
 
-    const { name, goal, startDate, endDate } = updateSprintDto;
+    const { name, goal, startDate, endDate, dailyStandupCount, slotTimes } = updateSprintDto;
 
     // If dates are being updated, validate them
     if (startDate || endDate) {
@@ -346,6 +352,16 @@ export class SprintService {
     // Update goal if provided
     if (goal !== undefined) {
       sprint.goal = goal;
+    }
+
+    // Update dailyStandupCount if provided
+    if (dailyStandupCount !== undefined) {
+      sprint.dailyStandupCount = dailyStandupCount;
+    }
+
+    // Update slotTimes if provided
+    if (slotTimes !== undefined) {
+      sprint.slotTimes = slotTimes;
     }
 
     return this.sprintRepository.save(sprint);

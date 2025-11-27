@@ -296,6 +296,18 @@ export default function SprintDetailsPage() {
                 <p className="text-gray-900">{getDuration(sprint.startDate, sprint.endDate)}</p>
               </div>
 
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Daily Standup Slots</h3>
+                <p className="text-gray-900">
+                  {sprint.dailyStandupCount || 1} slot{(sprint.dailyStandupCount || 1) !== 1 ? 's' : ''} per day
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {sprint.dailyStandupCount && sprint.dailyStandupCount > 1
+                    ? 'Multiple standup sessions per day'
+                    : 'Single standup session per day'}
+                </p>
+              </div>
+
               {sprint.status === SprintStatus.ACTIVE && daysRemaining !== null && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">Days Remaining</h3>

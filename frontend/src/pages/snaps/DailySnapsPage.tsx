@@ -355,7 +355,12 @@ Assignee Level:
                               <div className="mt-4 space-y-3">
                                 <h5 className="text-sm font-medium text-gray-700">Today's Snaps:</h5>
                                 {cardSnaps.map((snap) => (
-                                  <SnapCard key={snap.id} snap={snap} showCardTitle={false} />
+                                  <SnapCard
+                                    key={snap.id}
+                                    snap={snap}
+                                    showCardTitle={false}
+                                    slotTimes={sprint.slotTimes}
+                                  />
                                 ))}
                               </div>
                             )}
@@ -516,10 +521,11 @@ Assignee Level:
       </div>
 
       {/* Create Snap Modal */}
-      {creatingSnapForCard && (
+      {creatingSnapForCard && sprint && (
         <CreateSnapModal
           cardId={creatingSnapForCard.id}
           cardTitle={creatingSnapForCard.title}
+          dailyStandupCount={sprint.dailyStandupCount || 1}
           yesterdaySnap={getYesterdaySnapForCard(creatingSnapForCard.id)}
           olderSnaps={[]}
           onClose={() => setCreatingSnapForCard(null)}

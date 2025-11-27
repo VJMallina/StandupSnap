@@ -5,6 +5,7 @@ import { Snap, SnapRAG, CreateSnapRequest } from '../../types/snap';
 interface CreateSnapModalProps {
   cardId: string;
   cardTitle: string;
+  dailyStandupCount: number; // Number of standup slots configured for the sprint
   yesterdaySnap?: Snap | null;
   olderSnaps?: Snap[];
   onClose: () => void;
@@ -14,12 +15,14 @@ interface CreateSnapModalProps {
 export default function CreateSnapModal({
   cardId,
   cardTitle,
+  dailyStandupCount,
   yesterdaySnap,
   olderSnaps = [],
   onClose,
   onSuccess,
 }: CreateSnapModalProps) {
   const [rawInput, setRawInput] = useState('');
+  const [slotNumber, setSlotNumber] = useState<number>(1);
   const [done, setDone] = useState('');
   const [toDo, setToDo] = useState('');
   const [blockers, setBlockers] = useState('');
@@ -62,6 +65,7 @@ export default function CreateSnapModal({
       const data: CreateSnapRequest = {
         cardId,
         rawInput: rawInput.trim(),
+        slotNumber,
         done: done.trim() || undefined,
         toDo: toDo.trim() || undefined,
         blockers: blockers.trim() || undefined,
@@ -227,6 +231,29 @@ export default function CreateSnapModal({
               />
               <p className="text-xs text-gray-500 mt-1">
                 Standup Snap will automatically parse your update into Done, To Do, and Blockers sections.
+              </p>
+            </div>
+
+            {/* Slot Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Standup Slot <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={slotNumber}
+                onChange={(e) => setSlotNumber(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                disabled={parsing}
+                required
+              >
+                {Array.from({ length: dailyStandupCount }, (_, i) => i + 1).map((slot) => (
+                  <option key={slot} value={slot}>
+                    Slot {slot} {dailyStandupCount > 1 ? `(Standup ${slot})` : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Select which standup slot this update belongs to.
               </p>
             </div>
 

@@ -1,4 +1,4 @@
-import { IsUUID, IsNotEmpty, IsNumber, Min, IsString, IsOptional, IsIn } from 'class-validator';
+import { IsUUID, IsNotEmpty, IsNumber, Min, Max, IsString, IsOptional, IsIn, IsObject } from 'class-validator';
 
 export class GenerateSprintsDto {
   @IsUUID()
@@ -14,6 +14,16 @@ export class GenerateSprintsDto {
   @IsString()
   @IsOptional()
   namePrefix?: string;
+
+  @IsNumber()
+  @Min(1)
+  @Max(3)
+  @IsOptional()
+  dailyStandupCount?: number;
+
+  @IsObject()
+  @IsOptional()
+  slotTimes?: Record<string, string>;
 }
 
 export class PreviewSprintsDto {
@@ -30,4 +40,14 @@ export class PreviewSprintsDto {
   @IsString()
   @IsOptional()
   namePrefix?: string;
+
+  @IsNumber()
+  @Min(1)
+  @Max(3)
+  @IsOptional()
+  dailyStandupCount?: number;
+
+  @IsObject()
+  @IsOptional()
+  slotTimes?: Record<string, string>;
 }

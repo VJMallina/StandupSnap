@@ -22,6 +22,8 @@ import SnapsPage from './pages/SnapsPage';
 import AssigneeListPage from './pages/assignees/AssigneeListPage';
 import AssigneeDetailsPage from './pages/assignees/AssigneeDetailsPage';
 import ReportsPage from './pages/ReportsPage';
+import StandupBookPage from './pages/StandupBookPage';
+import StandupBookDayDetailsPage from './pages/StandupBookDayDetailsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -178,6 +180,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <ReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/standup-book"
+            element={
+              <ProtectedRoute>
+                <StandupBookPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/standup-book/:sprintId/:date"
+            element={
+              <ProtectedRoute>
+                <StandupBookDayDetailsPage />
               </ProtectedRoute>
             }
           />

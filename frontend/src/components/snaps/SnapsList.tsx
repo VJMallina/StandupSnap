@@ -8,22 +8,26 @@ import EditSnapModal from './EditSnapModal';
 interface SnapsListProps {
   cardId: string;
   cardTitle: string;
+  sprintId: string;
+  dailyStandupCount: number;
   isLocked?: boolean;
 }
 
-export default function SnapsList({ cardId, cardTitle, isLocked = false }: SnapsListProps) {
+export default function SnapsList({ cardId, cardTitle, sprintId, dailyStandupCount, isLocked = false }: SnapsListProps) {
   const [snaps, setSnaps] = useState<Snap[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingSnap, setEditingSnap] = useState<Snap | null>(null);
   const [deletingSnapId, setDeletingSnapId] = useState<string | null>(null);
+  const [isDayLocked, setIsDayLocked] = useState(false);
 
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     loadSnaps();
-  }, [cardId]);
+    checkDayLock();
+  }, [cardId, sprintId]);
 
   const loadSnaps = async () => {
     try {
@@ -35,6 +39,16 @@ export default function SnapsList({ cardId, cardTitle, isLocked = false }: Snaps
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkDayLock = async () => {
+    try {
+      const locked = await snapsApi.isDayLocked(sprintId, today);
+      setIsDayLocked(locked);
+    } catch (err) {
+      // If check fails, assume not locked
+      setIsDayLocked(false);
     }
   };
 
@@ -95,12 +109,14 @@ export default function SnapsList({ cardId, cardTitle, isLocked = false }: Snaps
     );
   }
 
+  const canAddSnap = !isLocked && !isDayLocked;
+
   return (
     <div className="space-y-6">
       {/* Header with Add Button */}
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold text-gray-900">Snaps</h3>
-        {!isLocked && (
+        {canAddSnap && (
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700"
@@ -109,6 +125,15 @@ export default function SnapsList({ cardId, cardTitle, isLocked = false }: Snaps
           </button>
         )}
       </div>
+
+      {/* Show lock warning if day is locked */}
+      {isDayLocked && !isLocked && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+          <p className="text-sm text-yellow-700">
+            Today's snaps have been locked. You cannot add or edit snaps for today.
+          </p>
+        </div>
+      )}
 
       {/* Today's Snaps */}
       {todaySnaps.length > 0 && (
@@ -165,7 +190,7 @@ export default function SnapsList({ cardId, cardTitle, isLocked = false }: Snaps
       {snaps.length === 0 && (
         <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <p className="text-gray-600 mb-4">No snaps yet for this card</p>
-          {!isLocked && (
+          {canAddSnap && (
             <button
               onClick={() => setShowCreateModal(true)}
               className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700"
@@ -181,6 +206,7 @@ export default function SnapsList({ cardId, cardTitle, isLocked = false }: Snaps
         <CreateSnapModal
           cardId={cardId}
           cardTitle={cardTitle}
+          dailyStandupCount={dailyStandupCount}
           yesterdaySnap={yesterdaySnap}
           olderSnaps={olderSnaps}
           onClose={() => setShowCreateModal(false)}

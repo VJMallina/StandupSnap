@@ -5,13 +5,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, In } from 'typeorm';
+import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, In, IsNull } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { Snap, SnapRAG } from '../entities/snap.entity';
 import { Card, CardStatus, CardRAG } from '../entities/card.entity';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
 import { DailySnapLock } from '../entities/daily-snap-lock.entity';
+import { DailyLock } from '../entities/daily-lock.entity';
 import { DailySummary } from '../entities/daily-summary.entity';
 import { CardRAGHistory } from '../entities/card-rag-history.entity';
 import { CreateSnapDto } from './dto/create-snap.dto';
@@ -40,6 +41,8 @@ export class SnapService {
     private sprintRepository: Repository<Sprint>,
     @InjectRepository(DailySnapLock)
     private lockRepository: Repository<DailySnapLock>,
+    @InjectRepository(DailyLock)
+    private dailyLockRepository: Repository<DailyLock>,
     @InjectRepository(DailySummary)
     private summaryRepository: Repository<DailySummary>,
     @InjectRepository(CardRAGHistory)
@@ -61,7 +64,7 @@ export class SnapService {
   async create(createSnapDto: CreateSnapDto, userId: string): Promise<Snap> {
     try {
       console.log('[SnapService.create] Starting snap creation:', { cardId: createSnapDto.cardId, userId });
-      const { cardId, rawInput, done, toDo, blockers, suggestedRAG, finalRAG } = createSnapDto;
+      const { cardId, rawInput, done, toDo, blockers, suggestedRAG, finalRAG, slotNumber } = createSnapDto;
 
       // 1. Validate card exists and load with relations
       const card = await this.cardRepository.findOne({
@@ -90,14 +93,20 @@ export class SnapService {
       throw new BadRequestException('Cannot create snaps after sprint closure');
     }
 
-    // 5. Check if today's snap is already locked
+    // 5. Validate slot number is within sprint's configured slots
     const today = new Date().toISOString().split('T')[0];
-    const isLocked = await this.isDayLocked(card.sprint.id, today);
-    if (isLocked) {
-      throw new BadRequestException('Cannot create snaps after daily snap lock has been applied');
+    const maxSlots = card.sprint.dailyStandupCount || 1;
+    if (slotNumber < 1 || slotNumber > maxSlots) {
+      throw new BadRequestException(`Invalid slot number. Sprint has ${maxSlots} daily standup slot(s). Please select a slot between 1 and ${maxSlots}.`);
     }
 
-    // 6. Validate snap date is within sprint range
+    // 6. Check if today's snap is already locked (slot-aware check)
+    const isLocked = await this.isDayLocked(card.sprint.id, today, slotNumber);
+    if (isLocked) {
+      throw new BadRequestException(`Cannot create snaps for locked slot ${slotNumber}. The day or this slot has been locked.`);
+    }
+
+    // 7. Validate snap date is within sprint range
     const snapDate = new Date(today);
     const sprintStart = new Date(card.sprint.startDate);
     const sprintEnd = new Date(card.sprint.endDate);
@@ -106,14 +115,14 @@ export class SnapService {
       throw new BadRequestException('Snap date must be within sprint date range');
     }
 
-    // 7. AI Parsing (if done/toDo/blockers not provided manually)
+    // 8. AI Parsing (if done/toDo/blockers not provided manually)
     let parsedData: ParsedSnapData | null = null;
     if (!done && !toDo && !blockers && !suggestedRAG) {
       // Use AI to parse the raw input
       parsedData = await this.parseSnapWithAI(rawInput, card);
     }
 
-    // 8. Create snap entity
+    // 9. Create snap entity with slot assignment
     const snap = this.snapRepository.create({
       cardId,
       createdById: userId,
@@ -124,6 +133,7 @@ export class SnapService {
       suggestedRAG: suggestedRAG || parsedData?.suggestedRAG || null,
       finalRAG: finalRAG || parsedData?.suggestedRAG || null, // Default to suggested if not overridden
       snapDate,
+      slotNumber,
       isLocked: false,
     });
 
@@ -222,10 +232,10 @@ export class SnapService {
       throw new BadRequestException('Cannot edit locked snaps');
     }
 
-    // 5. Validate daily lock not applied
-    const isLocked = await this.isDayLocked(snap.card.sprint.id, today);
+    // 5. Validate daily lock not applied (slot-aware check)
+    const isLocked = await this.isDayLocked(snap.card.sprint.id, today, snap.slotNumber);
     if (isLocked) {
-      throw new BadRequestException('Cannot edit snaps after daily lock has been applied');
+      throw new BadRequestException(`Cannot edit snaps after slot ${snap.slotNumber} has been locked`);
     }
 
     // 6. Validate sprint is Active
@@ -294,10 +304,10 @@ export class SnapService {
       throw new BadRequestException('Cannot delete locked snaps');
     }
 
-    // 5. Validate daily lock not applied
-    const isLocked = await this.isDayLocked(snap.card.sprint.id, today);
+    // 5. Validate daily lock not applied (slot-aware check)
+    const isLocked = await this.isDayLocked(snap.card.sprint.id, today, snap.slotNumber);
     if (isLocked) {
-      throw new BadRequestException('Cannot delete snaps after daily lock has been applied');
+      throw new BadRequestException(`Cannot delete snaps after slot ${snap.slotNumber} has been locked`);
     }
 
     // 6. Validate sprint is Active
@@ -657,20 +667,90 @@ export class SnapService {
   }
 
   /**
-   * Check if a specific date is locked for a sprint
+   * Determine which slot a snap belongs to based on time and existing snaps
    */
-  async isDayLocked(sprintId: string, date: string): Promise<boolean> {
-    const lock = await this.lockRepository
-      .createQueryBuilder('lock')
-      .where('lock.sprintId = :sprintId', { sprintId })
-      .andWhere('lock.lockDate = :date', { date })
-      .getOne();
+  private async determineSlotNumber(sprintId: string, date: string, createdAt: Date = new Date()): Promise<number> {
+    const sprint = await this.sprintRepository.findOne({ where: { id: sprintId } });
+    if (!sprint) {
+      return 1; // Default to slot 1
+    }
 
-    return !!lock;
+    const totalSlots = sprint.dailyStandupCount || 1;
+    if (totalSlots === 1) {
+      return 1; // Single slot per day
+    }
+
+    // Get all snaps for this day, ordered by creation time
+    const existingSnaps = await this.snapRepository.find({
+      where: { card: { sprint: { id: sprintId } }, snapDate: new Date(date) },
+      order: { createdAt: 'ASC' },
+    });
+
+    if (existingSnaps.length === 0) {
+      return 1; // First snap of the day
+    }
+
+    // Find the appropriate slot based on 2-hour clustering
+    let currentSlot = 1;
+    let lastSnapTime = new Date(existingSnaps[0].createdAt);
+
+    for (const snap of existingSnaps) {
+      const snapTime = new Date(snap.createdAt);
+      const timeDiff = (snapTime.getTime() - lastSnapTime.getTime()) / (1000 * 60 * 60); // hours
+
+      if (timeDiff > 2) {
+        // More than 2 hours gap = new slot
+        currentSlot++;
+        if (currentSlot > totalSlots) {
+          currentSlot = totalSlots; // Cap at max slots
+        }
+      }
+      lastSnapTime = snapTime;
+    }
+
+    // Check where current snap fits
+    const lastExistingSnapTime = new Date(existingSnaps[existingSnaps.length - 1].createdAt);
+    const timeSinceLastSnap = (createdAt.getTime() - lastExistingSnapTime.getTime()) / (1000 * 60 * 60);
+
+    if (timeSinceLastSnap > 2 && currentSlot < totalSlots) {
+      return currentSlot + 1;
+    }
+
+    return currentSlot;
   }
 
   /**
-   * AI Parsing Helper - Parse raw input with Ollama (free, open-source)
+   * Check if a specific date is locked for a sprint (unified check using DailyLock)
+   * Checks both day-level lock and slot-specific locks
+   */
+  async isDayLocked(sprintId: string, date: string, slotNumber?: number): Promise<boolean> {
+    const targetDate = new Date(date);
+
+    // Check if entire day is locked (slotNumber = null)
+    const dayLock = await this.dailyLockRepository.findOne({
+      where: { sprint: { id: sprintId }, date: targetDate, slotNumber: IsNull() },
+    });
+
+    if (dayLock && dayLock.isLocked) {
+      return true; // Entire day is locked
+    }
+
+    // If checking specific slot, also check slot-level lock
+    if (slotNumber !== undefined) {
+      const slotLock = await this.dailyLockRepository.findOne({
+        where: { sprint: { id: sprintId }, date: targetDate, slotNumber },
+      });
+
+      if (slotLock && slotLock.isLocked) {
+        return true; // This specific slot is locked
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * AI Parsing Helper - Parse raw input with Groq
    */
   private async parseSnapWithAI(rawInput: string, card: Card): Promise<ParsedSnapData> {
     try {
@@ -1017,10 +1097,10 @@ Return ONLY valid JSON:
       throw new BadRequestException('Can only override RAG for today\'s snaps');
     }
 
-    // 3. Validate daily lock not applied
-    const isLocked = await this.isDayLocked(snap.card.sprint.id, today);
+    // 3. Validate daily lock not applied (slot-aware check)
+    const isLocked = await this.isDayLocked(snap.card.sprint.id, today, snap.slotNumber);
     if (isLocked || snap.isLocked) {
-      throw new BadRequestException('Cannot override RAG after daily lock');
+      throw new BadRequestException(`Cannot override RAG after slot ${snap.slotNumber} has been locked`);
     }
 
     // 4. Update snap with override

@@ -23,6 +23,8 @@ export default function CreateSprintPage() {
     goal: '',
     startDate: '',
     endDate: '',
+    dailyStandupCount: 1,
+    slotTimes: {} as Record<string, string>,
   });
 
   // Auto-generate mode form data - M6-UC01 Auto
@@ -30,6 +32,8 @@ export default function CreateSprintPage() {
     projectId: '',
     sprintDurationWeeks: 2,
     namePrefix: 'Sprint',
+    dailyStandupCount: 1,
+    slotTimes: {} as Record<string, string>,
   });
 
   useEffect(() => {
@@ -58,6 +62,8 @@ export default function CreateSprintPage() {
         goal: manualFormData.goal || undefined,
         startDate: manualFormData.startDate,
         endDate: manualFormData.endDate,
+        dailyStandupCount: manualFormData.dailyStandupCount,
+        slotTimes: Object.keys(manualFormData.slotTimes).length > 0 ? manualFormData.slotTimes : undefined,
       });
       navigate('/sprints');
     } catch (err: any) {
@@ -78,6 +84,8 @@ export default function CreateSprintPage() {
         projectId: autoFormData.projectId,
         sprintDurationWeeks: autoFormData.sprintDurationWeeks,
         namePrefix: autoFormData.namePrefix || 'Sprint',
+        dailyStandupCount: autoFormData.dailyStandupCount,
+        slotTimes: Object.keys(autoFormData.slotTimes).length > 0 ? autoFormData.slotTimes : undefined,
       });
       setSprintPreviews(previews);
       setError(null);
@@ -99,6 +107,8 @@ export default function CreateSprintPage() {
         projectId: autoFormData.projectId,
         sprintDurationWeeks: autoFormData.sprintDurationWeeks,
         namePrefix: autoFormData.namePrefix || 'Sprint',
+        dailyStandupCount: autoFormData.dailyStandupCount,
+        slotTimes: Object.keys(autoFormData.slotTimes).length > 0 ? autoFormData.slotTimes : undefined,
       });
       navigate('/sprints');
     } catch (err: any) {
@@ -261,6 +271,66 @@ export default function CreateSprintPage() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Number of Standups Per Day <span className="text-red-500">*</span>
+              </label>
+              <select
+                required
+                value={manualFormData.dailyStandupCount}
+                onChange={(e) => {
+                  const count = parseInt(e.target.value);
+                  setManualFormData({
+                    ...manualFormData,
+                    dailyStandupCount: count,
+                    slotTimes: {} // Reset slot times when count changes
+                  });
+                }}
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              >
+                <option value={1}>1 Standup Per Day (Default)</option>
+                <option value={2}>2 Standups Per Day</option>
+                <option value={3}>3 Standups Per Day</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Configure how many standup slots should be available each day during this sprint
+              </p>
+            </div>
+
+            {/* Dynamic Slot Time Inputs */}
+            {manualFormData.dailyStandupCount > 1 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Slot Times (Optional)</h3>
+                <p className="text-xs text-gray-500 mb-4">
+                  Specify the time for each standup slot. This helps team members know when each slot occurs.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {Array.from({ length: manualFormData.dailyStandupCount }, (_, i) => i + 1).map((slotNum) => (
+                    <div key={slotNum}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Slot {slotNum} Time
+                      </label>
+                      <input
+                        type="time"
+                        value={manualFormData.slotTimes[slotNum.toString()] || ''}
+                        onChange={(e) => {
+                          const newSlotTimes = { ...manualFormData.slotTimes };
+                          if (e.target.value) {
+                            newSlotTimes[slotNum.toString()] = e.target.value;
+                          } else {
+                            delete newSlotTimes[slotNum.toString()];
+                          }
+                          setManualFormData({ ...manualFormData, slotTimes: newSlotTimes });
+                        }}
+                        className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        placeholder="HH:MM"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-4 border-t">
               <button
                 type="submit"
@@ -361,6 +431,66 @@ export default function CreateSprintPage() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Number of Standups Per Day <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={autoFormData.dailyStandupCount}
+                  onChange={(e) => {
+                    const count = parseInt(e.target.value);
+                    setAutoFormData({
+                      ...autoFormData,
+                      dailyStandupCount: count,
+                      slotTimes: {} // Reset slot times when count changes
+                    });
+                  }}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                >
+                  <option value={1}>1 Standup Per Day (Default)</option>
+                  <option value={2}>2 Standups Per Day</option>
+                  <option value={3}>3 Standups Per Day</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Configure how many standup slots should be available each day for all generated sprints
+                </p>
+              </div>
+
+              {/* Dynamic Slot Time Inputs */}
+              {autoFormData.dailyStandupCount > 1 && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Slot Times (Optional)</h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Specify the time for each standup slot. These times will apply to all generated sprints.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Array.from({ length: autoFormData.dailyStandupCount }, (_, i) => i + 1).map((slotNum) => (
+                      <div key={slotNum}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Slot {slotNum} Time
+                        </label>
+                        <input
+                          type="time"
+                          value={autoFormData.slotTimes[slotNum.toString()] || ''}
+                          onChange={(e) => {
+                            const newSlotTimes = { ...autoFormData.slotTimes };
+                            if (e.target.value) {
+                              newSlotTimes[slotNum.toString()] = e.target.value;
+                            } else {
+                              delete newSlotTimes[slotNum.toString()];
+                            }
+                            setAutoFormData({ ...autoFormData, slotTimes: newSlotTimes });
+                          }}
+                          className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          placeholder="HH:MM"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 pt-4 border-t">
                 <button
                   type="submit"
@@ -410,6 +540,9 @@ export default function CreateSprintPage() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Duration
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Daily Standups
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -426,6 +559,9 @@ export default function CreateSprintPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {preview.durationDays} day{preview.durationDays !== 1 ? 's' : ''}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {preview.dailyStandupCount} per day
                           </td>
                         </tr>
                       ))}

@@ -20,6 +20,7 @@ export interface Snap {
   suggestedRAG: SnapRAG | null;
   finalRAG: SnapRAG | null;
   snapDate: string; // ISO date string (YYYY-MM-DD)
+  slotNumber: number | null; // Which standup slot this snap belongs to (null if not multi-slot sprint)
   isLocked: boolean;
   createdAt: string;
   updatedAt: string;
@@ -28,6 +29,7 @@ export interface Snap {
 export interface CreateSnapRequest {
   cardId: string;
   rawInput: string;
+  slotNumber: number;
   done?: string;
   toDo?: string;
   blockers?: string;

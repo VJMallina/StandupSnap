@@ -1,0 +1,168 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - button [ref=e5] [cursor=pointer]:
+      - img [ref=e6]
+    - generic [ref=e8]:
+      - generic [ref=e11]:
+        - img [ref=e13]
+        - generic [ref=e15]:
+          - heading "StandupSnap™" [level=1] [ref=e16]:
+            - text: StandupSnap
+            - superscript [ref=e17]: ™
+          - paragraph [ref=e18]: AI-Powered Manager
+      - navigation [ref=e19]:
+        - button "Snapboard" [ref=e21] [cursor=pointer]:
+          - img [ref=e23]
+          - generic [ref=e25]: Snapboard
+        - button "Projects" [ref=e27] [cursor=pointer]:
+          - img [ref=e29]
+          - generic [ref=e31]: Projects
+        - button "Sprints" [ref=e33] [cursor=pointer]:
+          - img [ref=e35]
+          - generic [ref=e37]: Sprints
+        - button "Standup Book" [ref=e39] [cursor=pointer]:
+          - img [ref=e41]
+          - generic [ref=e43]: Standup Book
+        - button "Cards" [ref=e46] [cursor=pointer]:
+          - img [ref=e48]
+          - generic [ref=e50]: Cards
+        - button "Snaps" [ref=e52] [cursor=pointer]:
+          - img [ref=e54]
+          - generic [ref=e57]: Snaps
+        - button "Assignees" [ref=e59] [cursor=pointer]:
+          - img [ref=e61]
+          - generic [ref=e63]: Assignees
+        - button "Team" [ref=e65] [cursor=pointer]:
+          - img [ref=e67]
+          - generic [ref=e69]: Team
+        - button "Reports" [ref=e71] [cursor=pointer]:
+          - img [ref=e73]
+          - generic [ref=e75]: Reports
+        - button "Profile" [ref=e77] [cursor=pointer]:
+          - img [ref=e79]
+          - generic [ref=e81]: Profile
+      - generic [ref=e86]: v0.1.0 Beta
+  - generic [ref=e87]:
+    - navigation [ref=e88]:
+      - generic [ref=e90]:
+        - generic:
+          - generic:
+            - img
+          - generic:
+            - heading "StandupSnap™" [level=1]:
+              - text: StandupSnap
+              - superscript: ™
+        - generic [ref=e92]:
+          - button "S Standup Test User Scrum Master" [ref=e93] [cursor=pointer]:
+            - generic [ref=e94]: S
+            - generic [ref=e95]:
+              - generic [ref=e96]: Standup Test User
+              - generic [ref=e97]: Scrum Master
+          - button "Logout" [ref=e98] [cursor=pointer]:
+            - img [ref=e99]
+            - text: Logout
+    - main [ref=e101]:
+      - generic [ref=e104]:
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - img [ref=e111]
+            - generic [ref=e113]:
+              - heading "Standup Book" [level=1] [ref=e114]
+              - paragraph [ref=e115]: Daily activities & meetings
+          - generic [ref=e116]:
+            - img [ref=e117]
+            - combobox [ref=e119]:
+              - option "Select a project..."
+              - option "Standup Test Project 1764261846163" [selected]
+              - option "Standup Test Project 1764261816754"
+              - option "Standup Test Project 1764261816465"
+              - option "Standup Test Project 1764261782156"
+              - option "Standup Test Project 1764261772206"
+              - option "Standup Test Project 1764261743417"
+              - option "Standup Test Project 1764261743350"
+              - option "Project XYZ"
+              - option "Project ABC"
+              - option "Test_Project"
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - img [ref=e124]
+            - generic [ref=e126]:
+              - heading "Test Sprint 1764261846163" [level=2] [ref=e127]
+              - paragraph [ref=e128]: 11/27/2025 - 12/11/2025
+          - generic [ref=e129]:
+            - generic [ref=e130]: "15"
+            - generic [ref=e131]: Total Days
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - img [ref=e135]
+            - heading "Day Books" [level=3] [ref=e137]
+            - generic [ref=e138]:
+              - generic [ref=e141]: Locked
+              - generic [ref=e144]: Today
+              - generic [ref=e147]: Available
+              - generic [ref=e150]: Future
+          - generic [ref=e151]:
+            - button "1 Nov 27" [disabled] [ref=e152]:
+              - generic [ref=e156]:
+                - generic [ref=e157]: "1"
+                - generic [ref=e158]: Nov 27
+            - button "2 Nov 28" [disabled] [ref=e159]:
+              - generic [ref=e163]:
+                - generic [ref=e164]: "2"
+                - generic [ref=e165]: Nov 28
+            - button "3 Nov 29" [disabled] [ref=e166]:
+              - generic [ref=e170]:
+                - generic [ref=e171]: "3"
+                - generic [ref=e172]: Nov 29
+            - button "4 Nov 30" [disabled] [ref=e173]:
+              - generic [ref=e177]:
+                - generic [ref=e178]: "4"
+                - generic [ref=e179]: Nov 30
+            - button "5 Dec 1" [disabled] [ref=e180]:
+              - generic [ref=e184]:
+                - generic [ref=e185]: "5"
+                - generic [ref=e186]: Dec 1
+            - button "6 Dec 2" [disabled] [ref=e187]:
+              - generic [ref=e191]:
+                - generic [ref=e192]: "6"
+                - generic [ref=e193]: Dec 2
+            - button "7 Dec 3" [disabled] [ref=e194]:
+              - generic [ref=e198]:
+                - generic [ref=e199]: "7"
+                - generic [ref=e200]: Dec 3
+            - button "8 Dec 4" [disabled] [ref=e201]:
+              - generic [ref=e205]:
+                - generic [ref=e206]: "8"
+                - generic [ref=e207]: Dec 4
+            - button "9 Dec 5" [disabled] [ref=e208]:
+              - generic [ref=e212]:
+                - generic [ref=e213]: "9"
+                - generic [ref=e214]: Dec 5
+            - button "10 Dec 6" [disabled] [ref=e215]:
+              - generic [ref=e219]:
+                - generic [ref=e220]: "10"
+                - generic [ref=e221]: Dec 6
+            - button "11 Dec 7" [disabled] [ref=e222]:
+              - generic [ref=e226]:
+                - generic [ref=e227]: "11"
+                - generic [ref=e228]: Dec 7
+            - button "12 Dec 8" [disabled] [ref=e229]:
+              - generic [ref=e233]:
+                - generic [ref=e234]: "12"
+                - generic [ref=e235]: Dec 8
+            - button "13 Dec 9" [disabled] [ref=e236]:
+              - generic [ref=e240]:
+                - generic [ref=e241]: "13"
+                - generic [ref=e242]: Dec 9
+            - button "14 Dec 10" [disabled] [ref=e243]:
+              - generic [ref=e247]:
+                - generic [ref=e248]: "14"
+                - generic [ref=e249]: Dec 10
+            - button "15 Dec 11" [disabled] [ref=e250]:
+              - generic [ref=e254]:
+                - generic [ref=e255]: "15"
+                - generic [ref=e256]: Dec 11
+```

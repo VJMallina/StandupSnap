@@ -63,6 +63,12 @@ export class Sprint {
   @Column({ default: false })
   isClosed: boolean;
 
+  @Column({ type: 'int', default: 1 })
+  dailyStandupCount: number;
+
+  @Column({ type: 'jsonb', nullable: true })
+  slotTimes: Record<string, string>;
+
   @OneToMany(() => StandupUpdate, (standupUpdate) => standupUpdate.sprint)
   standupUpdates: StandupUpdate[];
 

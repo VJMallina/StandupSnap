@@ -63,7 +63,10 @@
       "Bash(C:Usersuser.flybinflyctl.exe ssh console -a standupsnap-backend -C \"printenv GROQ_API_KEY && printenv GROQ_MODEL\")",
       "Bash(del \"C:\\Users\\user\\Desktop\\StandupSnap\\backend\\src\\auth\\auth.controller.integration.spec.ts\")",
       "Bash(powershell -Command \"Remove-Item ''C:\\Users\\user\\Desktop\\StandupSnap\\backend\\src\\auth\\auth.controller.integration.spec.ts''\")",
-      "Bash(Remove-Item \"C:\\Users\\user\\Desktop\\StandupSnap\\frontend\\e2e\\rbac.spec.ts\")"
+      "Bash(Remove-Item \"C:\\Users\\user\\Desktop\\StandupSnap\\frontend\\e2e\\rbac.spec.ts\")",
+      "Bash(npx kill-port:*)",
+      "Bash(tasklist:*)",
+      "Bash(del \"C:\\Users\\user\\Desktop\\StandupSnap\\frontend\\e2e\\standupbook-complete.spec.ts\")"
     ],
     "deny": [],
     "ask": []

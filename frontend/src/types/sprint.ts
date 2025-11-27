@@ -21,6 +21,8 @@ export interface Sprint {
   status: SprintStatus;
   creationType: SprintCreationType;
   isClosed: boolean;
+  dailyStandupCount: number;
+  slotTimes?: Record<string, string>;
   project: Project;
   createdAt: string;
   updatedAt: string;
@@ -32,6 +34,8 @@ export interface CreateSprintRequest {
   goal?: string;
   startDate: string;
   endDate: string;
+  dailyStandupCount?: number;
+  slotTimes?: Record<string, string>;
 }
 
 export interface UpdateSprintRequest {
@@ -39,18 +43,24 @@ export interface UpdateSprintRequest {
   goal?: string;
   startDate?: string;
   endDate?: string;
+  dailyStandupCount?: number;
+  slotTimes?: Record<string, string>;
 }
 
 export interface GenerateSprintsRequest {
   projectId: string;
   sprintDurationWeeks: number;
   namePrefix?: string;
+  dailyStandupCount?: number;
+  slotTimes?: Record<string, string>;
 }
 
 export interface PreviewSprintsRequest {
   projectId: string;
   sprintDurationWeeks: number;
   namePrefix?: string;
+  dailyStandupCount?: number;
+  slotTimes?: Record<string, string>;
 }
 
 export interface SprintPreview {
@@ -58,4 +68,5 @@ export interface SprintPreview {
   startDate: Date;
   endDate: Date;
   durationDays: number;
+  dailyStandupCount: number;
 }
