@@ -166,7 +166,7 @@ test.describe('Standup Book - Core Functionality', () => {
   // Login before each test (reuse same user)
   test.beforeEach(async ({ page }) => {
     await page.goto('/login');
-    await page.locator('input[name="email"]').fill(testEmail);
+    await page.locator('input[name="usernameOrEmail"]').fill(testEmail);
     await page.locator('input[name="password"]').fill(testPassword);
     await page.getByRole('button', { name: /sign in/i }).click();
     await page.waitForURL('/', { timeout: 15000 });

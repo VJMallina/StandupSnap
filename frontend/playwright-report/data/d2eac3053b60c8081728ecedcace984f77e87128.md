@@ -1,0 +1,102 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - button [ref=e5] [cursor=pointer]:
+      - img [ref=e6]
+    - generic [ref=e8]:
+      - generic [ref=e11]:
+        - img [ref=e13]
+        - generic [ref=e15]:
+          - heading "StandupSnap™" [level=1] [ref=e16]:
+            - text: StandupSnap
+            - superscript [ref=e17]: ™
+          - paragraph [ref=e18]: AI-Powered Manager
+      - navigation [ref=e19]:
+        - button "Snapboard" [ref=e21] [cursor=pointer]:
+          - img [ref=e23]
+          - generic [ref=e25]: Snapboard
+        - button "Projects" [ref=e27] [cursor=pointer]:
+          - img [ref=e29]
+          - generic [ref=e31]: Projects
+        - button "Sprints" [ref=e33] [cursor=pointer]:
+          - img [ref=e35]
+          - generic [ref=e37]: Sprints
+        - button "Standup Book" [ref=e39] [cursor=pointer]:
+          - img [ref=e41]
+          - generic [ref=e43]: Standup Book
+        - button "Cards" [ref=e46] [cursor=pointer]:
+          - img [ref=e48]
+          - generic [ref=e50]: Cards
+        - button "Snaps" [ref=e52] [cursor=pointer]:
+          - img [ref=e54]
+          - generic [ref=e57]: Snaps
+        - button "Assignees" [ref=e59] [cursor=pointer]:
+          - img [ref=e61]
+          - generic [ref=e63]: Assignees
+        - button "Team" [ref=e65] [cursor=pointer]:
+          - img [ref=e67]
+          - generic [ref=e69]: Team
+        - button "Reports" [ref=e71] [cursor=pointer]:
+          - img [ref=e73]
+          - generic [ref=e75]: Reports
+        - button "Profile" [ref=e77] [cursor=pointer]:
+          - img [ref=e79]
+          - generic [ref=e81]: Profile
+      - generic [ref=e86]: v0.1.0 Beta
+  - generic [ref=e87]:
+    - navigation [ref=e88]:
+      - generic [ref=e90]:
+        - generic:
+          - generic:
+            - img
+          - generic:
+            - heading "StandupSnap™" [level=1]:
+              - text: StandupSnap
+              - superscript: ™
+        - generic [ref=e92]:
+          - button "T Test User Scrum Master" [ref=e93] [cursor=pointer]:
+            - generic [ref=e94]: T
+            - generic [ref=e95]:
+              - generic [ref=e96]: Test User
+              - generic [ref=e97]: Scrum Master
+          - button "Logout" [ref=e98] [cursor=pointer]:
+            - img [ref=e99]
+            - text: Logout
+    - main [ref=e101]:
+      - generic [ref=e104]:
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - img [ref=e111]
+            - generic [ref=e113]:
+              - heading "Standup Book" [level=1] [ref=e114]
+              - paragraph [ref=e115]: Daily activities & meetings
+          - generic [ref=e116]:
+            - img [ref=e117]
+            - combobox [ref=e119]:
+              - option "Select a project..."
+              - option "Standup Test Project 1764319890553" [selected]
+              - option "Project XYZ"
+              - option "Project ABC"
+              - option "Test_Project"
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - img [ref=e124]
+            - generic [ref=e126]:
+              - heading "Test Sprint 1764319890553" [level=2] [ref=e127]
+              - paragraph [ref=e128]: 11/28/2025 - 12/12/2025
+          - generic [ref=e129]:
+            - generic [ref=e130]: "0"
+            - generic [ref=e131]: Total Days
+        - generic [ref=e132]:
+          - generic [ref=e133]:
+            - img [ref=e135]
+            - heading "Day Books" [level=3] [ref=e137]
+            - generic [ref=e138]:
+              - generic [ref=e141]: Locked
+              - generic [ref=e144]: Today
+              - generic [ref=e147]: Available
+              - generic [ref=e150]: Future
+          - paragraph [ref=e153]: Loading day books...
+```

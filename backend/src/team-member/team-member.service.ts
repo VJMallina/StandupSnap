@@ -58,17 +58,74 @@ export class TeamMemberService {
   }
 
   // Get all team members for a specific project
-  async getProjectTeam(projectId: string): Promise<TeamMember[]> {
+  async getProjectTeam(projectId: string): Promise<any[]> {
     const project = await this.projectRepository.findOne({
       where: { id: projectId },
-      relations: ['teamMembers'],
+      relations: ['teamMembers', 'productOwner', 'pmo', 'members', 'members.user'],
     });
 
     if (!project) {
       throw new NotFoundException(`Project with ID ${projectId} not found`);
     }
 
-    return project.teamMembers || [];
+    const teamMembers: any[] = [];
+
+    // Add regular team members
+    if (project.teamMembers) {
+      teamMembers.push(...project.teamMembers.map(tm => ({
+        id: tm.id,
+        fullName: tm.fullName,
+        displayName: tm.displayName,
+        designationRole: tm.designationRole,
+        type: 'team_member',
+      })));
+    }
+
+    // Add Product Owner if exists
+    if (project.productOwner) {
+      teamMembers.push({
+        id: `user-${project.productOwner.id}`,
+        fullName: project.productOwner.name,
+        displayName: project.productOwner.name,
+        designationRole: 'Product Owner',
+        type: 'special_role',
+        userId: project.productOwner.id,
+      });
+    }
+
+    // Add PMO if exists
+    if (project.pmo) {
+      teamMembers.push({
+        id: `user-${project.pmo.id}`,
+        fullName: project.pmo.name,
+        displayName: project.pmo.name,
+        designationRole: 'PMO',
+        type: 'special_role',
+        userId: project.pmo.id,
+      });
+    }
+
+    // Add Scrum Master from project members
+    if (project.members) {
+      const scrumMasters = project.members.filter(
+        member => member.role.toLowerCase().includes('scrum') && member.isActive
+      );
+
+      for (const sm of scrumMasters) {
+        if (sm.user) {
+          teamMembers.push({
+            id: `user-${sm.user.id}`,
+            fullName: sm.user.name,
+            displayName: sm.user.name,
+            designationRole: 'Scrum Master',
+            type: 'special_role',
+            userId: sm.user.id,
+          });
+        }
+      }
+    }
+
+    return teamMembers;
   }
 
   // Get team members NOT assigned to a specific project

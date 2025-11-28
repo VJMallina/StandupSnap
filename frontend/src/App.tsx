@@ -24,6 +24,7 @@ import AssigneeDetailsPage from './pages/assignees/AssigneeDetailsPage';
 import ReportsPage from './pages/ReportsPage';
 import StandupBookPage from './pages/StandupBookPage';
 import StandupBookDayDetailsPage from './pages/StandupBookDayDetailsPage';
+import ArtifactsPage from './pages/ArtifactsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -196,6 +197,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <StandupBookDayDetailsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/artifacts"
+            element={
+              <ProtectedRoute>
+                <ArtifactsPage />
               </ProtectedRoute>
             }
           />

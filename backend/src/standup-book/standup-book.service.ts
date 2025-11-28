@@ -195,7 +195,11 @@ export class StandupBookService {
 
     while (currentDate <= sprintEnd) {
       const dateStr = currentDate.toISOString().split('T')[0];
-      const isAccessible = currentDate <= today;
+
+      // Create a normalized date for comparison (set time to midnight)
+      const normalizedCurrentDate = new Date(currentDate);
+      normalizedCurrentDate.setHours(0, 0, 0, 0);
+      const isAccessible = normalizedCurrentDate <= today;
 
       days.push({
         date: dateStr,

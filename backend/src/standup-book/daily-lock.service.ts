@@ -76,7 +76,6 @@ export class DailyLockService {
       dailySummaryDone: summary.done,
       dailySummaryToDo: summary.toDo,
       dailySummaryBlockers: summary.blockers,
-      lockedBy: { id: userId } as User,
     });
 
     // Mark all snaps for this day as locked
@@ -138,7 +137,6 @@ export class DailyLockService {
       dailySummaryDone: summary.done,
       dailySummaryToDo: summary.toDo,
       dailySummaryBlockers: summary.blockers,
-      lockedBy: { id: userId } as User,
     });
 
     // Mark all snaps in this slot as locked
