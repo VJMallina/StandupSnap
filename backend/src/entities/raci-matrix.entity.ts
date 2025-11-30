@@ -28,7 +28,7 @@ export class RaciMatrix {
   description: string;
 
   @Column({ type: 'json', nullable: true })
-  teamMemberColumns: string[]; // Array of team member IDs in display order
+  teamMemberColumns: string[];
 
   @OneToMany(() => RaciEntry, (entry) => entry.raciMatrix, { cascade: true })
   entries: RaciEntry[];
@@ -40,6 +40,10 @@ export class RaciMatrix {
   @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'updated_by' })
   updatedBy: User;
+
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'approved_by' })
+  approvedBy: User;
 
   @CreateDateColumn()
   createdAt: Date;

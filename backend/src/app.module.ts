@@ -16,6 +16,7 @@ import { AssigneeModule } from './assignee/assignee.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { StandupBookModule } from './standup-book/standup-book.module';
 import { ArtifactsModule } from './artifacts/artifacts.module';
+import { StandaloneMomModule } from './standalone-mom/standalone-mom.module';
 
 // Team Management Module for non-login team members
 @Module({
@@ -69,6 +70,7 @@ import { ArtifactsModule } from './artifacts/artifacts.module';
     DashboardModule,
     StandupBookModule,
     ArtifactsModule,
+    StandaloneMomModule,
   ],
   controllers: [AppController],
   providers: [AppService],

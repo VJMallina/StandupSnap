@@ -144,18 +144,17 @@ export default function SprintsListPage() {
 
   return (
     <AppLayout>
-      <div className="p-6">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="bg-gradient-to-r from-teal-600 via-cyan-600 to-emerald-600 rounded-3xl p-6 md:p-8 shadow-xl text-white">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-teal-100 text-sm font-medium mb-1">Planning</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">Sprints</h1>
-              <p className="text-teal-100 mt-2 text-sm">Manage sprint cycles and iterations</p>
+              <p className="text-white/80 text-sm font-semibold uppercase tracking-wide">Planning</p>
+              <h1 className="text-3xl font-bold mt-1">Sprints</h1>
+              <p className="text-white/80 mt-2 text-sm">Plan, track, and close sprint cycles with clarity.</p>
             </div>
             <button
               onClick={() => navigate('/sprints/new')}
-              className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all font-medium"
+              className="flex items-center px-5 py-2.5 bg-white text-teal-700 font-semibold rounded-xl shadow-md hover:shadow-lg transition"
             >
               <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -166,75 +165,79 @@ export default function SprintsListPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded mb-4">
-            {error}
+          <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl shadow-sm">
+            <div className="flex items-start justify-between">
+              <span>{error}</span>
+              <button onClick={() => setError(null)} className="text-sm font-semibold text-red-700 hover:text-red-900">
+                Dismiss
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-end gap-4 mb-6">
-          {/* Project Filter */}
-          <div className="flex-1 min-w-[180px]">
-            <Select
-              label="Project"
-              value={selectedProjectId}
-              onChange={setSelectedProjectId}
-              placeholder="All Projects"
-              options={[
-                { value: '', label: 'All Projects' },
-                ...projects.map((project) => ({
-                  value: project.id,
-                  label: project.name,
-                })),
-              ]}
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="flex-1 min-w-[150px]">
-            <Select
-              label="Status"
-              value={selectedStatus}
-              onChange={(value) => setSelectedStatus(value as SprintStatus | '')}
-              placeholder="All Statuses"
-              options={[
-                { value: '', label: 'All Statuses' },
-                { value: SprintStatus.UPCOMING, label: 'Upcoming' },
-                { value: SprintStatus.ACTIVE, label: 'Active' },
-                { value: SprintStatus.COMPLETED, label: 'Completed' },
-                { value: SprintStatus.CLOSED, label: 'Closed' },
-              ]}
-            />
-          </div>
-
-          {/* Search */}
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Search</label>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search sprints..."
-              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
-            />
-          </div>
-        </div>
-        <div className="mb-6">
-
-          {hasActiveFilters && (
-            <div className="mt-3">
-              <button
-                onClick={clearFilters}
-                className="text-sm text-teal-600 hover:underline"
-              >
-                Clear all filters
-              </button>
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 md:p-5 space-y-4">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <Select
+                label="Project"
+                value={selectedProjectId}
+                onChange={setSelectedProjectId}
+                placeholder="All Projects"
+                options={[
+                  { value: '', label: 'All Projects' },
+                  ...projects.map((project) => ({
+                    value: project.id,
+                    label: project.name,
+                  })),
+                ]}
+              />
             </div>
-          )}
+
+            <div className="flex-1 min-w-[180px]">
+              <Select
+                label="Status"
+                value={selectedStatus}
+                onChange={(value) => setSelectedStatus(value as SprintStatus | '')}
+                placeholder="All Statuses"
+                options={[
+                  { value: '', label: 'All Statuses' },
+                  { value: SprintStatus.UPCOMING, label: 'Upcoming' },
+                  { value: SprintStatus.ACTIVE, label: 'Active' },
+                  { value: SprintStatus.COMPLETED, label: 'Completed' },
+                  { value: SprintStatus.CLOSED, label: 'Closed' },
+                ]}
+              />
+            </div>
+
+            <div className="flex-1 min-w-[220px]">
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Search</label>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search sprints..."
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+              />
+            </div>
+
+            {hasActiveFilters && (
+              <div className="flex items-center">
+                <button
+                  onClick={clearFilters}
+                  className="px-3 py-2 text-sm font-semibold text-teal-700 bg-teal-50 border border-teal-100 rounded-lg hover:bg-teal-100 transition"
+                >
+                  Clear filters
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="text-xs text-gray-500">
+            Showing {sprints.length} sprint{sprints.length !== 1 ? 's' : ''}
+          </div>
         </div>
 
-        {/* Sprint List Table - M6-UC02 */}
-        <div className="bg-white shadow rounded overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
           <table className="min-w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -261,13 +264,13 @@ export default function SprintsListPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {sprints.map((sprint) => (
-                <tr key={sprint.id} className="hover:bg-gray-50">
+                <tr key={sprint.id} className="hover:bg-gray-50/60">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{sprint.name}</div>
+                        <div className="text-sm font-semibold text-gray-900">{sprint.name}</div>
                         {sprint.goal && (
                           <div className="text-sm text-gray-500 truncate max-w-xs">
                             {sprint.goal}
@@ -301,14 +304,14 @@ export default function SprintsListPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       onClick={() => navigate(`/sprints/${sprint.id}`)}
-                      className="text-teal-600 hover:text-teal-900 mr-3"
+                      className="text-teal-700 hover:text-teal-900 font-semibold mr-3"
                     >
                       View
                     </button>
                     {!sprint.isClosed && (
                       <button
                         onClick={() => handleDelete(sprint.id, sprint)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-800 font-semibold"
                       >
                         Delete
                       </button>

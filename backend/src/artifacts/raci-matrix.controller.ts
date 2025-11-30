@@ -15,6 +15,7 @@ import { CreateRaciMatrixDto } from './dto/create-raci-matrix.dto';
 import { AddTaskDto } from './dto/add-task.dto';
 import { AddTeamMemberColumnDto } from './dto/add-team-member-column.dto';
 import { SetRaciDto } from './dto/set-raci.dto';
+import { SetApprovedByDto } from './dto/set-approved-by.dto';
 
 @Controller('artifacts/raci-matrix')
 @UseGuards(JwtAuthGuard)
@@ -27,7 +28,7 @@ export class RaciMatrixController {
    */
   @Post()
   async create(@Body() createRaciMatrixDto: CreateRaciMatrixDto, @Request() req) {
-    const userId = req.user.userId;
+    const userId = req.user.id || req.user.userId;
     return this.raciMatrixService.create(createRaciMatrixDto, userId);
   }
 
@@ -54,8 +55,13 @@ export class RaciMatrixController {
    * POST /artifacts/raci-matrix/:id/task
    */
   @Post(':id/task')
-  async addTask(@Param('id') matrixId: string, @Body() addTaskDto: AddTaskDto) {
-    return this.raciMatrixService.addTask(matrixId, addTaskDto);
+  async addTask(
+    @Param('id') matrixId: string,
+    @Body() addTaskDto: AddTaskDto,
+    @Request() req,
+  ) {
+    const userId = req.user.id || req.user.userId;
+    return this.raciMatrixService.addTask(matrixId, addTaskDto, userId);
   }
 
   /**
@@ -67,12 +73,15 @@ export class RaciMatrixController {
     @Param('id') matrixId: string,
     @Param('rowOrder') rowOrder: string,
     @Body() updateDto: { taskName?: string; taskDescription?: string },
+    @Request() req,
   ) {
+    const userId = req.user.id || req.user.userId;
     return this.raciMatrixService.updateTask(
       matrixId,
       parseInt(rowOrder, 10),
       updateDto.taskName,
       updateDto.taskDescription,
+      userId,
     );
   }
 
@@ -84,8 +93,10 @@ export class RaciMatrixController {
   async deleteTask(
     @Param('id') matrixId: string,
     @Param('rowOrder') rowOrder: string,
+    @Request() req,
   ) {
-    return this.raciMatrixService.deleteTask(matrixId, parseInt(rowOrder, 10));
+    const userId = req.user.id || req.user.userId;
+    return this.raciMatrixService.deleteTask(matrixId, parseInt(rowOrder, 10), userId);
   }
 
   /**
@@ -96,10 +107,13 @@ export class RaciMatrixController {
   async addTeamMemberColumn(
     @Param('id') matrixId: string,
     @Body() addTeamMemberColumnDto: AddTeamMemberColumnDto,
+    @Request() req,
   ) {
+    const userId = req.user.id || req.user.userId;
     return this.raciMatrixService.addTeamMemberColumn(
       matrixId,
       addTeamMemberColumnDto,
+      userId,
     );
   }
 
@@ -111,8 +125,10 @@ export class RaciMatrixController {
   async removeTeamMemberColumn(
     @Param('id') matrixId: string,
     @Param('teamMemberId') teamMemberId: string,
+    @Request() req,
   ) {
-    return this.raciMatrixService.removeTeamMemberColumn(matrixId, teamMemberId);
+    const userId = req.user.id || req.user.userId;
+    return this.raciMatrixService.removeTeamMemberColumn(matrixId, teamMemberId, userId);
   }
 
   /**
@@ -120,8 +136,27 @@ export class RaciMatrixController {
    * PUT /artifacts/raci-matrix/:id/raci
    */
   @Put(':id/raci')
-  async setRaci(@Param('id') matrixId: string, @Body() setRaciDto: SetRaciDto) {
-    return this.raciMatrixService.setRaci(matrixId, setRaciDto);
+  async setRaci(
+    @Param('id') matrixId: string,
+    @Body() setRaciDto: SetRaciDto,
+    @Request() req,
+  ) {
+    const userId = req.user.id || req.user.userId;
+    return this.raciMatrixService.setRaci(matrixId, setRaciDto, userId);
+  }
+
+  /**
+   * Set approved by user (must be PO/PMO/Scrum Master)
+   * PUT /artifacts/raci-matrix/:id/approved-by
+   */
+  @Put(':id/approved-by')
+  async setApprovedBy(
+    @Param('id') matrixId: string,
+    @Body() setApprovedByDto: SetApprovedByDto,
+    @Request() req,
+  ) {
+    const userId = req.user.id || req.user.userId;
+    return this.raciMatrixService.setApprovedBy(matrixId, setApprovedByDto.approverId, userId);
   }
 
   /**

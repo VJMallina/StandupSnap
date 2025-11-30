@@ -25,191 +25,255 @@ import ReportsPage from './pages/ReportsPage';
 import StandupBookPage from './pages/StandupBookPage';
 import StandupBookDayDetailsPage from './pages/StandupBookDayDetailsPage';
 import ArtifactsPage from './pages/ArtifactsPage';
+import ArtifactsHubPage from './pages/ArtifactsHubPage';
+import RisksPage from './pages/RisksPage';
+import StandaloneMomListPage from './pages/StandaloneMomListPage';
+import StandaloneMomFormPage from './pages/StandaloneMomFormPage';
+import StandaloneMomDetailPage from './pages/StandaloneMomDetailPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ProjectSelectionProvider } from './context/ProjectSelectionContext';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects"
-            element={
-              <ProtectedRoute>
-                <ProjectsListPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects/new"
-            element={
-              <ProtectedRoute>
-                <CreateProjectPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects/:id"
-            element={
-              <ProtectedRoute>
-                <ProjectDetailsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects/:id/edit"
-            element={
-              <ProtectedRoute>
-                <EditProjectPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/projects/:projectId/team"
-            element={
-              <ProtectedRoute>
-                <TeamManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/sprints"
-            element={
-              <ProtectedRoute>
-                <SprintsListPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/sprints/new"
-            element={
-              <ProtectedRoute>
-                <CreateSprintPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/sprints/:id"
-            element={
-              <ProtectedRoute>
-                <SprintDetailsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/standups"
-            element={
-              <ProtectedRoute>
-                <StandupsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/team"
-            element={
-              <ProtectedRoute>
-                <TeamPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cards"
-            element={
-              <ProtectedRoute>
-                <CardsListPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cards/:id"
-            element={
-              <ProtectedRoute>
-                <CardDetailsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/snaps"
-            element={
-              <ProtectedRoute>
-                <SnapsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/snaps/sprint/:sprintId"
-            element={<Navigate to="/snaps" replace />}
-          />
-          <Route
-            path="/assignees"
-            element={
-              <ProtectedRoute>
-                <AssigneeListPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/assignees/:id"
-            element={
-              <ProtectedRoute>
-                <AssigneeDetailsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <ReportsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/standup-book"
-            element={
-              <ProtectedRoute>
-                <StandupBookPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/standup-book/:sprintId/:date"
-            element={
-              <ProtectedRoute>
-                <StandupBookDayDetailsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/artifacts"
-            element={
-              <ProtectedRoute>
-                <ArtifactsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <ProjectSelectionProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/projects"
+              element={
+                <ProtectedRoute>
+                  <ProjectsListPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/projects/new"
+              element={
+                <ProtectedRoute>
+                  <CreateProjectPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/projects/:id"
+              element={
+                <ProtectedRoute>
+                  <ProjectDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/projects/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditProjectPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/projects/:projectId/team"
+              element={
+                <ProtectedRoute>
+                  <TeamManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sprints"
+              element={
+                <ProtectedRoute>
+                  <SprintsListPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sprints/new"
+              element={
+                <ProtectedRoute>
+                  <CreateSprintPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sprints/:id"
+              element={
+                <ProtectedRoute>
+                  <SprintDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/standups"
+              element={
+                <ProtectedRoute>
+                  <StandupsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <ProtectedRoute>
+                  <TeamPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cards"
+              element={
+                <ProtectedRoute>
+                  <CardsListPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cards/:id"
+              element={
+                <ProtectedRoute>
+                  <CardDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/snaps"
+              element={
+                <ProtectedRoute>
+                  <SnapsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/snaps/sprint/:sprintId"
+              element={<Navigate to="/snaps" replace />}
+            />
+            <Route
+              path="/assignees"
+              element={
+                <ProtectedRoute>
+                  <AssigneeListPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assignees/:id"
+              element={
+                <ProtectedRoute>
+                  <AssigneeDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <ReportsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/standup-book"
+              element={
+                <ProtectedRoute>
+                  <StandupBookPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/standup-book/:sprintId/:date"
+              element={
+                <ProtectedRoute>
+                  <StandupBookDayDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mom"
+              element={
+                <ProtectedRoute>
+                  <StandaloneMomListPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mom/new"
+              element={
+                <ProtectedRoute>
+                  <StandaloneMomFormPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mom/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <StandaloneMomFormPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/mom/:id"
+              element={
+                <ProtectedRoute>
+                  <StandaloneMomDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts"
+              element={
+                <ProtectedRoute>
+                  <ArtifactsHubPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/raci"
+              element={
+                <ProtectedRoute>
+                  <ArtifactsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/raci/:matrixId"
+              element={
+                <ProtectedRoute>
+                  <ArtifactsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/risks"
+              element={
+                <ProtectedRoute>
+                  <RisksPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ProjectSelectionProvider>
       </AuthProvider>
     </BrowserRouter>
   );

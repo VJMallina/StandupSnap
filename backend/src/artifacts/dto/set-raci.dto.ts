@@ -1,4 +1,4 @@
-import { IsUUID, IsEnum, IsOptional, IsNotEmpty, IsInt, Min } from 'class-validator';
+import { IsEnum, IsOptional, IsNotEmpty, IsInt, Min, Matches } from 'class-validator';
 import { RaciRole } from '../../entities/raci-entry.entity';
 
 export class SetRaciDto {
@@ -7,8 +7,10 @@ export class SetRaciDto {
   @IsNotEmpty()
   rowOrder: number;
 
-  @IsUUID()
   @IsNotEmpty()
+  @Matches(/^user-.+|[0-9a-fA-F-]{36}$/, {
+    message: 'teamMemberId must be a UUID or start with user-',
+  })
   teamMemberId: string;
 
   @IsEnum(RaciRole)

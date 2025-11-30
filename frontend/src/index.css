@@ -91,3 +91,25 @@ code {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #5568d3 0%, #6a3f8f 100%);
 }
+
+/* Brand-aligned scrollbars for RACI table */
+.raci-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #0f766e #e0f2fe;
+}
+.raci-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.raci-scroll::-webkit-scrollbar-track {
+  background: #e0f2fe;
+  border-radius: 999px;
+}
+.raci-scroll::-webkit-scrollbar-thumb {
+  background: #0f766e;
+  border-radius: 999px;
+  border: 2px solid #e0f2fe;
+}
+.raci-scroll::-webkit-scrollbar-thumb:hover {
+  background: #115e59;
+}
