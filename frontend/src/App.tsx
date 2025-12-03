@@ -27,9 +27,16 @@ import StandupBookDayDetailsPage from './pages/StandupBookDayDetailsPage';
 import ArtifactsPage from './pages/ArtifactsPage';
 import ArtifactsHubPage from './pages/ArtifactsHubPage';
 import RisksPage from './pages/RisksPage';
+import RAIDLogPage from './pages/RAIDLogPage';
+import AssumptionsPage from './pages/AssumptionsPage';
+import IssuesPage from './pages/IssuesPage';
+import DecisionsPage from './pages/DecisionsPage';
+import StakeholderRegisterPage from './pages/StakeholderRegisterPage';
+import PowerInterestGridPage from './pages/PowerInterestGridPage';
 import StandaloneMomListPage from './pages/StandaloneMomListPage';
 import StandaloneMomFormPage from './pages/StandaloneMomFormPage';
 import StandaloneMomDetailPage from './pages/StandaloneMomDetailPage';
+import ChangesPage from './pages/ChangesPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ProjectSelectionProvider } from './context/ProjectSelectionContext';
 
@@ -268,6 +275,62 @@ function App() {
               element={
                 <ProtectedRoute>
                   <RisksPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/raid-log"
+              element={
+                <ProtectedRoute>
+                  <RAIDLogPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/raid-log/assumptions"
+              element={
+                <ProtectedRoute>
+                  <AssumptionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/raid-log/issues"
+              element={
+                <ProtectedRoute>
+                  <IssuesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/raid-log/decisions"
+              element={
+                <ProtectedRoute>
+                  <DecisionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/stakeholders"
+              element={
+                <ProtectedRoute>
+                  <StakeholderRegisterPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/stakeholders/grid"
+              element={
+                <ProtectedRoute>
+                  <PowerInterestGridPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/changes"
+              element={
+                <ProtectedRoute>
+                  <ChangesPage />
                 </ProtectedRoute>
               }
             />

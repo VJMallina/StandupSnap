@@ -70,7 +70,8 @@
       "Bash(npm run migration:generate:*)",
       "Bash(powershell -Command \"Stop-Process -Id 16696 -Force\")",
       "Bash(powershell -Command \"Stop-Process -Id 13784 -Force\")",
-      "Bash(powershell -Command \"Stop-Process -Id 9960 -Force\")"
+      "Bash(powershell -Command \"Stop-Process -Id 9960 -Force\")",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

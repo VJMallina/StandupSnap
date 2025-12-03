@@ -66,104 +66,138 @@ export default function StandaloneMomDetailPage() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-5">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase text-teal-300">Standalone MOM</p>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white">{mom?.title || 'Minutes of Meeting'}</h1>
-            {mom && (
-              <p className="text-gray-400 text-sm">
-                {mom.customMeetingType || mom.meetingType} • {mom.meetingDate}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={() => navigate('/mom')} className="text-gray-300 hover:text-white text-sm px-3 py-2">
-              Back to list
-            </button>
-            {mom && !mom.archived && (
-              <button
-                onClick={() => navigate(`/mom/${mom.id}/edit`)}
-                className="bg-slate-800 border border-teal-700 text-white px-3 py-2 rounded-lg text-sm"
-              >
-                Edit MOM
-              </button>
-            )}
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => handleDownload('txt')}
-                className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-sm"
-              >
-                Download TXT
-              </button>
-              <button
-                onClick={() => handleDownload('docx')}
-                className="bg-teal-700 hover:bg-teal-800 text-white px-3 py-2 rounded-lg text-sm"
-              >
-                DOCX
-              </button>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/20">
+        <div className="max-w-6xl mx-auto p-8 space-y-8">
+          <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg shadow-lg">
+                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-bold text-blue-600 uppercase tracking-wider">Meeting Details</span>
+              </div>
+              <h1 className="text-4xl font-black text-gray-900 leading-tight">{mom?.title || 'Minutes of Meeting'}</h1>
+              {mom && (
+                <div className="flex items-center gap-3 text-gray-600">
+                  <span className="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold rounded-full uppercase">
+                    {mom.customMeetingType || mom.meetingType}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {mom.meetingDate}
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
-
-        {error && <div className="bg-red-950/40 border border-red-700 text-red-200 p-3 rounded-lg text-sm">{error}</div>}
-        {actionError && (
-          <div className="bg-red-950/40 border border-red-700 text-red-200 p-3 rounded-lg text-sm">{actionError}</div>
-        )}
-
-        {loading || !mom ? (
-          <div className="text-gray-300">Loading...</div>
-        ) : (
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-5 shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-300">
-              <Info label="Project" value={mom.project?.name || mom.projectId} />
-              <Info label="Sprint" value={mom.sprint?.name || 'Not tagged'} />
-              <Info label="Created By" value={mom.createdBy?.email || mom.createdBy?.id || 'N/A'} />
-              <Info label="Last Updated" value={new Date(mom.updatedAt).toLocaleString()} />
-            </div>
-
-            <Section title="Agenda" body={mom.agenda || 'None'} />
-            <Section title="Discussion Summary" body={mom.discussionSummary || 'None'} />
-            <Section title="Decisions" body={mom.decisions || 'None'} />
-            <Section title="Action Items" body={mom.actionItems || 'None'} />
-
-            {!mom.archived && (
-              <div className="flex items-center space-x-3 pt-2">
-                <button
-                  onClick={handleArchive}
-                  className="bg-slate-800 border border-teal-700 text-white px-3 py-2 rounded-lg text-sm"
-                >
-                  Archive
+            <div className="flex items-center gap-3 flex-wrap">
+              <button onClick={() => navigate('/mom')} className="px-5 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-bold transition-all">Back to List</button>
+              {mom && !mom.archived && (
+                <button onClick={() => navigate(`/mom/${mom.id}/edit`)} className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg font-bold flex items-center gap-2">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit
                 </button>
-                <button
-                  onClick={handleDelete}
-                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm"
-                >
-                  Delete
+              )}
+              <div className="flex items-center gap-2">
+                <button onClick={() => handleDownload('txt')} className="px-4 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-2 font-bold">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  TXT
+                </button>
+                <button onClick={() => handleDownload('docx')} className="px-4 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white rounded-xl transition-all shadow-lg flex items-center gap-2 font-bold">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  DOCX
                 </button>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          </header>
+
+          {error && <div className="bg-red-50 border-l-4 border-red-500 text-red-800 rounded-xl p-4 shadow-lg font-medium">{error}</div>}
+          {actionError && <div className="bg-red-50 border-l-4 border-red-500 text-red-800 rounded-xl p-4 shadow-lg font-medium">{actionError}</div>}
+
+          {loading || !mom ? (
+            <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-16 w-16 border-4 border-teal-500 border-t-transparent"></div></div>
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Info label="Project" value={mom.project?.name || mom.projectId || 'N/A'} icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>} />
+                  <Info label="Sprint" value={mom.sprint?.name || 'Not tagged'} icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>} />
+                  <Info label="Created By" value={mom.createdBy?.email || mom.createdBy?.id || 'N/A'} icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>} />
+                  <Info label="Last Updated" value={new Date(mom.updatedAt).toLocaleString()} icon={<svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Section title="Agenda" body={mom.agenda || 'Not specified'} gradient="from-blue-500 to-indigo-500" />
+                <Section title="Discussion Summary" body={mom.discussionSummary || 'Not specified'} gradient="from-purple-500 to-pink-500" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Section title="Decisions" body={mom.decisions || 'No decisions recorded'} gradient="from-green-500 to-teal-500" />
+                <Section title="Action Items" body={mom.actionItems || 'No action items'} gradient="from-orange-500 to-red-500" />
+              </div>
+
+              {!mom.archived && (
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">Document Actions</p>
+                    <div className="flex items-center gap-3">
+                      <button onClick={handleArchive} className="px-5 py-3 bg-amber-50 border-2 border-amber-200 text-amber-700 rounded-xl hover:bg-amber-100 font-bold transition-all flex items-center gap-2">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        Archive
+                      </button>
+                      <button onClick={handleDelete} className="px-5 py-3 bg-red-50 border-2 border-red-200 text-red-700 rounded-xl hover:bg-red-100 font-bold transition-all flex items-center gap-2">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </AppLayout>
   );
 }
 
-function Section({ title, body }: { title: string; body: string }) {
+function Section({ title, body, gradient }: { title: string; body: string; gradient: string }) {
   return (
-    <div className="bg-slate-950/60 border border-slate-800 rounded-lg p-3 space-y-2">
-      <p className="text-sm font-semibold text-teal-300">{title}</p>
-      <p className="text-gray-200 whitespace-pre-wrap">{body}</p>
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      <div className={`bg-gradient-to-r ${gradient} px-6 py-4`}>
+        <h3 className="text-lg font-black text-white uppercase tracking-wide">{title}</h3>
+      </div>
+      <div className="p-6">
+        <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{body}</p>
+      </div>
     </div>
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
-    <div>
-      <p className="text-gray-400">{label}</p>
-      <p className="font-semibold text-white">{value}</p>
+    <div className="flex items-start gap-3">
+      <div className="p-2 bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200 rounded-lg text-teal-600">
+        {icon}
+      </div>
+      <div className="flex-1">
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{label}</p>
+        <p className="text-base font-bold text-gray-900">{value}</p>
+      </div>
     </div>
   );
 }

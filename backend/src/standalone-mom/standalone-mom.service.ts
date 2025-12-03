@@ -190,39 +190,79 @@ export class StandaloneMomService {
   }
 
   async generateWithAI(dto: GenerateStandaloneMomDto) {
-    const prompt = `You are a meeting minutes assistant. Convert the provided notes into JSON with fields: agenda, discussionSummary, decisions, actionItems (owner + due date if possible).\nReturn ONLY JSON.`;
+    const systemPrompt = `You are an expert meeting minutes assistant. Your task is to analyze raw meeting notes and extract structured information into a JSON format.
+
+IMPORTANT: You must return ONLY a valid JSON object with these exact fields:
+- agenda: The main topics/agenda items discussed (bullet points or paragraph)
+- discussionSummary: Key discussion points, context, and what was talked about
+- decisions: Final decisions or conclusions reached (clearly state each decision)
+- actionItems: Action items with owner and due date (format: "Task description - Owner: Name, Due: Date")
+
+INSTRUCTIONS:
+1. Extract the agenda from meeting topics, objectives, or discussion points
+2. Summarize the main discussion, conversations, and context
+3. Identify explicit decisions, agreements, or conclusions
+4. List all action items with owners and deadlines when mentioned
+5. If a section is not found in the notes, use "Not mentioned" or "No [section] recorded"
+6. Use clear, concise language and bullet points where appropriate
+7. For action items, always try to identify who is responsible and when it's due
+
+EXAMPLE INPUT:
+"Team discussed the new feature release. John presented the progress. We decided to launch on March 15th. Sarah will review documentation by March 10th. Mike raised concerns about testing."
+
+EXAMPLE OUTPUT:
+{
+  "agenda": "New feature release discussion and launch planning",
+  "discussionSummary": "John presented current progress on the new feature. Mike raised concerns about testing coverage and timeline. Team discussed launch readiness and documentation requirements.",
+  "decisions": "Launch date confirmed for March 15th. Additional testing will be conducted before launch.",
+  "actionItems": "Review and finalize documentation - Owner: Sarah, Due: March 10th"
+}
+
+Now parse the following meeting notes:`;
+
     try {
       const response = await axios.post(
         'https://api.groq.com/openai/v1/chat/completions',
         {
           model: this.groqModel,
           messages: [
-            { role: 'system', content: 'You are a meeting minutes assistant returning JSON only.' },
-            { role: 'user', content: `${prompt}\n\nNotes:\n${dto.text}` },
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: dto.text },
           ],
-          temperature: 0.2,
-          max_tokens: 1200,
+          temperature: 0.3,
+          max_tokens: 2000,
+          response_format: { type: 'json_object' },
         },
         {
           headers: {
             Authorization: `Bearer ${this.groqApiKey}`,
+            'Content-Type': 'application/json',
           },
           timeout: 30000,
         },
       );
 
       const content = response.data?.choices?.[0]?.message?.content || '';
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return this.fallbackParse(dto.text);
-      const jsonString = jsonMatch[0].replace(/\r?\n/g, '\\n');
-      const parsed = JSON.parse(jsonString);
+
+      // Try to parse JSON directly first (since we're using json_object format)
+      let parsed: any;
+      try {
+        parsed = JSON.parse(content);
+      } catch {
+        // Fallback: extract JSON from markdown code blocks or text
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return this.fallbackParse(dto.text);
+        parsed = JSON.parse(jsonMatch[0]);
+      }
+
       return {
-        agenda: parsed.agenda || 'No agenda specified',
-        discussionSummary: parsed.discussionSummary || parsed.keyDiscussionPoints || dto.text,
-        decisions: parsed.decisions || parsed.decisionsTaken || 'No decisions recorded',
-        actionItems: parsed.actionItems || 'No action items',
+        agenda: parsed.agenda || parsed.Agenda || 'No agenda specified',
+        discussionSummary: parsed.discussionSummary || parsed.discussion_summary || parsed.discussion || parsed.summary || 'No discussion summary',
+        decisions: parsed.decisions || parsed.Decisions || parsed.decisionsTaken || 'No decisions recorded',
+        actionItems: parsed.actionItems || parsed.action_items || parsed.actions || 'No action items',
       };
     } catch (error) {
+      console.error('AI generation error:', error.response?.data || error.message);
       return this.fallbackParse(dto.text);
     }
   }

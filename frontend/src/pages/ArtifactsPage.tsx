@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
+import ArtifactsNavigation from '../components/artifacts/ArtifactsNavigation';
 import { useProjectSelection } from '../context/ProjectSelectionContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -586,6 +587,7 @@ export default function ArtifactsPage() {
 
   return (
     <AppLayout>
+      <ArtifactsNavigation />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-cyan-800 to-emerald-700 text-white shadow-2xl border border-white/10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.12),transparent_35%)]" />
