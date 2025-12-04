@@ -17,6 +17,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { StandupBookModule } from './standup-book/standup-book.module';
 import { ArtifactsModule } from './artifacts/artifacts.module';
 import { StandaloneMomModule } from './standalone-mom/standalone-mom.module';
+import { ScrumRoomsModule } from './scrum-rooms/scrum-rooms.module';
 
 // Team Management Module for non-login team members
 @Module({
@@ -71,6 +72,7 @@ import { StandaloneMomModule } from './standalone-mom/standalone-mom.module';
     StandupBookModule,
     ArtifactsModule,
     StandaloneMomModule,
+    ScrumRoomsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

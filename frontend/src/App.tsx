@@ -37,6 +37,9 @@ import StandaloneMomListPage from './pages/StandaloneMomListPage';
 import StandaloneMomFormPage from './pages/StandaloneMomFormPage';
 import StandaloneMomDetailPage from './pages/StandaloneMomDetailPage';
 import ChangesPage from './pages/ChangesPage';
+import FormBuilderPage from './pages/FormBuilderPage';
+import ScrumRoomsPage from './pages/ScrumRoomsPage';
+import ScrumRoomDetailPage from './pages/ScrumRoomDetailPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ProjectSelectionProvider } from './context/ProjectSelectionContext';
 
@@ -255,6 +258,14 @@ function App() {
               }
             />
             <Route
+              path="/artifacts/form-builder"
+              element={
+                <ProtectedRoute>
+                  <FormBuilderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/artifacts/raci"
               element={
                 <ProtectedRoute>
@@ -331,6 +342,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ChangesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/scrum-rooms"
+              element={
+                <ProtectedRoute>
+                  <ScrumRoomsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/scrum-rooms/:roomId"
+              element={
+                <ProtectedRoute>
+                  <ScrumRoomDetailPage />
                 </ProtectedRoute>
               }
             />

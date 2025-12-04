@@ -14,6 +14,8 @@ import { Decision } from '../entities/decision.entity';
 import { Stakeholder } from '../entities/stakeholder.entity';
 import { Change } from '../entities/change.entity';
 import { User } from '../entities/user.entity';
+import { FormTemplate } from '../entities/form-template.entity';
+import { FormInstance } from '../entities/form-instance.entity';
 import { RiskService } from './risk.service';
 import { RiskController } from './risk.controller';
 import { AssumptionService } from './assumption.service';
@@ -26,13 +28,15 @@ import { StakeholderService } from './stakeholder.service';
 import { StakeholderController } from './stakeholder.controller';
 import { ChangeService } from './change.service';
 import { ChangeController } from './change.controller';
+import { FormBuilderService } from './form-builder/form-builder.service';
+import { FormBuilderController } from './form-builder/form-builder.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RaciMatrix, RaciEntry, Project, TeamMember, Risk, RiskHistory, Assumption, Issue, Decision, Stakeholder, Change, User]),
+    TypeOrmModule.forFeature([RaciMatrix, RaciEntry, Project, TeamMember, Risk, RiskHistory, Assumption, Issue, Decision, Stakeholder, Change, User, FormTemplate, FormInstance]),
   ],
-  controllers: [RaciMatrixController, RiskController, AssumptionController, IssueController, DecisionController, StakeholderController, ChangeController],
-  providers: [RaciMatrixService, RiskService, AssumptionService, IssueService, DecisionService, StakeholderService, ChangeService],
-  exports: [RaciMatrixService, RiskService, AssumptionService, IssueService, DecisionService, StakeholderService, ChangeService],
+  controllers: [RaciMatrixController, RiskController, AssumptionController, IssueController, DecisionController, StakeholderController, ChangeController, FormBuilderController],
+  providers: [RaciMatrixService, RiskService, AssumptionService, IssueService, DecisionService, StakeholderService, ChangeService, FormBuilderService],
+  exports: [RaciMatrixService, RiskService, AssumptionService, IssueService, DecisionService, StakeholderService, ChangeService, FormBuilderService],
 })
 export class ArtifactsModule {}
