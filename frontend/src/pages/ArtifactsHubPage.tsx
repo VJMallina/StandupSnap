@@ -9,6 +9,7 @@ import { changesApi } from '../services/api/changes';
 import { assumptionsApi } from '../services/api/assumptions';
 import { issuesApi } from '../services/api/issues';
 import { decisionsApi } from '../services/api/decisions';
+import { resourcesApi } from '../services/api/resources';
 import { useProjectSelection } from '../context/ProjectSelectionContext';
 
 interface Project {
@@ -24,6 +25,7 @@ interface ArtifactCounts {
   issues: number;
   decisions: number;
   raci: number;
+  resources: number;
 }
 
 const artifactTypes = [
@@ -80,6 +82,15 @@ const artifactTypes = [
     href: '/artifacts/changes',
     disabled: false,
   },
+  {
+    key: 'resource-tracker',
+    title: 'Resource Tracker',
+    description: 'Manage team capacity, workload allocation, and resource utilization with heatmap visualization.',
+    badge: 'Active',
+    color: 'from-purple-600 to-indigo-600',
+    href: '/artifacts/resources',
+    disabled: false,
+  },
 ];
 
 export default function ArtifactsHubPage() {
@@ -96,6 +107,7 @@ export default function ArtifactsHubPage() {
     issues: 0,
     decisions: 0,
     raci: 0,
+    resources: 0,
   });
   const [loadingCounts, setLoadingCounts] = useState(false);
 
@@ -137,19 +149,21 @@ export default function ArtifactsHubPage() {
           issues: 0,
           decisions: 0,
           raci: 0,
+          resources: 0,
         });
         return;
       }
 
       try {
         setLoadingCounts(true);
-        const [risks, stakeholders, changes, assumptions, issues, decisions] = await Promise.allSettled([
+        const [risks, stakeholders, changes, assumptions, issues, decisions, resources] = await Promise.allSettled([
           risksApi.getByProject(selectedProjectId, { includeArchived: false }),
           stakeholdersApi.getByProject(selectedProjectId, { includeArchived: false }),
           changesApi.getByProject(selectedProjectId, false),
           assumptionsApi.getByProject(selectedProjectId, { includeArchived: false }),
           issuesApi.getByProject(selectedProjectId, { includeArchived: false }),
           decisionsApi.getByProject(selectedProjectId, { includeArchived: false }),
+          resourcesApi.getAll(selectedProjectId, false),
         ]);
 
         setCounts({
@@ -160,6 +174,7 @@ export default function ArtifactsHubPage() {
           issues: issues.status === 'fulfilled' ? issues.value.length : 0,
           decisions: decisions.status === 'fulfilled' ? decisions.value.length : 0,
           raci: 0, // RACI matrices need separate API call
+          resources: resources.status === 'fulfilled' ? resources.value.length : 0,
         });
       } catch (err) {
         console.error('Failed to load artifact counts', err);
@@ -214,6 +229,8 @@ export default function ArtifactsHubPage() {
         return counts.risks + counts.assumptions + counts.issues + counts.decisions;
       case 'raci':
         return counts.raci;
+      case 'resource-tracker':
+        return counts.resources;
       default:
         return 0;
     }

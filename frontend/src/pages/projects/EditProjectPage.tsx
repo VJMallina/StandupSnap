@@ -156,7 +156,7 @@ export default function EditProjectPage() {
         pmoId: formData.pmoId || undefined,
         isActive: formData.isActive,
       });
-      navigate(`/projects/${id}`);
+      navigate('/projects');
     } catch (err: any) {
       setError(err.message || 'Failed to update project');
     } finally {
@@ -185,13 +185,13 @@ export default function EditProjectPage() {
       <div className="p-6 max-w-3xl mx-auto">
         <div className="mb-6">
           <button
-            onClick={() => navigate(`/projects/${id}`)}
+            onClick={() => navigate('/projects')}
             className="text-teal-600 hover:text-teal-800 font-medium mb-2 inline-flex items-center"
           >
             <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Project Details
+            Back to Projects
           </button>
           <h1 className="text-3xl font-bold text-gray-900">Edit Project</h1>
         </div>
@@ -362,7 +362,7 @@ export default function EditProjectPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate(`/projects/${id}`)}
+              onClick={() => navigate('/projects')}
               className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
             >
               Cancel

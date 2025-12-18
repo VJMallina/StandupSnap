@@ -71,7 +71,13 @@
       "Bash(powershell -Command \"Stop-Process -Id 16696 -Force\")",
       "Bash(powershell -Command \"Stop-Process -Id 13784 -Force\")",
       "Bash(powershell -Command \"Stop-Process -Id 9960 -Force\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(dir /B \"C:\\Users\\user\\Desktop\\StandupSnap\\frontend\\src\")",
+      "Bash(dir:*)",
+      "Bash(npm run seed:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 17788 -Force\")",
+      "Bash(powershell -Command \"Stop-Process -Id 8440 -Force\")",
+      "Bash(npx playwright test sprints-comprehensive.spec.ts --workers=1)"
     ],
     "deny": [],
     "ask": []

@@ -8,10 +8,31 @@ const getAuthHeaders = () => {
   };
 };
 
+// Helper function for fetch with timeout
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 30000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw error;
+  }
+};
+
 export const projectsApi = {
   getAll: async (isArchived?: boolean) => {
     const queryParams = isArchived !== undefined ? `?isArchived=${isArchived}` : '';
-    const response = await fetch(`${API_URL}/projects${queryParams}`, {
+    const response = await fetchWithTimeout(`${API_URL}/projects${queryParams}`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch projects');
@@ -19,7 +40,7 @@ export const projectsApi = {
   },
 
   getById: async (id: string) => {
-    const response = await fetch(`${API_URL}/projects/${id}`, {
+    const response = await fetchWithTimeout(`${API_URL}/projects/${id}`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch project');
@@ -27,7 +48,7 @@ export const projectsApi = {
   },
 
   create: async (data: any) => {
-    const response = await fetch(`${API_URL}/projects`, {
+    const response = await fetchWithTimeout(`${API_URL}/projects`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -40,7 +61,7 @@ export const projectsApi = {
   },
 
   update: async (id: string, data: any) => {
-    const response = await fetch(`${API_URL}/projects/${id}`, {
+    const response = await fetchWithTimeout(`${API_URL}/projects/${id}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
@@ -50,7 +71,7 @@ export const projectsApi = {
   },
 
   delete: async (id: string) => {
-    const response = await fetch(`${API_URL}/projects/${id}`, {
+    const response = await fetchWithTimeout(`${API_URL}/projects/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -58,7 +79,7 @@ export const projectsApi = {
   },
 
   getMembers: async (id: string) => {
-    const response = await fetch(`${API_URL}/projects/${id}/members`, {
+    const response = await fetchWithTimeout(`${API_URL}/projects/${id}/members`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch members');
@@ -67,7 +88,7 @@ export const projectsApi = {
 
   // Check if project name is unique (excluding the current project in edit mode)
   checkNameUniqueness: async (name: string, excludeId?: string) => {
-    const response = await fetch(`${API_URL}/projects/check-name?name=${encodeURIComponent(name)}${excludeId ? `&excludeId=${excludeId}` : ''}`, {
+    const response = await fetchWithTimeout(`${API_URL}/projects/check-name?name=${encodeURIComponent(name)}${excludeId ? `&excludeId=${excludeId}` : ''}`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) throw new Error('Failed to check name uniqueness');
@@ -76,7 +97,7 @@ export const projectsApi = {
 
   // Archive a project
   archive: async (id: string) => {
-    const response = await fetch(`${API_URL}/projects/${id}/archive`, {
+    const response = await fetchWithTimeout(`${API_URL}/projects/${id}/archive`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
     });

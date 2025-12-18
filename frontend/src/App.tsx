@@ -40,6 +40,7 @@ import ChangesPage from './pages/ChangesPage';
 import FormBuilderPage from './pages/FormBuilderPage';
 import ScrumRoomsPage from './pages/ScrumRoomsPage';
 import ScrumRoomDetailPage from './pages/ScrumRoomDetailPage';
+import ResourceTrackerPage from './pages/ResourceTrackerPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ProjectSelectionProvider } from './context/ProjectSelectionContext';
 
@@ -342,6 +343,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ChangesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/resources"
+              element={
+                <ProtectedRoute>
+                  <ResourceTrackerPage />
                 </ProtectedRoute>
               }
             />

@@ -85,31 +85,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (registerData: RegisterData) => {
-    const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(registerData),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Registration failed');
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registerData),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Registration failed');
+      }
+
+      const data: AuthResponse = await response.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+
+      // Map roles to strings (role names) like in initAuth
+      setUser({
+        id: data.user.id,
+        username: data.user.username,
+        email: data.user.email,
+        name: data.user.name,
+        roles: data.user.roles?.map((r: any) => typeof r === 'string' ? r : r.name) || [],
+      });
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Registration timed out. Please try again.');
+      }
+      throw error;
     }
-
-    const data: AuthResponse = await response.json();
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
-
-    // Map roles to strings (role names) like in initAuth
-    setUser({
-      id: data.user.id,
-      username: data.user.username,
-      email: data.user.email,
-      name: data.user.name,
-      roles: data.user.roles?.map((r: any) => typeof r === 'string' ? r : r.name) || [],
-    });
   };
 
   const logout = async () => {

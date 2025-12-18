@@ -91,22 +91,18 @@ export class AuthService {
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
     const { username, email, password, name, roleName, invitationToken } = registerDto;
 
-    // Check if username already exists
-    const existingUsername = await this.userRepository.findOne({
-      where: { username },
+    // Check if username or email already exists (single query instead of two)
+    const existingUser = await this.userRepository.findOne({
+      where: [{ username }, { email }],
     });
 
-    if (existingUsername) {
-      throw new ConflictException('Username already registered');
-    }
-
-    // Check if email already exists
-    const existingEmail = await this.userRepository.findOne({
-      where: { email },
-    });
-
-    if (existingEmail) {
-      throw new ConflictException('Email already registered');
+    if (existingUser) {
+      if (existingUser.username === username) {
+        throw new ConflictException('Username already registered');
+      }
+      if (existingUser.email === email) {
+        throw new ConflictException('Email already registered');
+      }
     }
 
     let selectedRole = roleName;
@@ -188,14 +184,11 @@ export class AuthService {
       }
     }
 
-    // Reload user with roles relation
-    const userWithRoles = await this.userRepository.findOne({
-      where: { id: savedUser.id },
-      relations: ['roles'],
-    });
+    // Ensure roles are loaded for token generation
+    savedUser.roles = [userRole];
 
     // Generate tokens
-    return this.generateTokens(userWithRoles);
+    return this.generateTokens(savedUser);
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {

@@ -22,7 +22,9 @@
     "migration:generate": "npm run typeorm -- migration:generate -d src/config/typeorm.config.ts",
     "migration:run": "npm run typeorm -- migration:run -d src/config/typeorm.config.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d src/config/typeorm.config.ts",
-    "cleanup:test-data": "ts-node -r tsconfig-paths/register src/scripts/cleanup-test-data.ts"
+    "cleanup:test-data": "ts-node -r tsconfig-paths/register src/scripts/cleanup-test-data.ts",
+    "check:user-projects": "ts-node -r tsconfig-paths/register src/scripts/check-user-projects.ts",
+    "fix:user-projects": "ts-node -r tsconfig-paths/register src/scripts/fix-user-projects.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

@@ -298,7 +298,7 @@ export default function CreateSprintPage() {
             </div>
 
             {/* Dynamic Slot Time Inputs */}
-            {manualFormData.dailyStandupCount > 1 && (
+            {manualFormData.dailyStandupCount >= 1 && (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">Slot Times (Optional)</h3>
                 <p className="text-xs text-gray-500 mb-4">
@@ -458,7 +458,7 @@ export default function CreateSprintPage() {
               </div>
 
               {/* Dynamic Slot Time Inputs */}
-              {autoFormData.dailyStandupCount > 1 && (
+              {autoFormData.dailyStandupCount >= 1 && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Slot Times (Optional)</h3>
                   <p className="text-xs text-gray-500 mb-4">

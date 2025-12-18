@@ -18,6 +18,7 @@ import { StandupBookModule } from './standup-book/standup-book.module';
 import { ArtifactsModule } from './artifacts/artifacts.module';
 import { StandaloneMomModule } from './standalone-mom/standalone-mom.module';
 import { ScrumRoomsModule } from './scrum-rooms/scrum-rooms.module';
+import { ResourceModule } from './resource/resource.module';
 
 // Team Management Module for non-login team members
 @Module({
@@ -39,6 +40,13 @@ import { ScrumRoomsModule } from './scrum-rooms/scrum-rooms.module';
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize: true, // Enable for initial deployment, disable later
             logging: process.env.NODE_ENV === 'development',
+            // Connection pooling for better performance with remote database
+            extra: {
+              max: 10, // Maximum number of connections in pool
+              min: 2,  // Minimum number of connections in pool
+              connectionTimeoutMillis: 5000, // Timeout for acquiring connection
+              idleTimeoutMillis: 30000, // Close idle connections after 30s
+            },
             ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
           };
         }
@@ -54,6 +62,14 @@ import { ScrumRoomsModule } from './scrum-rooms/scrum-rooms.module';
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize: process.env.NODE_ENV === 'development',
           logging: process.env.NODE_ENV === 'development',
+          // Connection pooling for better performance with remote database
+          extra: {
+            max: 10, // Maximum number of connections in pool
+            min: 2,  // Minimum number of connections in pool
+            connectionTimeoutMillis: 5000, // Timeout for acquiring connection
+            idleTimeoutMillis: 30000, // Close idle connections after 30s
+          },
+          ssl: configService.get('DATABASE_SSL') === 'true' ? { rejectUnauthorized: false } : false,
         };
       },
       inject: [ConfigService],
@@ -73,6 +89,7 @@ import { ScrumRoomsModule } from './scrum-rooms/scrum-rooms.module';
     ArtifactsModule,
     StandaloneMomModule,
     ScrumRoomsModule,
+    ResourceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
