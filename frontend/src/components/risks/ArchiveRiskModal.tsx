@@ -22,7 +22,7 @@ export const ArchiveRiskModal: React.FC<ArchiveRiskModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
         {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4 rounded-t-xl">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4 rounded-t-xl">
           <h2 className="text-xl font-semibold text-white">Archive Risk</h2>
         </div>
 
@@ -59,7 +59,7 @@ export const ArchiveRiskModal: React.FC<ArchiveRiskModalProps> = ({
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="px-4 py-2 text-white bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg hover:from-teal-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-4 py-2 text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg hover:from-primary-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? 'Archiving...' : 'Archive'}
           </button>

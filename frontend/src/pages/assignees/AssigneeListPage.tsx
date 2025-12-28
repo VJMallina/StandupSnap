@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import AppLayout from '../../components/AppLayout';
-import Select from '../../components/ui/Select';
+import { Select } from '../../components/ui/Select';
 import { assigneesApi, AssigneeListItem } from '../../services/api/assignees';
 import { projectsApi } from '../../services/api/projects';
 import { sprintsApi } from '../../services/api/sprints';
@@ -182,14 +182,13 @@ export default function AssigneeListPage() {
     <AppLayout>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 via-slate-600 to-slate-700 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
-          <p className="text-teal-100 text-sm font-medium mb-1">Team</p>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Team Members</h1>
-          <p className="text-teal-100 mt-2 text-sm">View all assignees and their work status</p>
+        <div className="bg-gradient-to-r from-primary-500 via-primary-600 to-secondary-700 rounded-2xl p-4 md:p-5 shadow-lg mb-8">
+          <p className="text-primary-100 text-sm font-medium mb-1">Team</p>
+          <h1 className="text-2xl md:text-2xl font-bold text-white">Team Members</h1>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-end gap-4 mb-6">
+        <div className="flex flex-wrap items-end gap-3 mb-6">
           {/* Project Selector */}
           <div className="flex-1 min-w-[200px]">
             <Select
@@ -242,7 +241,7 @@ export default function AssigneeListPage() {
         {showContentLoader ? (
           <div className="flex justify-center items-center py-12">
             <svg
-              className="animate-spin h-10 w-10 text-teal-600"
+              className="animate-spin h-10 w-10 text-primary-600"
               viewBox="0 0 24 24"
             >
               <circle
@@ -300,7 +299,7 @@ export default function AssigneeListPage() {
                   <div className="p-6">
                     {/* Avatar/Initials */}
                     <div className="flex items-center mb-4">
-                      <div className="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-lg mr-3">
+                      <div className="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-lg mr-3">
                         {assignee.fullName
                           .split(' ')
                           .map((n) => n[0])
@@ -328,7 +327,7 @@ export default function AssigneeListPage() {
                     {/* Stats */}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-teal-600">
+                        <p className="text-2xl font-bold text-primary-600">
                           {assignee.assignedCardsCount}
                         </p>
                         <p className="text-xs text-gray-500">
@@ -349,7 +348,7 @@ export default function AssigneeListPage() {
 
                   {/* View Details Link */}
                   <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
-                    <button className="text-sm font-medium text-teal-600 hover:text-teal-800">
+                    <button className="text-sm font-medium text-primary-600 hover:text-primary-800">
                       View Details →
                     </button>
                   </div>

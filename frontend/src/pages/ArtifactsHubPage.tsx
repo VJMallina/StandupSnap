@@ -34,7 +34,7 @@ const artifactTypes = [
     title: 'RACI Matrix',
     description: 'Clarify who is Responsible, Accountable, Consulted, and Informed for every deliverable.',
     badge: 'Active',
-    color: 'from-slate-900 via-cyan-800 to-emerald-600',
+    color: 'from-primary-500 via-primary-600 to-secondary-600',
     href: '/artifacts/raci',
   },
   {
@@ -42,7 +42,7 @@ const artifactTypes = [
     title: 'Risk Register',
     description: 'Log risks, impact, likelihood, owners, and mitigation plans.',
     badge: 'Active',
-    color: 'from-indigo-900 via-indigo-700 to-sky-600',
+    color: 'from-primary-600 via-primary-700 to-secondary-600',
     href: '/artifacts/risks',
     disabled: false,
   },
@@ -51,7 +51,7 @@ const artifactTypes = [
     title: 'Stakeholder Register',
     description: 'Manage stakeholders with Power-Interest Grid analysis and engagement strategies.',
     badge: 'Active',
-    color: 'from-teal-900 via-teal-700 to-cyan-600',
+    color: 'from-primary-500 via-primary-600 to-secondary-700',
     href: '/artifacts/stakeholders',
     disabled: false,
   },
@@ -69,7 +69,7 @@ const artifactTypes = [
     title: 'RAID Log',
     description: 'Track risks, assumptions, issues, and decisions in one view.',
     badge: 'Active',
-    color: 'from-purple-900 via-purple-700 to-fuchsia-600',
+    color: 'from-secondary-600 via-secondary-700 to-primary-700',
     href: '/artifacts/raid-log',
     disabled: false,
   },
@@ -78,7 +78,7 @@ const artifactTypes = [
     title: 'Change Management',
     description: 'Track and manage project changes with approval workflows and impact analysis.',
     badge: 'Active',
-    color: 'from-purple-900 via-purple-700 to-indigo-600',
+    color: 'from-secondary-600 via-secondary-700 to-primary-600',
     href: '/artifacts/changes',
     disabled: false,
   },
@@ -87,8 +87,26 @@ const artifactTypes = [
     title: 'Resource Tracker',
     description: 'Manage team capacity, workload allocation, and resource utilization with heatmap visualization.',
     badge: 'Active',
-    color: 'from-purple-600 to-indigo-600',
+    color: 'from-secondary-600 to-primary-600',
     href: '/artifacts/resources',
+    disabled: false,
+  },
+  {
+    key: 'schedule-builder',
+    title: 'Schedule Builder',
+    description: 'MS Project-like Gantt chart with task hierarchy, dependencies, and resource assignment.',
+    badge: 'Active',
+    color: 'from-primary-600 via-secondary-600 to-primary-700',
+    href: '/artifacts/schedule-builder',
+    disabled: false,
+  },
+  {
+    key: 'document-templates',
+    title: 'Document Templates',
+    description: 'Create project documents from standard templates (Charter, Budget, Lessons Learned, etc.).',
+    badge: 'Active',
+    color: 'from-secondary-500 via-primary-600 to-secondary-700',
+    href: '/artifacts/documents',
     disabled: false,
   },
 ];
@@ -212,9 +230,9 @@ export default function ArtifactsHubPage() {
 
   const getBadgeColor = (key: string, count: number): string => {
     if (key === 'decision-log') return 'bg-gray-100 text-gray-500';
-    if (!selectedProjectId || loadingCounts) return 'bg-teal-50 text-teal-700 border border-teal-100';
+    if (!selectedProjectId || loadingCounts) return 'bg-primary-50 text-primary-700 border border-primary-100';
     if (count === 0) return 'bg-gray-100 text-gray-600';
-    return 'bg-teal-50 text-teal-700 border border-teal-100';
+    return 'bg-primary-50 text-primary-700 border border-primary-100';
   };
 
   const getArtifactCount = (key: string): number => {
@@ -240,48 +258,25 @@ export default function ArtifactsHubPage() {
     <AppLayout>
       <ArtifactsNavigation />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-cyan-800 to-emerald-700 text-white shadow-2xl border border-white/10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.12),transparent_35%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.08),transparent_30%)]" />
-          <div className="relative p-6 md:p-8 flex flex-col gap-3">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold tracking-wide uppercase">
-                  Artifacts
-                </div>
-                <div className="space-y-1">
-                  <h1 className="text-3xl font-bold leading-tight">Project documentation, in one place</h1>
-                  <p className="text-sm text-white/80 max-w-2xl">
-                    Choose a project once and open any artifact workspace with the same context.
-                  </p>
-                </div>
-              </div>
-              <div className="bg-white/10 border border-white/20 rounded-2xl px-4 py-3 w-full md:w-80">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-white/80">Project</span>
-                  {selectedProjectId && (
-                    <span className="px-2 py-0.5 rounded-full text-[11px] bg-white/20 text-white font-semibold">
-                      Selected
-                    </span>
-                  )}
-                </div>
-                <select
-                  value={selectedProjectId}
-                  onChange={(e) => handleProjectChange(e.target.value)}
-                  className="w-full rounded-xl bg-white/90 text-slate-900 font-semibold px-3 py-2 outline-none focus:ring-2 focus:ring-teal-300 border border-white/40"
-                  disabled={loadingProjects}
-                >
-                  <option value="">-- Select a project --</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-                {selectedProjectName && (
-                  <p className="text-xs text-white/80 mt-2">Artifacts will open for <span className="font-semibold text-white">{selectedProjectName}</span>.</p>
-                )}
-              </div>
+        <div className="bg-gradient-to-r from-primary-500 via-primary-600 to-secondary-700 rounded-xl p-4 md:p-5 shadow-xl text-white">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold">Artifacts Hub</h1>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 min-w-[250px]">
+              <select
+                value={selectedProjectId}
+                onChange={(e) => handleProjectChange(e.target.value)}
+                className="w-full rounded-lg bg-white/90 text-slate-900 font-semibold px-3 py-2 outline-none focus:ring-2 focus:ring-white/50 border border-white/40"
+                disabled={loadingProjects}
+              >
+                <option value="">-- Select a project --</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -325,7 +320,7 @@ export default function ArtifactsHubPage() {
                   {type.description}
                 </p>
                 {!type.disabled && (
-                  <div className="inline-flex items-center text-sm font-semibold text-teal-700">
+                  <div className="inline-flex items-center text-sm font-semibold text-primary-700">
                     Open
                     <svg className="w-4 h-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

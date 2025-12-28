@@ -101,12 +101,12 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-white">Add Team Member</h3>
             <button
               onClick={handleClose}
-              className="text-teal-100 hover:text-white transition-colors"
+              className="text-primary-100 hover:text-white transition-colors"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -128,7 +128,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                 onClick={() => setMode('select')}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                   mode === 'select'
-                    ? 'bg-teal-600 text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -138,7 +138,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                 onClick={() => setMode('create')}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
                   mode === 'create'
-                    ? 'bg-teal-600 text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -162,7 +162,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                       type="checkbox"
                       checked={selectedMemberIds.includes(member.id)}
                       onChange={() => handleSelectMember(member.id)}
-                      className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
+                      className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
                     />
                     <div className="ml-3">
                       <p className="font-medium text-gray-900">{member.fullName}</p>
@@ -191,7 +191,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Enter full name"
                 />
               </div>
@@ -203,7 +203,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                 <select
                   value={formData.designationRole}
                   onChange={(e) => setFormData({ ...formData, designationRole: e.target.value as DesignationRole })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   {Object.values(DesignationRole).map(role => (
                     <option key={role} value={role}>{role}</option>
@@ -219,7 +219,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Enter nickname or display name"
                 />
               </div>
@@ -237,7 +237,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
           <button
             onClick={mode === 'select' ? handleAddExisting : handleCreateNew}
             disabled={loading}
-            className="flex-1 bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-teal-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+            className="flex-1 bg-gradient-to-r from-primary-600 to-secondary-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-primary-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
             {loading ? 'Adding...' : mode === 'select' ? `Add Selected (${selectedMemberIds.length})` : 'Create & Add'}
           </button>

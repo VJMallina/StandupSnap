@@ -16,7 +16,7 @@ interface SelectProps {
   variant?: 'default' | 'dark';
 }
 
-export default function Select({
+export function Select({
   value,
   onChange,
   options,
@@ -45,7 +45,7 @@ export default function Select({
                 ? `bg-white/10 backdrop-blur-sm border border-white/20 ${disabled ? 'cursor-not-allowed opacity-50' : 'hover:bg-white/20 cursor-pointer'}`
                 : `bg-white border border-gray-200 ${disabled ? 'bg-gray-50 cursor-not-allowed text-gray-400' : 'hover:border-gray-300 cursor-pointer'}`
               }
-              focus:outline-none focus:ring-2 ${isDark ? 'focus:ring-white/50' : 'focus:ring-teal-500'} focus:border-transparent`}
+              focus:outline-none focus:ring-2 ${isDark ? 'focus:ring-white/50' : 'focus:ring-primary-500'} focus:border-transparent`}
           >
             <span className={`block truncate ${
               isDark
@@ -81,7 +81,7 @@ export default function Select({
                   value={option.value}
                   className={({ active, selected }) =>
                     `relative cursor-pointer select-none py-2.5 pl-10 pr-4 transition-colors
-                    ${active ? 'bg-teal-50 text-teal-900' : 'text-gray-900'}
+                    ${active ? 'bg-primary-50 text-primary-900' : 'text-gray-900'}
                     ${selected ? 'font-medium' : 'font-normal'}`
                   }
                 >
@@ -93,7 +93,7 @@ export default function Select({
                       {selected && (
                         <span
                           className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                            active ? 'text-teal-600' : 'text-teal-600'
+                            active ? 'text-primary-600' : 'text-primary-600'
                           }`}
                         >
                           <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

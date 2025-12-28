@@ -74,7 +74,7 @@ export default function SnapCard({
               </span>
             )}
             {isToday && !snap.isLocked && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800">
                 Today
               </span>
             )}
@@ -92,7 +92,7 @@ export default function SnapCard({
             {onEdit && (
               <button
                 onClick={onEdit}
-                className="text-teal-600 hover:text-teal-800 text-sm font-medium"
+                className="text-primary-600 hover:text-primary-800 text-sm font-medium"
               >
                 Edit
               </button>
@@ -121,8 +121,8 @@ export default function SnapCard({
 
         {/* To Do */}
         {snap.toDo && (
-          <div className="border-l-4 border-teal-500 pl-3">
-            <div className="text-xs font-semibold text-teal-700 uppercase mb-1">To Do</div>
+          <div className="border-l-4 border-primary-500 pl-3">
+            <div className="text-xs font-semibold text-primary-700 uppercase mb-1">To Do</div>
             <div className="text-sm text-gray-700">{snap.toDo}</div>
           </div>
         )}

@@ -239,7 +239,7 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
               <select
                 value={deckType}
                 onChange={(e) => setDeckType(e.target.value as DeckType)}
-                className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value={DeckType.FIBONACCI}>Fibonacci (0, 1, 2, 3, 5, 8, 13, ...)</option>
                 <option value={DeckType.MODIFIED_FIBONACCI}>
@@ -262,11 +262,11 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
                     onChange={(e) => setCustomCardInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddCustomCard()}
                     placeholder="Add card value"
-                    className="flex-1 max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="flex-1 max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                   <button
                     onClick={handleAddCustomCard}
-                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                   >
                     Add
                   </button>
@@ -318,13 +318,13 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
               placeholder="Enter story or item name (e.g., 'User Login Feature')"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               onKeyPress={(e) => e.key === 'Enter' && handleStartNewRound()}
             />
             <button
               onClick={handleStartNewRound}
               disabled={loading || !itemName.trim()}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Start Round
             </button>
@@ -338,12 +338,12 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Current Round</h3>
-              <p className="text-2xl font-bold text-teal-600 mt-1">{currentRound.itemName}</p>
+              <p className="text-2xl font-bold text-primary-600 mt-1">{currentRound.itemName}</p>
             </div>
             <button
               onClick={handleReveal}
               disabled={loading || Object.keys(currentRound.votes).length === 0}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Reveal Votes
             </button>
@@ -360,8 +360,8 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
                   disabled={loading}
                   className={`aspect-[2/3] flex items-center justify-center text-lg font-bold rounded-lg border-2 transition-all ${
                     userVote === card
-                      ? 'border-teal-600 bg-teal-50 text-teal-700 scale-105'
-                      : 'border-gray-300 bg-white text-gray-700 hover:border-teal-400 hover:bg-teal-50'
+                      ? 'border-primary-600 bg-primary-50 text-primary-700 scale-105'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-primary-400 hover:bg-primary-50'
                   } disabled:opacity-50`}
                 >
                   {card}
@@ -379,7 +379,7 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
               {Object.entries(currentRound.votes).map(([userId, _]) => (
                 <div
                   key={userId}
-                  className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium"
+                  className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium"
                 >
                   {userId === currentUserId ? 'You' : `User ${userId.slice(0, 8)}`} ✓
                 </div>
@@ -404,7 +404,7 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
                   key={userId}
                   className="aspect-[2/3] flex flex-col items-center justify-center text-lg font-bold rounded-lg border-2 border-gray-300 bg-white"
                 >
-                  <span className="text-2xl text-teal-600">{vote}</span>
+                  <span className="text-2xl text-primary-600">{vote}</span>
                   <span className="text-xs text-gray-500 mt-1">
                     {userId === currentUserId ? 'You' : `...${userId.slice(-4)}`}
                   </span>
@@ -450,8 +450,8 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
                     disabled={loading}
                     className={`px-4 py-2 rounded-lg border-2 font-medium transition-all ${
                       currentRound.finalValue === card
-                        ? 'border-teal-600 bg-teal-600 text-white'
-                        : 'border-gray-300 bg-white text-gray-700 hover:border-teal-400'
+                        ? 'border-primary-600 bg-primary-600 text-white'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-primary-400'
                     } disabled:opacity-50`}
                   >
                     {card}
@@ -489,7 +489,7 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
                     {round.finalValue && (
                       <div className="text-center">
                         <div className="text-xs text-gray-600">Final</div>
-                        <div className="text-lg font-bold text-teal-600">{round.finalValue}</div>
+                        <div className="text-lg font-bold text-primary-600">{round.finalValue}</div>
                       </div>
                     )}
                     {round.revealed && !round.finalValue && (

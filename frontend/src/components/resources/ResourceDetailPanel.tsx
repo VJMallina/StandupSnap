@@ -100,7 +100,7 @@ export default function ResourceDetailPanel({ resource, onClose, onEdit }: Resou
                 {resource.skills.map((skill, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-sm"
+                    className="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm"
                   >
                     {skill}
                   </span>
@@ -151,7 +151,7 @@ export default function ResourceDetailPanel({ resource, onClose, onEdit }: Resou
           <div className="flex gap-3 pt-4">
             <button
               onClick={() => onEdit(resource)}
-              className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+              className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               Edit Resource
             </button>

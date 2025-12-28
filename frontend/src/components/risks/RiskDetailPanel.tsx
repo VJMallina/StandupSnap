@@ -134,7 +134,7 @@ export const RiskDetailPanel: React.FC<RiskDetailPanelProps> = ({
       {/* Slide-over Panel */}
       <div className="fixed inset-y-0 right-0 w-full max-w-2xl bg-white shadow-2xl z-50 overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4 flex justify-between items-center z-10">
+        <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4 flex justify-between items-center z-10">
           <h2 className="text-xl font-semibold text-white">Risk Details</h2>
           <button
             onClick={onClose}
@@ -344,7 +344,7 @@ export const RiskDetailPanel: React.FC<RiskDetailPanelProps> = ({
               <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 flex-1">History Timeline</h3>
               <button
                 onClick={() => setShowHistory(!showHistory)}
-                className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
               >
                 {showHistory ? 'Hide' : 'Show'}
               </button>
@@ -354,7 +354,7 @@ export const RiskDetailPanel: React.FC<RiskDetailPanelProps> = ({
               <div className="space-y-3">
                 {loadingHistory ? (
                   <div className="text-center py-4">
-                    <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-teal-600 border-r-transparent"></div>
+                    <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary-600 border-r-transparent"></div>
                     <p className="mt-2 text-sm text-gray-600">Loading history...</p>
                   </div>
                 ) : history.length === 0 ? (
@@ -423,7 +423,7 @@ export const RiskDetailPanel: React.FC<RiskDetailPanelProps> = ({
           <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex gap-3 border-t">
             <button
               onClick={onEdit}
-              className="flex-1 px-4 py-2 text-white bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg hover:from-teal-700 hover:to-cyan-700 transition-all"
+              className="flex-1 px-4 py-2 text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg hover:from-primary-700 hover:to-cyan-700 transition-all"
             >
               Edit Risk
             </button>

@@ -54,7 +54,7 @@ export const AssumptionDetailPanel: React.FC<AssumptionDetailPanelProps> = ({
       {/* Slide-over Panel */}
       <div className="fixed inset-y-0 right-0 max-w-2xl w-full bg-white shadow-xl z-50 overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-teal-50 to-cyan-50 border-b border-gray-200 px-6 py-4 z-10">
+        <div className="sticky top-0 bg-gradient-to-r from-primary-50 to-secondary-50 border-b border-gray-200 px-6 py-4 z-10">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900">Assumption Details</h2>
             <button

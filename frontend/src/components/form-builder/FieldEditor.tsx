@@ -71,7 +71,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
           type="text"
           value={localField.label}
           onChange={(e) => handleUpdate({ label: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
           placeholder={isLayoutField ? 'Section title' : 'Field label'}
         />
       </div>
@@ -85,7 +85,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
               type="text"
               value={localField.placeholder || ''}
               onChange={(e) => handleUpdate({ placeholder: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               placeholder="Placeholder text"
             />
           </div>
@@ -97,7 +97,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
               rows={2}
               value={localField.description || ''}
               onChange={(e) => handleUpdate({ description: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               placeholder="Help text for this field"
             />
           </div>
@@ -109,7 +109,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
               type="text"
               value={localField.helpText || ''}
               onChange={(e) => handleUpdate({ helpText: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               placeholder="Additional help text"
             />
           </div>
@@ -120,7 +120,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
             <button
               onClick={() => handleUpdate({ required: !localField.required })}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                localField.required ? 'bg-teal-600' : 'bg-gray-300'
+                localField.required ? 'bg-primary-600' : 'bg-gray-300'
               }`}
             >
               <span
@@ -141,7 +141,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                 rows={5}
                 value={options}
                 onChange={(e) => handleOptionsUpdate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm font-mono"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-mono"
                 placeholder="Option 1&#10;Option 2&#10;Option 3"
               />
             </div>
@@ -156,7 +156,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                   type="number"
                   value={localField.properties?.min || ''}
                   onChange={(e) => handlePropertiesUpdate({ min: parseFloat(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 />
               </div>
               <div>
@@ -165,7 +165,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                   type="number"
                   value={localField.properties?.max || ''}
                   onChange={(e) => handlePropertiesUpdate({ max: parseFloat(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 />
               </div>
             </>
@@ -180,7 +180,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                   type="number"
                   value={localField.properties?.minLength || ''}
                   onChange={(e) => handlePropertiesUpdate({ minLength: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 />
               </div>
               <div>
@@ -189,7 +189,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                   type="number"
                   value={localField.properties?.maxLength || ''}
                   onChange={(e) => handlePropertiesUpdate({ maxLength: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 />
               </div>
             </>
@@ -205,7 +205,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                 max="20"
                 value={localField.properties?.rows || 4}
                 onChange={(e) => handlePropertiesUpdate({ rows: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               />
             </div>
           )}
@@ -220,7 +220,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                 max="10"
                 value={localField.properties?.maxRating || 5}
                 onChange={(e) => handlePropertiesUpdate({ maxRating: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
               />
             </div>
           )}
@@ -236,7 +236,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                   onChange={(e) =>
                     handlePropertiesUpdate({ acceptedFileTypes: e.target.value.split(',').map((t) => t.trim()) })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                   placeholder=".pdf, .doc, .docx, image/*"
                 />
               </div>
@@ -248,7 +248,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                   max="100"
                   value={localField.properties?.maxFileSize || 10}
                   onChange={(e) => handlePropertiesUpdate({ maxFileSize: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 />
               </div>
               <div className="flex items-center justify-between">
@@ -256,7 +256,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                 <button
                   onClick={() => handlePropertiesUpdate({ allowMultiple: !localField.properties?.allowMultiple })}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    localField.properties?.allowMultiple ? 'bg-teal-600' : 'bg-gray-300'
+                    localField.properties?.allowMultiple ? 'bg-primary-600' : 'bg-gray-300'
                   }`}
                 >
                   <span
@@ -277,7 +277,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
                 rows={3}
                 value={localField.properties?.aiPrompt || ''}
                 onChange={(e) => handlePropertiesUpdate({ aiPrompt: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                 placeholder="Instructions for AI processing"
               />
             </div>
@@ -293,7 +293,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({ field, onUpdate }) => 
             type="text"
             value={(localField.defaultValue as string) || ''}
             onChange={(e) => handleUpdate({ defaultValue: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
             placeholder="Default value"
           />
         </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import AppLayout from '../components/AppLayout';
-import Select from '../components/ui/Select';
+import { Select } from '../components/ui/Select';
 import { reportsApi } from '../services/api/reports';
 import { dashboardApi, ProjectSummary } from '../services/api/dashboard';
 import { sprintsApi } from '../services/api/sprints';
@@ -473,14 +473,12 @@ Assignee-Level Status:
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg">
-          <p className="text-teal-100 text-sm font-medium mb-1">Analytics</p>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Reports</h1>
-          <p className="text-teal-100 mt-2 text-sm">View and download daily standup summaries</p>
+        <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-4 md:p-5 shadow-lg">
+          <h1 className="text-2xl font-bold text-white">Reports</h1>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-end gap-4 mb-6">
+        <div className="flex flex-wrap items-end gap-3 mb-6">
           {/* Project Selector */}
           <div className="flex-1 min-w-[180px]">
             <Select
@@ -519,7 +517,7 @@ Assignee-Level Status:
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
             />
           </div>
 
@@ -530,7 +528,7 @@ Assignee-Level Status:
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
             />
           </div>
 
@@ -554,7 +552,7 @@ Assignee-Level Status:
         {/* Summaries List */}
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center animate-pulse">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center animate-pulse">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
@@ -591,9 +589,9 @@ Assignee-Level Status:
                     onClick={() => setExpandedSummary(isExpanded ? null : summary.id)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center">
-                          <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-100 to-primary-100 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
@@ -610,7 +608,7 @@ Assignee-Level Status:
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         {/* RAG Badge */}
                         <div className={`px-3 py-1.5 rounded-lg ${ragConfig.bg}`}>
                           <div className="flex items-center gap-2">
@@ -686,7 +684,7 @@ Assignee-Level Status:
                           </svg>
                           Sprint Health Overview
                         </h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <div className="text-center p-3 bg-gray-50 rounded-lg">
                             <p className="text-xs text-gray-500 mb-1">Day RAG</p>
                             <div className={`inline-flex px-3 py-1 rounded-full text-sm font-semibold ${ragConfig.bg} ${ragConfig.text}`}>
@@ -711,7 +709,7 @@ Assignee-Level Status:
                       {/* Card-Level Snaps */}
                       <div className="space-y-4">
                         <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                          <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                           </svg>
                           Card-Level Updates
@@ -759,8 +757,8 @@ Assignee-Level Status:
                                             <p className="font-medium text-emerald-700 mb-1">Done</p>
                                             <p className="text-gray-700 whitespace-pre-wrap">{snap.done || '-'}</p>
                                           </div>
-                                          <div className="bg-teal-50 rounded-lg p-3">
-                                            <p className="font-medium text-teal-700 mb-1">To Do</p>
+                                          <div className="bg-primary-50 rounded-lg p-3">
+                                            <p className="font-medium text-primary-700 mb-1">To Do</p>
                                             <p className="text-gray-700 whitespace-pre-wrap">{snap.toDo || '-'}</p>
                                           </div>
                                           <div className="bg-red-50 rounded-lg p-3">

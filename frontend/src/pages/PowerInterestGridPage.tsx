@@ -191,7 +191,7 @@ const PowerInterestGridPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search name, role, email..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               />
             </div>
 
@@ -201,7 +201,7 @@ const PowerInterestGridPage: React.FC = () => {
               <select
                 value={filters.powerLevel || ''}
                 onChange={(e) => setFilters({ ...filters, powerLevel: e.target.value as PowerLevel || undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               >
                 <option value="">All</option>
                 <option value={PowerLevel.LOW}>Low</option>
@@ -216,7 +216,7 @@ const PowerInterestGridPage: React.FC = () => {
               <select
                 value={filters.interestLevel || ''}
                 onChange={(e) => setFilters({ ...filters, interestLevel: e.target.value as InterestLevel || undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               >
                 <option value="">All</option>
                 <option value={InterestLevel.LOW}>Low</option>
@@ -229,7 +229,7 @@ const PowerInterestGridPage: React.FC = () => {
             <div className="flex items-end">
               <button
                 onClick={fetchData}
-                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors"
+                className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors"
               >
                 Apply Filters
               </button>
@@ -242,7 +242,7 @@ const PowerInterestGridPage: React.FC = () => {
           {loading ? (
             <div className="flex items-center justify-center h-96">
               <div className="text-center">
-                <svg className="animate-spin h-8 w-8 text-purple-600 mx-auto mb-4" viewBox="0 0 24 24">
+                <svg className="animate-spin h-8 w-8 text-primary-600 mx-auto mb-4" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -346,7 +346,7 @@ const PowerInterestGridPage: React.FC = () => {
                                 <p className="text-gray-400">
                                   <span className="font-semibold">Interest:</span> {stakeholder.interestLevel}
                                 </p>
-                                <p className="text-purple-300 mt-1 font-semibold">
+                                <p className="text-primary-300 mt-1 font-semibold">
                                   {getQuadrantLabel(stakeholder.quadrant)}
                                 </p>
                                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
@@ -406,7 +406,7 @@ const PowerInterestGridPage: React.FC = () => {
 
                   <div className="border-t border-gray-300 pt-4">
                     <p className="text-xs text-gray-700 font-semibold mb-2">Total Stakeholders</p>
-                    <p className="text-2xl font-bold text-purple-600">{stakeholders.length}</p>
+                    <p className="text-2xl font-bold text-primary-600">{stakeholders.length}</p>
                   </div>
 
                   <div className="border-t border-gray-300 mt-4 pt-4">

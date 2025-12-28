@@ -130,7 +130,7 @@ export const SprintPlanningRoom: React.FC<SprintPlanningRoomProps> = ({ room, on
         <button
           onClick={handleSave}
           disabled={loading}
-          className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50"
+          className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
         >
           {loading ? 'Saving...' : 'Save Sprint Plan'}
         </button>
@@ -152,7 +152,7 @@ export const SprintPlanningRoom: React.FC<SprintPlanningRoomProps> = ({ room, on
                 onChange={(e) => setCapacity(Number(e.target.value))}
                 placeholder="e.g., 40"
                 min="0"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -189,11 +189,11 @@ export const SprintPlanningRoom: React.FC<SprintPlanningRoomProps> = ({ room, on
               onChange={(e) => setNewGoal(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddGoal()}
               placeholder="Add sprint goal..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <button
               onClick={handleAddGoal}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Add
             </button>
@@ -202,10 +202,10 @@ export const SprintPlanningRoom: React.FC<SprintPlanningRoomProps> = ({ room, on
             {sprintGoals.map((goal, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2 p-3 bg-teal-50 border border-teal-200 rounded-lg"
+                className="flex items-center gap-2 p-3 bg-primary-50 border border-primary-200 rounded-lg"
               >
                 <svg
-                  className="h-5 w-5 text-teal-600 flex-shrink-0"
+                  className="h-5 w-5 text-primary-600 flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -265,7 +265,7 @@ export const SprintPlanningRoom: React.FC<SprintPlanningRoomProps> = ({ room, on
 
         {/* In Sprint Column */}
         <div className="bg-white rounded-lg border border-gray-200 flex flex-col">
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
+          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-secondary-50">
             <h3 className="font-semibold text-gray-900">
               In Sprint ({getItemsByStatus('in_scope').length})
             </h3>
@@ -320,7 +320,7 @@ export const SprintPlanningRoom: React.FC<SprintPlanningRoomProps> = ({ room, on
       <div className="mt-6 flex justify-center">
         <button
           onClick={handleAddItem}
-          className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2"
+          className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -344,7 +344,7 @@ interface ItemCardProps {
 const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, onMove, color }) => {
   const colorClasses = {
     gray: 'bg-gray-50 border-gray-200',
-    teal: 'bg-teal-50 border-teal-200',
+    teal: 'bg-primary-50 border-primary-200',
     red: 'bg-red-50 border-red-200',
   };
 
@@ -355,7 +355,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, onMove, c
         value={item.title}
         onChange={(e) => onUpdate(item.itemId, 'title', e.target.value)}
         placeholder="Item title..."
-        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
       />
 
       <div className="flex items-center gap-2">
@@ -365,14 +365,14 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, onMove, c
           onChange={(e) => onUpdate(item.itemId, 'estimate', Number(e.target.value))}
           placeholder="Points"
           min="0"
-          className="w-20 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          className="w-20 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
         <select
           value={item.status}
           onChange={(e) =>
             onUpdate(item.itemId, 'status', e.target.value as SprintPlanningItem['status'])
           }
-          className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value="ready">Ready</option>
           <option value="in_scope">In Sprint</option>

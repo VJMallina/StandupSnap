@@ -45,7 +45,13 @@ async function killPortProcess(port: number): Promise<void> {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: true,
+  });
+
+  // Increase body size limit to handle rich text content with images
+  app.use(require('express').json({ limit: '50mb' }));
+  app.use(require('express').urlencoded({ limit: '50mb', extended: true }));
 
   // Enable CORS
   const allowedOrigins = [

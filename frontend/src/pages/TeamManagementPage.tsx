@@ -96,7 +96,7 @@ export default function TeamManagementPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading team members...</p>
         </div>
       </div>
@@ -118,15 +118,12 @@ export default function TeamManagementPage() {
         </button>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="bg-gradient-to-r from-primary-500 via-primary-600 to-secondary-700 rounded-xl p-4 md:p-5 shadow-lg mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <p className="text-emerald-100 text-sm font-medium mb-1">Project Team</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">Team Management</h1>
-              <p className="text-emerald-100 mt-2 text-sm">
-                {projectName}
+              <h1 className="text-2xl font-bold text-white">{projectName}
                 {isArchived && <span className="ml-2 px-2 py-0.5 bg-orange-500/20 rounded text-orange-200 text-xs font-semibold">Archived</span>}
-              </p>
+              </h1>
             </div>
 
             <button
@@ -152,22 +149,22 @@ export default function TeamManagementPage() {
         {/* Project Leads Section */}
         {project && (
           <div className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Project Leads</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Project Leads</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Product Owner */}
-              <div className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
-                <div className="h-20 bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-600"></div>
+              <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="h-20 bg-gradient-to-br from-primary-600 via-primary-500 to-secondary-400"></div>
                 <div className="relative px-6 pb-6">
                   {project.productOwner ? (
                     <>
                       <div className="-mt-10 mb-4">
-                        <div className="w-20 h-20 rounded-xl bg-white shadow-lg flex items-center justify-center text-2xl font-bold text-teal-600 border-4 border-white">
+                        <div className="w-20 h-20 rounded-xl bg-white shadow-lg flex items-center justify-center text-2xl font-bold text-primary-600 border-4 border-white">
                           {project.productOwner.name?.charAt(0) || '?'}
                         </div>
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
                             Product Owner
                           </span>
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
@@ -198,7 +195,7 @@ export default function TeamManagementPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
                                 Product Owner
                               </span>
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
@@ -226,7 +223,7 @@ export default function TeamManagementPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
                                 Product Owner
                               </span>
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
@@ -244,8 +241,8 @@ export default function TeamManagementPage() {
               </div>
 
               {/* PMO */}
-              <div className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
-                <div className="h-20 bg-gradient-to-br from-cyan-500 via-teal-500 to-emerald-600"></div>
+              <div className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div className="h-20 bg-gradient-to-br from-secondary-500 via-primary-500 to-secondary-600"></div>
                 <div className="relative px-6 pb-6">
                   {project.pmo ? (
                     <>
@@ -336,7 +333,7 @@ export default function TeamManagementPage() {
         )}
 
         {/* Team Members List */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           {teamMembers.length === 0 ? (
             <div className="text-center py-16">
               <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -348,7 +345,7 @@ export default function TeamManagementPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white">
+                <thead className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold">Full Name</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">Designation / Role</th>
@@ -363,7 +360,7 @@ export default function TeamManagementPage() {
                         <p className="font-medium text-gray-900">{member.fullName}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
                           {member.designationRole}
                         </span>
                       </td>
@@ -379,7 +376,7 @@ export default function TeamManagementPage() {
                           <button
                             onClick={() => handleEditMember(member)}
                             disabled={isArchived}
-                            className="text-teal-600 hover:text-teal-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                            className="text-primary-600 hover:text-primary-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
                           >
                             <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -408,9 +405,9 @@ export default function TeamManagementPage() {
 
         {/* Team Stats */}
         {teamMembers.length > 0 && (
-          <div className="mt-6 bg-teal-50 border border-teal-200 rounded-lg p-4">
-            <p className="text-teal-900 font-medium">
-              Total Team Members: <span className="text-teal-700">{teamMembers.length}</span>
+          <div className="mt-6 bg-primary-50 border border-primary-200 rounded-lg p-4">
+            <p className="text-primary-900 font-medium">
+              Total Team Members: <span className="text-primary-700">{teamMembers.length}</span>
             </p>
           </div>
         )}

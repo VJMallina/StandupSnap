@@ -149,7 +149,7 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="e.g., John Doe"
             />
           </div>
@@ -163,7 +163,7 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
               required
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as ResourceRole })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               {Object.values(ResourceRole).map((role) => (
                 <option key={role} value={role}>
@@ -184,7 +184,7 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
                 required
                 value={formData.customRoleName}
                 onChange={(e) => setFormData({ ...formData, customRoleName: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="e.g., DevOps Engineer"
               />
             </div>
@@ -200,7 +200,7 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
               value={skillInput}
               onChange={(e) => setSkillInput(e.target.value)}
               onKeyDown={handleAddSkill}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="e.g., React, TypeScript, Node.js"
             />
             {formData.skills.length > 0 && (
@@ -208,13 +208,13 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
                 {formData.skills.map((skill) => (
                   <span
                     key={skill}
-                    className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm flex items-center gap-2"
+                    className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-2"
                   >
                     {skill}
                     <button
                       type="button"
                       onClick={() => handleRemoveSkill(skill)}
-                      className="hover:bg-teal-200 rounded-full p-0.5"
+                      className="hover:bg-primary-200 rounded-full p-0.5"
                     >
                       <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -239,7 +239,7 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
                 step="0.5"
                 value={formData.weeklyAvailability}
                 onChange={(e) => setFormData({ ...formData, weeklyAvailability: parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -253,7 +253,7 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
                 step="0.5"
                 value={formData.weeklyWorkload}
                 onChange={(e) => setFormData({ ...formData, weeklyWorkload: parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -294,7 +294,7 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
               rows={3}
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               placeholder="e.g., Part-time, Available afternoons only, etc."
             />
           </div>
@@ -312,7 +312,7 @@ export default function ResourceFormModal({ projectId, resource, onClose, onSucc
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {loading && (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

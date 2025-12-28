@@ -128,7 +128,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
         <button
           onClick={handleSave}
           disabled={loading}
-          className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50"
+          className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
         >
           {loading ? 'Saving...' : 'Save Refinement'}
         </button>
@@ -141,7 +141,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
             <h3 className="font-semibold text-gray-900">Stories ({items.length})</h3>
             <button
               onClick={handleAddItem}
-              className="px-3 py-1 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm"
+              className="px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
             >
               + Add
             </button>
@@ -154,7 +154,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
                 onClick={() => setSelectedItem(item)}
                 className={`p-4 border-b border-gray-200 cursor-pointer transition-colors ${
                   selectedItem?.itemId === item.itemId
-                    ? 'bg-teal-50 border-l-4 border-l-teal-600'
+                    ? 'bg-primary-50 border-l-4 border-l-primary-600'
                     : 'hover:bg-gray-50'
                 }`}
               >
@@ -185,7 +185,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
                         {item.acceptanceCriteria.length} AC
                       </span>
                       {item.estimate > 0 && (
-                        <span className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded font-medium">
+                        <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded font-medium">
                           {item.estimate} pts
                         </span>
                       )}
@@ -235,7 +235,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
                     value={selectedItem.title}
                     onChange={(e) => handleUpdateItem(selectedItem.itemId, { title: e.target.value })}
                     placeholder="Enter story title..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
@@ -250,7 +250,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
                       handleUpdateItem(selectedItem.itemId, { estimate: Number(e.target.value) })
                     }
                     min="0"
-                    className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -262,7 +262,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
                 <h3 className="text-lg font-semibold text-gray-900">Discussion Notes</h3>
                 <button
                   onClick={() => handleAddNote(selectedItem.itemId)}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm flex items-center gap-2"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm flex items-center gap-2"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -316,7 +316,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
                 <h3 className="text-lg font-semibold text-gray-900">Acceptance Criteria</h3>
                 <button
                   onClick={() => handleAddAcceptanceCriteria(selectedItem.itemId)}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm flex items-center gap-2"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm flex items-center gap-2"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

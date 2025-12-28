@@ -92,12 +92,12 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 backdrop-blur-sm">
       <div className="relative top-10 mx-auto w-full max-w-2xl shadow-2xl rounded-xl bg-white mb-10 overflow-hidden">
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-white">Edit Card</h3>
             <button
               onClick={onClose}
-              className="text-teal-100 hover:text-white transition-colors"
+              className="text-primary-100 hover:text-white transition-colors"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -132,7 +132,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
 
@@ -145,7 +145,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
               required
               value={formData.sprintId}
               onChange={(e) => setFormData({ ...formData, sprintId: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               {sprints.map((sprint) => (
                 <option key={sprint.id} value={sprint.id}>
@@ -168,7 +168,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
               required
               value={formData.assigneeId}
               onChange={(e) => setFormData({ ...formData, assigneeId: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               {teamMembers.map((member) => (
                 <option key={member.id} value={member.id}>
@@ -191,7 +191,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
               step="0.5"
               value={formData.estimatedTime}
               onChange={(e) => setFormData({ ...formData, estimatedTime: parseFloat(e.target.value) })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <p className="text-xs text-gray-500 mt-1">
               Changing ET will trigger RAG recalculation if card has snaps
@@ -207,7 +207,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
               type="text"
               value={formData.externalId}
               onChange={(e) => setFormData({ ...formData, externalId: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="e.g., JIRA-1234, TASK-567"
             />
           </div>
@@ -220,7 +220,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
             <select
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: e.target.value as CardPriority })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value={CardPriority.LOW}>Low</option>
               <option value={CardPriority.MEDIUM}>Medium</option>
@@ -237,7 +237,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               rows={4}
             />
           </div>
@@ -247,7 +247,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
             <button
               type="submit"
               disabled={loading || !hasChanges}
-              className="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>

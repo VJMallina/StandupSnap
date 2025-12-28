@@ -137,7 +137,7 @@ export default function SprintDetailsPage() {
       case SprintStatus.ACTIVE:
         return 'bg-green-100 text-green-800 border-green-200';
       case SprintStatus.COMPLETED:
-        return 'bg-teal-100 text-teal-800 border-teal-200';
+        return 'bg-primary-100 text-primary-800 border-primary-200';
       case SprintStatus.CLOSED:
         return 'bg-gray-100 text-gray-800 border-gray-200';
       case SprintStatus.UPCOMING:
@@ -197,7 +197,7 @@ export default function SprintDetailsPage() {
         {/* Back Navigation */}
         <button
           onClick={() => navigate('/sprints')}
-          className="flex items-center text-gray-600 hover:text-teal-600 transition-colors mb-4 group"
+          className="flex items-center text-gray-600 hover:text-primary-600 transition-colors mb-4 group"
         >
           <svg className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -209,7 +209,7 @@ export default function SprintDetailsPage() {
         <div className="mb-6">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">{sprint.name}</h1>
+              <h1 className="text-2xl font-bold mb-2">{sprint.name}</h1>
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold border ${getStatusBadgeColor(sprint.status)}`}>
                 {getStatusLabel(sprint.status)}
               </span>
@@ -218,7 +218,7 @@ export default function SprintDetailsPage() {
               {canEdit && (
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700"
+                  className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
                 >
                   Edit Sprint
                 </button>
@@ -268,7 +268,7 @@ export default function SprintDetailsPage() {
                 <p className="text-gray-900 font-medium">{sprint.project.name}</p>
                 <button
                   onClick={() => navigate(`/projects/${sprint.project.id}`)}
-                  className="text-teal-600 hover:underline text-sm mt-1"
+                  className="text-primary-600 hover:underline text-sm mt-1"
                 >
                   View Project →
                 </button>
@@ -336,7 +336,7 @@ export default function SprintDetailsPage() {
                   <div
                     className={`h-2 rounded-full ${
                       sprint.status === SprintStatus.COMPLETED || sprint.status === SprintStatus.CLOSED
-                        ? 'bg-teal-600'
+                        ? 'bg-primary-600'
                         : sprint.status === SprintStatus.ACTIVE
                         ? 'bg-green-600'
                         : 'bg-yellow-600'
@@ -414,7 +414,7 @@ export default function SprintDetailsPage() {
                   required
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
@@ -425,7 +425,7 @@ export default function SprintDetailsPage() {
                 <textarea
                   value={editFormData.goal}
                   onChange={(e) => setEditFormData({ ...editFormData, goal: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   rows={3}
                 />
               </div>
@@ -440,7 +440,7 @@ export default function SprintDetailsPage() {
                     required
                     value={editFormData.startDate}
                     onChange={(e) => setEditFormData({ ...editFormData, startDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
 
@@ -453,7 +453,7 @@ export default function SprintDetailsPage() {
                     required
                     value={editFormData.endDate}
                     onChange={(e) => setEditFormData({ ...editFormData, endDate: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -462,7 +462,7 @@ export default function SprintDetailsPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-teal-600 text-white px-6 py-2 rounded-md hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="bg-primary-600 text-white px-6 py-2 rounded-md hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
                 </button>

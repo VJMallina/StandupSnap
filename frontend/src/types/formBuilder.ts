@@ -30,6 +30,7 @@ export enum InstanceStatus {
 export enum FieldType {
   TEXT = 'TEXT',
   TEXTAREA = 'TEXTAREA',
+  RICH_TEXT = 'RICH_TEXT',
   DROPDOWN = 'DROPDOWN',
   YES_NO = 'YES_NO',
   DATE = 'DATE',

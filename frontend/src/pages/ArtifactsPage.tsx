@@ -74,8 +74,8 @@ const RACI_CELL_BG = {
 };
 
 const MEMBER_COLOR_BANDS = [
-  'from-teal-50/90 via-emerald-50/80 to-emerald-100',
-  'from-sky-50/90 via-cyan-50/80 to-cyan-100',
+  'from-primary-50/90 via-primary-100/80 to-primary-100',
+  'from-secondary-50/90 via-secondary-100/80 to-secondary-100',
   'from-amber-50/90 via-orange-50/80 to-orange-100',
   'from-rose-50/90 via-pink-50/80 to-pink-100',
 ];
@@ -589,18 +589,10 @@ export default function ArtifactsPage() {
     <AppLayout>
       <ArtifactsNavigation />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-cyan-800 to-emerald-700 text-white shadow-2xl border border-white/10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.12),transparent_35%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_10%,rgba(255,255,255,0.08),transparent_30%)]" />
-          <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold tracking-wide uppercase">
-                Artifacts & RACI
-              </div>
-              <h1 className="text-3xl font-bold leading-tight">Make ownership obvious</h1>
-              <p className="text-sm text-white/80 max-w-2xl">
-                Project context comes from the Artifacts hub—open a matrix and assign R/A/C/I without re-selecting.
-              </p>
+        <div className="bg-gradient-to-r from-primary-500 via-primary-600 to-secondary-700 rounded-xl p-4 md:p-5 shadow-xl text-white">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold">RACI Matrix</h1>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
@@ -612,7 +604,7 @@ export default function ArtifactsPage() {
               {selectedProjectId && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="px-4 py-2 bg-white text-slate-900 font-semibold rounded-xl shadow-md hover:shadow-lg transition"
+                  className="px-4 py-2 bg-white text-primary-700 font-semibold rounded-xl shadow-md hover:shadow-lg transition"
                 >
                   + New Matrix
                 </button>
@@ -639,7 +631,7 @@ export default function ArtifactsPage() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="text-sm px-3 py-1.5 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 disabled:opacity-50"
+                    className="text-sm px-3 py-1.5 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 disabled:opacity-50"
                     disabled={!selectedProjectId}
                   >
                     + New Matrix
@@ -671,8 +663,8 @@ export default function ArtifactsPage() {
                       onClick={() => navigate(`/artifacts/raci/${matrix.id}`)}
                       className={`text-left rounded-xl border p-4 transition shadow-sm hover:shadow-md ${
                         isSelected
-                          ? 'border-teal-500 ring-2 ring-teal-100 bg-teal-50'
-                          : 'border-gray-200 bg-white hover:border-teal-200'
+                          ? 'border-primary-500 ring-2 ring-primary-100 bg-primary-50'
+                          : 'border-gray-200 bg-white hover:border-primary-200'
                       } group`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -700,7 +692,7 @@ export default function ArtifactsPage() {
                       </div>
                       <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
-                          isSelected ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-700'
+                          isSelected ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-700'
                         }`}>
                           {isSelected ? 'Open' : 'Select'}
                         </span>
@@ -738,7 +730,7 @@ export default function ArtifactsPage() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => navigate('/artifacts/raci')}
-                className="text-sm text-teal-700 font-semibold hover:text-teal-900"
+                className="text-sm text-primary-700 font-semibold hover:text-primary-900"
               >
                 ← Back to matrices
               </button>
@@ -753,12 +745,12 @@ export default function ArtifactsPage() {
             )}
 
             {!loading && !selectedProjectId && (
-              <div className="bg-white rounded-2xl border border-dashed border-teal-200 p-8 shadow-sm text-center">
+              <div className="bg-white rounded-2xl border border-dashed border-primary-200 p-8 shadow-sm text-center">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Choose a project to get started</h3>
                 <p className="text-gray-600 mb-4">Select a project in the Artifacts hub to view and manage its RACI matrices.</p>
                 <button
                   onClick={() => navigate('/artifacts')}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
                 >
                   Go to Artifacts hub
                 </button>
@@ -771,7 +763,7 @@ export default function ArtifactsPage() {
             <p className="text-gray-600 mb-4">Create your first RACI matrix to outline responsibilities.</p>
             <button
               onClick={() => setShowCreateModal(true)}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
                 >
                   Create matrix
                 </button>
@@ -784,7 +776,7 @@ export default function ArtifactsPage() {
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                       <div>
-                        <p className="text-sm text-teal-700 font-semibold">RACI Matrix</p>
+                        <p className="text-sm text-primary-700 font-semibold">RACI Matrix</p>
                         <h2 className="text-2xl font-bold text-gray-900">{matrixData.name}</h2>
                         {matrixData.description && (
                           <p className="text-gray-600 mt-1">{matrixData.description}</p>
@@ -857,7 +849,7 @@ export default function ArtifactsPage() {
                           <select
                             value={selectedApproverId || matrixData.approvedBy?.id || ''}
                             onChange={(e) => saveApprover(e.target.value)}
-                            className="text-xs border border-gray-200 rounded-md px-2 py-1 focus:ring-teal-500 focus:border-teal-500"
+                            className="text-xs border border-gray-200 rounded-md px-2 py-1 focus:ring-primary-500 focus:border-primary-500"
                             disabled={loading}
                           >
                             <option value="">Select approver</option>
@@ -877,7 +869,7 @@ export default function ArtifactsPage() {
                   <div className="overflow-x-auto overflow-y-auto max-h-[480px] rounded-xl border border-gray-200 raci-scroll">
                     <table className="min-w-full text-sm table-fixed border-collapse">
                       <thead className="text-xs uppercase tracking-wide sticky top-0 z-10">
-                        <tr className="bg-gradient-to-r from-teal-50 via-cyan-50 to-blue-50 text-teal-900 border-b border-gray-200">
+                        <tr className="bg-gradient-to-r from-primary-50 via-primary-100 to-secondary-50 text-primary-900 border-b border-gray-200">
                           <th
                             className="relative px-3 py-3 border border-gray-200 text-left font-semibold bg-white/40 backdrop-blur-sm"
                             style={{ width: `${columnWidths.deliverable}px` }}
@@ -922,7 +914,7 @@ export default function ArtifactsPage() {
                                 >
                                   ×
                                 </button>
-                                <div className="w-10 h-10 rounded-full bg-white border border-white/70 flex items-center justify-center text-teal-700 font-bold shadow-sm">
+                                <div className="w-10 h-10 rounded-full bg-white border border-white/70 flex items-center justify-center text-primary-700 font-bold shadow-sm">
                                   {initials(member.displayName || member.fullName)}
                                 </div>
                                 <div className="text-xs text-gray-700 text-center leading-tight break-words break-all whitespace-normal">
@@ -991,7 +983,7 @@ export default function ArtifactsPage() {
                               <div className="flex items-center justify-center gap-2">
                                 <button
                                   onClick={() => openEditTask(task)}
-                                  className="text-sm text-teal-700 hover:text-teal-900 font-semibold"
+                                  className="text-sm text-primary-700 hover:text-primary-900 font-semibold"
                                 >
                                   Edit
                                 </button>
@@ -1026,7 +1018,7 @@ export default function ArtifactsPage() {
                     type="text"
                     value={newMatrixName}
                     onChange={(e) => setNewMatrixName(e.target.value)}
-                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                     placeholder="e.g., Project Launch RACI"
                   />
                 </div>
@@ -1035,7 +1027,7 @@ export default function ArtifactsPage() {
                   <textarea
                     value={newMatrixDescription}
                     onChange={(e) => setNewMatrixDescription(e.target.value)}
-                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                     rows={3}
                     placeholder="Optional description"
                   />
@@ -1054,7 +1046,7 @@ export default function ArtifactsPage() {
                 </button>
                 <button
                   onClick={createMatrix}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                   disabled={loading}
                 >
                   Create
@@ -1076,7 +1068,7 @@ export default function ArtifactsPage() {
                     value={newTaskName}
                     onChange={(e) => setNewTaskName(e.target.value)}
                     maxLength={TASK_NAME_LIMIT}
-                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                     placeholder="e.g., Design wireframes"
                   />
                 </div>
@@ -1086,7 +1078,7 @@ export default function ArtifactsPage() {
                     value={newTaskDescription}
                     onChange={(e) => setNewTaskDescription(e.target.value)}
                     maxLength={TASK_DESC_LIMIT}
-                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                     rows={3}
                     placeholder="Optional description"
                   />
@@ -1127,7 +1119,7 @@ export default function ArtifactsPage() {
                     value={editTaskName}
                     onChange={(e) => setEditTaskName(e.target.value)}
                     maxLength={TASK_NAME_LIMIT}
-                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                     placeholder="Task name"
                   />
                 </div>
@@ -1137,7 +1129,7 @@ export default function ArtifactsPage() {
                     value={editTaskDescription}
                     onChange={(e) => setEditTaskDescription(e.target.value)}
                     maxLength={TASK_DESC_LIMIT}
-                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                    className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                     rows={3}
                     placeholder="Optional description"
                   />
@@ -1157,7 +1149,7 @@ export default function ArtifactsPage() {
                 </button>
                 <button
                   onClick={updateTask}
-                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                   disabled={loading}
                 >
                   Save Changes
@@ -1191,7 +1183,7 @@ export default function ArtifactsPage() {
                     <select
                       value={selectedMemberId}
                       onChange={(e) => setSelectedMemberId(e.target.value)}
-                      className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                      className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                     >
                       <option value="">-- Select a team member --</option>
                       {availableTeamMembers.map((member) => (
@@ -1211,7 +1203,7 @@ export default function ArtifactsPage() {
                         type="text"
                         value={externalName}
                         onChange={(e) => setExternalName(e.target.value)}
-                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                         placeholder="External stakeholder name"
                       />
                     </div>
@@ -1221,7 +1213,7 @@ export default function ArtifactsPage() {
                         type="email"
                         value={externalEmail}
                         onChange={(e) => setExternalEmail(e.target.value)}
-                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500"
+                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500"
                         placeholder="email@example.com"
                       />
                     </div>

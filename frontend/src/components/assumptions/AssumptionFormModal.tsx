@@ -110,7 +110,7 @@ export const AssumptionFormModal: React.FC<AssumptionFormModalProps> = ({
         {/* Modal */}
         <div className="inline-block w-full max-w-2xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
+          <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-secondary-50">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
                 {mode === 'create' ? 'Add New Assumption' : 'Edit Assumption'}
@@ -137,7 +137,7 @@ export const AssumptionFormModal: React.FC<AssumptionFormModalProps> = ({
                 type="text"
                 value={formData.title || ''}
                 onChange={(e) => handleChange('title', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none ${
+                className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none ${
                   errors.title ? 'border-red-300 bg-red-50' : 'border-gray-300'
                 }`}
                 placeholder="Enter assumption title"
@@ -156,7 +156,7 @@ export const AssumptionFormModal: React.FC<AssumptionFormModalProps> = ({
                 value={formData.description || ''}
                 onChange={(e) => handleChange('description', e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none"
                 placeholder="Describe the assumption in detail"
               />
             </div>
@@ -169,7 +169,7 @@ export const AssumptionFormModal: React.FC<AssumptionFormModalProps> = ({
               <select
                 value={formData.ownerId || ''}
                 onChange={(e) => handleChange('ownerId', e.target.value || null)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               >
                 <option value="">-- No Owner --</option>
                 {teamMembers.map((member) => (
@@ -188,7 +188,7 @@ export const AssumptionFormModal: React.FC<AssumptionFormModalProps> = ({
               <select
                 value={formData.status || AssumptionStatus.OPEN}
                 onChange={(e) => handleChange('status', e.target.value as AssumptionStatus)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               >
                 <option value={AssumptionStatus.OPEN}>Open</option>
                 <option value={AssumptionStatus.VALIDATED}>Validated</option>
@@ -208,7 +208,7 @@ export const AssumptionFormModal: React.FC<AssumptionFormModalProps> = ({
                 value={formData.notes || ''}
                 onChange={(e) => handleChange('notes', e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-none"
                 placeholder={mode === 'edit' ? 'Add a new note...' : 'Add notes...'}
               />
             </div>
@@ -226,7 +226,7 @@ export const AssumptionFormModal: React.FC<AssumptionFormModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-4 py-2 text-sm font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">

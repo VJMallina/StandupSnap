@@ -38,6 +38,16 @@ export const FieldPalette: React.FC<FieldPaletteProps> = ({ onAddField }) => {
       ),
     },
     {
+      type: FieldType.RICH_TEXT,
+      label: 'Rich Text Editor',
+      category: 'Basic',
+      icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      ),
+    },
+    {
       type: FieldType.NUMBER,
       label: 'Number',
       category: 'Basic',
@@ -288,7 +298,7 @@ export const FieldPalette: React.FC<FieldPaletteProps> = ({ onAddField }) => {
                   <button
                     key={field.type}
                     onClick={() => onAddField(field.type)}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 rounded-lg transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-700 rounded-lg transition-colors"
                   >
                     <div className="text-gray-500">{field.icon}</div>
                     <span>{field.label}</span>

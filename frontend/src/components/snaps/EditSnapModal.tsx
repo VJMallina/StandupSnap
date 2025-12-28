@@ -63,14 +63,14 @@ export default function EditSnapModal({
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 backdrop-blur-sm">
       <div className="relative top-10 mx-auto w-full max-w-4xl shadow-2xl rounded-xl bg-white mb-10 overflow-hidden">
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-white">
               Edit Snap ({new Date(snap.snapDate).toLocaleDateString()})
             </h3>
             <button
               onClick={onClose}
-              className="text-teal-100 hover:text-white transition-colors"
+              className="text-primary-100 hover:text-white transition-colors"
               disabled={loading}
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,8 +92,8 @@ export default function EditSnapModal({
 
         {/* Prior Context Section */}
         {yesterdaySnap && (
-          <div className="mb-4 p-4 bg-teal-50 border border-teal-200 rounded-md">
-            <h4 className="text-sm font-semibold text-teal-900 mb-2 flex items-center gap-2">
+          <div className="mb-4 p-4 bg-primary-50 border border-primary-200 rounded-md">
+            <h4 className="text-sm font-semibold text-primary-900 mb-2 flex items-center gap-2">
               Yesterday's Snap ({new Date(yesterdaySnap.snapDate).toLocaleDateString()})
               {yesterdaySnap.isLocked && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-700">
@@ -110,7 +110,7 @@ export default function EditSnapModal({
               )}
               {yesterdaySnap.toDo && (
                 <div>
-                  <span className="font-medium text-teal-700">To Do: </span>
+                  <span className="font-medium text-primary-700">To Do: </span>
                   <span className="text-gray-700">{yesterdaySnap.toDo}</span>
                 </div>
               )}
@@ -130,7 +130,7 @@ export default function EditSnapModal({
             <button
               type="button"
               onClick={() => setShowOlderSnaps(!showOlderSnaps)}
-              className="text-sm text-teal-600 hover:text-teal-800 font-medium"
+              className="text-sm text-primary-600 hover:text-primary-800 font-medium"
             >
               {showOlderSnaps ? '▼' : '▶'} View Full History ({olderSnaps.length} older snaps)
             </button>
@@ -166,7 +166,7 @@ export default function EditSnapModal({
               value={rawInput}
               onChange={(e) => setRawInput(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               disabled={loading || snap.isLocked}
               required
             />
@@ -196,7 +196,7 @@ export default function EditSnapModal({
                   value={done}
                   onChange={(e) => setDone(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   disabled={loading || snap.isLocked}
                 />
               </div>
@@ -206,7 +206,7 @@ export default function EditSnapModal({
                   value={toDo}
                   onChange={(e) => setToDo(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   disabled={loading || snap.isLocked}
                 />
               </div>
@@ -216,7 +216,7 @@ export default function EditSnapModal({
                   value={blockers}
                   onChange={(e) => setBlockers(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   disabled={loading || snap.isLocked}
                 />
               </div>
@@ -228,7 +228,7 @@ export default function EditSnapModal({
                   <select
                     value={suggestedRAG}
                     onChange={(e) => setSuggestedRAG(e.target.value as SnapRAG | '')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     disabled={loading || snap.isLocked}
                   >
                     <option value="">None</option>
@@ -244,7 +244,7 @@ export default function EditSnapModal({
                   <select
                     value={finalRAG}
                     onChange={(e) => setFinalRAG(e.target.value as SnapRAG | '')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     disabled={loading || snap.isLocked}
                   >
                     <option value="">None</option>
@@ -270,7 +270,7 @@ export default function EditSnapModal({
             {!snap.isLocked && (
               <button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:bg-teal-300"
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 disabled:bg-primary-300"
                 disabled={loading}
               >
                 {loading ? (

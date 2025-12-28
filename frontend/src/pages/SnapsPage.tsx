@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, ShadingType } from 'docx';
 import { saveAs } from 'file-saver';
 import AppLayout from '../components/AppLayout';
-import Select from '../components/ui/Select';
+import { Select } from '../components/ui/Select';
 import CreateSnapModal from '../components/snaps/CreateSnapModal';
 import EditSnapModal from '../components/snaps/EditSnapModal';
 import { sprintsApi } from '../services/api/sprints';
@@ -249,7 +249,7 @@ export default function SnapsPage() {
   const getStatusBadge = (status: string) => {
     const styles = {
       active: 'bg-green-100 text-green-800',
-      in_progress: 'bg-teal-100 text-blue-800',
+      in_progress: 'bg-primary-100 text-blue-800',
       completed: 'bg-gray-100 text-gray-800',
     };
     return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800';
@@ -575,12 +575,11 @@ export default function SnapsPage() {
     <AppLayout>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-cyan-500 via-teal-500 to-teal-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="bg-gradient-to-r from-secondary-500 via-primary-500 to-primary-600 rounded-2xl p-4 md:p-5 shadow-lg mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <p className="text-cyan-100 text-sm font-medium mb-1">Snap Management</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">Daily Snaps</h1>
-              <p className="text-cyan-100 mt-2 text-sm">Track daily progress updates and team status</p>
+              <h1 className="text-2xl md:text-2xl font-bold text-white">Daily Snaps</h1>
             </div>
             {activeTab === 'management' && (
               <button
@@ -598,7 +597,7 @@ export default function SnapsPage() {
         </div>
 
         {/* Global Filters */}
-        <div className="flex flex-wrap items-end gap-4 mb-6">
+        <div className="flex flex-wrap items-end gap-3 mb-6">
           <div className="flex-1 min-w-[200px]">
             <Select
               label="Project"
@@ -639,7 +638,7 @@ export default function SnapsPage() {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+                className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
               />
             </div>
           </div>
@@ -673,7 +672,7 @@ export default function SnapsPage() {
               onClick={() => setActiveTab('management')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'management'
-                  ? 'border-teal-500 text-teal-600'
+                  ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -683,7 +682,7 @@ export default function SnapsPage() {
               onClick={() => setActiveTab('overview')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'overview'
-                  ? 'border-teal-500 text-teal-600'
+                  ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -702,17 +701,17 @@ export default function SnapsPage() {
         {activeTab === 'overview' && (
           <div>
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-100 p-5 hover:shadow-md transition-shadow">
                 <div className="flex items-center">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center mr-4 shadow-lg">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center mr-4 shadow-lg">
                     <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-teal-600 uppercase tracking-wide">Today's Snaps</p>
-                    <p className="text-3xl font-bold text-gray-900">{snaps.length}</p>
+                    <p className="text-xs font-medium text-primary-600 uppercase tracking-wide">Today's Snaps</p>
+                    <p className="text-2xl font-bold text-gray-900">{snaps.length}</p>
                   </div>
                 </div>
               </div>
@@ -726,7 +725,7 @@ export default function SnapsPage() {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-green-600 uppercase tracking-wide">On Track</p>
-                    <p className="text-3xl font-bold text-green-600">
+                    <p className="text-2xl font-bold text-green-600">
                       {snaps.filter(s => (s.finalRAG || s.suggestedRAG) === SnapRAG.GREEN).length}
                     </p>
                   </div>
@@ -742,7 +741,7 @@ export default function SnapsPage() {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-amber-600 uppercase tracking-wide">At Risk</p>
-                    <p className="text-3xl font-bold text-amber-600">
+                    <p className="text-2xl font-bold text-amber-600">
                       {snaps.filter(s => (s.finalRAG || s.suggestedRAG) === SnapRAG.AMBER).length}
                     </p>
                   </div>
@@ -758,7 +757,7 @@ export default function SnapsPage() {
                   </div>
                   <div>
                     <p className="text-xs font-medium text-red-600 uppercase tracking-wide">Off Track</p>
-                    <p className="text-3xl font-bold text-red-600">
+                    <p className="text-2xl font-bold text-red-600">
                       {snaps.filter(s => (s.finalRAG || s.suggestedRAG) === SnapRAG.RED).length}
                     </p>
                   </div>
@@ -788,7 +787,7 @@ export default function SnapsPage() {
                     </button>
                     <button
                       onClick={downloadWordSummary}
-                      className="flex items-center px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
+                      className="flex items-center px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
                     >
                       <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -803,7 +802,7 @@ export default function SnapsPage() {
             {/* Snaps Summary List */}
             {loading ? (
               <div className="flex justify-center items-center py-12">
-                <svg className="animate-spin h-10 w-10 text-teal-600" viewBox="0 0 24 24">
+                <svg className="animate-spin h-10 w-10 text-primary-600" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -914,14 +913,14 @@ export default function SnapsPage() {
                       </>
                     ) : (
                       <>
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center mr-4 shadow-md">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center mr-4 shadow-md">
                           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                           </svg>
                         </div>
                         <div>
                           <p className="text-blue-800 font-semibold">{snaps.length} Snap{snaps.length !== 1 ? 's' : ''}</p>
-                          <p className="text-teal-600 text-sm">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
+                          <p className="text-primary-600 text-sm">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</p>
                         </div>
                       </>
                     )}
@@ -957,7 +956,7 @@ export default function SnapsPage() {
             {/* Snaps List */}
             {loading ? (
               <div className="flex justify-center items-center py-12">
-                <svg className="animate-spin h-10 w-10 text-teal-600" viewBox="0 0 24 24">
+                <svg className="animate-spin h-10 w-10 text-primary-600" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -978,7 +977,7 @@ export default function SnapsPage() {
                 {!isLocked && (
                   <button
                     onClick={openCardSelection}
-                    className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700"
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700"
                   >
                     Create First Snap
                   </button>
@@ -1026,7 +1025,7 @@ export default function SnapsPage() {
                               <div className="flex items-center space-x-1">
                                 <button
                                   onClick={() => setEditingSnap(snap)}
-                                  className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                                  className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                                   title="Edit"
                                 >
                                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1128,7 +1127,7 @@ export default function SnapsPage() {
 
               {loadingCards ? (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <svg className="animate-spin h-10 w-10 text-teal-600 mb-3" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-10 w-10 text-primary-600 mb-3" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
@@ -1152,16 +1151,16 @@ export default function SnapsPage() {
                       onClick={() => handleCardSelect(card)}
                       className="w-full text-left p-4 bg-white border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 group"
                     >
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-3">
                         {/* Avatar */}
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow">
                           {card.assignee ? (card.assignee.fullName || card.assignee.displayName || 'U').charAt(0).toUpperCase() : '?'}
                         </div>
 
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-gray-900 truncate group-hover:text-teal-600 transition-colors">
+                            <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
                               {card.title}
                             </h3>
                           </div>
@@ -1179,7 +1178,7 @@ export default function SnapsPage() {
                           {card.status && (
                             <div className="mt-2">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                card.status === 'in_progress' ? 'bg-teal-100 text-blue-700' :
+                                card.status === 'in_progress' ? 'bg-primary-100 text-blue-700' :
                                 card.status === 'completed' ? 'bg-green-100 text-green-700' :
                                 card.status === 'blocked' ? 'bg-red-100 text-red-700' :
                                 'bg-gray-100 text-gray-700'

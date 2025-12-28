@@ -49,7 +49,7 @@ const ScrumRoomDetailPage: React.FC = () => {
       <AppLayout>
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading room...</p>
           </div>
         </div>
@@ -67,7 +67,7 @@ const ScrumRoomDetailPage: React.FC = () => {
             <p className="text-gray-600 mb-6">{error || 'The room you are looking for does not exist.'}</p>
             <button
               onClick={() => navigate('/scrum-rooms')}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               Back to Rooms
             </button>

@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center pt-4">
             <Link
               to="/login"
-              className="font-semibold text-teal-600 hover:text-teal-500 transition-colors"
+              className="font-semibold text-primary-600 hover:text-primary-500 transition-colors"
             >
               Back to sign in
             </Link>
@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-150 sm:text-sm"
+                className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition duration-150 sm:text-sm"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -121,7 +121,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-lg hover:shadow-xl"
+              className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <>
@@ -140,7 +140,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center">
             <Link
               to="/login"
-              className="text-sm font-semibold text-teal-600 hover:text-teal-500 transition-colors"
+              className="text-sm font-semibold text-primary-600 hover:text-primary-500 transition-colors"
             >
               Back to sign in
             </Link>

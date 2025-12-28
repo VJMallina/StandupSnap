@@ -48,13 +48,13 @@ export default function AuthLayout({ children, showTagline = false }: AuthLayout
   return (
     <div className="min-h-screen flex">
       {/* Left side - Illustration and branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-cyan-800">
         {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-teal-500/30 via-transparent to-cyan-500/30 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-primary-500/30 via-transparent to-cyan-500/30 animate-pulse"></div>
 
         {/* Decorative floating blobs */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-teal-400/20 rounded-full blur-3xl animate-blob"></div>
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary-400/20 rounded-full blur-3xl animate-blob"></div>
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-emerald-400/20 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
         </div>
@@ -148,7 +148,7 @@ export default function AuthLayout({ children, showTagline = false }: AuthLayout
         {/* Mobile logo for small screens */}
         <div className="lg:hidden absolute top-6 left-6">
           <div className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>

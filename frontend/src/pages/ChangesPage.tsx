@@ -93,7 +93,7 @@ export default function ChangesPage() {
       APPROVED: 'bg-green-100 text-green-700 border-green-200',
       REJECTED: 'bg-red-100 text-red-700 border-red-200',
       IN_PROGRESS: 'bg-blue-100 text-blue-700 border-blue-200',
-      IMPLEMENTED: 'bg-teal-100 text-teal-700 border-teal-200',
+      IMPLEMENTED: 'bg-primary-100 text-primary-700 border-primary-200',
       CLOSED: 'bg-gray-100 text-gray-700 border-gray-200',
     };
     return colors[status] || colors.DRAFT;
@@ -146,7 +146,7 @@ export default function ChangesPage() {
                 </div>
                 <span className="text-sm font-bold text-purple-600 uppercase tracking-wider">Change Management</span>
               </div>
-              <h1 className="text-4xl font-black text-gray-900 tracking-tight">Change Log</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Change Log</h1>
               <p className="text-gray-600 text-base">Track and manage project changes with approval workflows</p>
             </div>
             <div className="flex items-center gap-3">
@@ -156,7 +156,7 @@ export default function ChangesPage() {
                 </svg>
                 Export CSV
               </button>
-              <button onClick={handleAdd} className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 font-bold">
+              <button onClick={handleAdd} className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm flex items-center gap-2">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
@@ -165,7 +165,7 @@ export default function ChangesPage() {
             </div>
           </header>
 
-          <section className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-6">
+          <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
               <div className="col-span-2 relative">
                 <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -207,7 +207,7 @@ export default function ChangesPage() {
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {filteredChanges.map((change) => (
-                <article key={change.id} className="group bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl border-2 border-gray-100 hover:border-purple-300 transition-all duration-300">
+                <article key={change.id} className="group bg-white rounded-xl p-6 shadow-sm hover:shadow-lg border border-gray-100 hover:border-primary-300 transition-all duration-300">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-3 flex-wrap">
@@ -249,7 +249,7 @@ export default function ChangesPage() {
 
           {showArchived && archivedChanges.length > 0 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-gray-700">Archived Changes</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Archived Changes</h2>
               <div className="grid grid-cols-1 gap-4 opacity-60">
                 {archivedChanges.map((change) => (
                   <article key={change.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">

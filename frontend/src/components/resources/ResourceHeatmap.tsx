@@ -324,7 +324,7 @@ export default function ResourceHeatmap({ projectId }: ResourceHeatmapProps) {
           <div className="px-5 py-5">
             <div className="space-y-4 max-h-[500px] overflow-visible pr-2">
               {heatmapData.map((resourceData) => (
-                <div key={resourceData.resourceId} className="border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors overflow-visible">
+                <div key={resourceData.resourceId} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors overflow-visible">
                   <div className="flex items-center gap-4 overflow-visible">
                     {/* Resource Name - Left */}
                     <div className="w-48 flex-shrink-0">
@@ -378,13 +378,13 @@ export default function ResourceHeatmap({ projectId }: ResourceHeatmapProps) {
                                   <div className="space-y-0.5">
                                     <p>Availability: <span className="font-semibold">{week.availability}h</span></p>
                                     <p>Workload: <span className="font-semibold">{week.workload}h</span></p>
-                                    <p>Load: <span className="font-semibold text-teal-400">{week.loadPercentage.toFixed(1)}%</span></p>
+                                    <p>Load: <span className="font-semibold text-primary-400">{week.loadPercentage.toFixed(1)}%</span></p>
                                   </div>
                                   <p className="text-gray-400 mt-1.5 pt-1.5 text-[10px] border-t border-gray-700">
                                     {new Date(week.weekStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {new Date(week.weekEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                   </p>
                                   {week.notes && (
-                                    <p className="text-teal-300 mt-1 italic text-[10px] border-t border-gray-700 pt-1 whitespace-normal break-words">
+                                    <p className="text-primary-300 mt-1 italic text-[10px] border-t border-gray-700 pt-1 whitespace-normal break-words">
                                       {week.notes}
                                     </p>
                                   )}
@@ -444,7 +444,7 @@ export default function ResourceHeatmap({ projectId }: ResourceHeatmapProps) {
         <div className="flex items-center gap-2 mb-4 text-sm">
           <button
             onClick={() => handleBreadcrumbClick('month')}
-            className="text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1"
+            className="text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -462,7 +462,7 @@ export default function ResourceHeatmap({ projectId }: ResourceHeatmapProps) {
           </div>
           <button
             onClick={handleWeekClick}
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
           >
             View Day Breakdown
           </button>
@@ -546,7 +546,7 @@ export default function ResourceHeatmap({ projectId }: ResourceHeatmapProps) {
         <div className="flex items-center gap-2 mb-4 text-sm">
           <button
             onClick={() => handleBreadcrumbClick('month')}
-            className="text-teal-600 hover:text-teal-700 font-medium"
+            className="text-primary-600 hover:text-primary-700 font-medium"
           >
             {monthName}
           </button>
@@ -555,7 +555,7 @@ export default function ResourceHeatmap({ projectId }: ResourceHeatmapProps) {
           </svg>
           <button
             onClick={() => handleBreadcrumbClick('week')}
-            className="text-teal-600 hover:text-teal-700 font-medium"
+            className="text-primary-600 hover:text-primary-700 font-medium"
           >
             Weekly View
           </button>

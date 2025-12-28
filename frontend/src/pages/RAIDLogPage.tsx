@@ -198,7 +198,7 @@ const RAIDLogPage: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">RAID Log</h1>
+            <h1 className="text-2xl font-bold text-gray-900">RAID Log</h1>
             <p className="text-gray-600 mt-1">
               Risks, Assumptions, Issues, and Decisions
             </p>
@@ -229,7 +229,7 @@ const RAIDLogPage: React.FC = () => {
         {/* Loading State */}
         {loading && (
           <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-teal-600 border-r-transparent"></div>
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary-600 border-r-transparent"></div>
             <p className="mt-2 text-gray-600">Loading RAID summary...</p>
           </div>
         )}
@@ -247,7 +247,7 @@ const RAIDLogPage: React.FC = () => {
             {/* Risk Summary Widget */}
             <div
               onClick={() => navigate('/artifacts/risks')}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-red-500"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-red-500"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Risks</h3>
@@ -315,7 +315,7 @@ const RAIDLogPage: React.FC = () => {
             {/* Assumptions Summary Widget */}
             <div
               onClick={() => navigate('/artifacts/raid-log/assumptions')}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-blue-500"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-blue-500"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Assumptions</h3>
@@ -361,7 +361,7 @@ const RAIDLogPage: React.FC = () => {
             {/* Issues Summary Widget */}
             <div
               onClick={() => navigate('/artifacts/raid-log/issues')}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-amber-500"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-amber-500"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Issues</h3>
@@ -407,7 +407,7 @@ const RAIDLogPage: React.FC = () => {
             {/* Decisions Summary Widget */}
             <div
               onClick={() => navigate('/artifacts/raid-log/decisions')}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-purple-500"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-purple-500"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Decisions</h3>

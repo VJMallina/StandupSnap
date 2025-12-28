@@ -18,13 +18,13 @@ export default function CardsPage() {
               d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
             />
           </svg>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Cards</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Cards</h2>
           <p className="text-lg text-gray-600 mb-8">
             Manage task cards and track progress
           </p>
-          <div className="inline-flex items-center px-6 py-3 bg-teal-50 rounded-lg border border-teal-200">
+          <div className="inline-flex items-center px-6 py-3 bg-primary-50 rounded-lg border border-primary-200">
             <svg
-              className="h-5 w-5 text-teal-500 mr-2"
+              className="h-5 w-5 text-primary-500 mr-2"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -34,7 +34,7 @@ export default function CardsPage() {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-teal-700 font-medium">
+            <span className="text-primary-700 font-medium">
               This feature is coming soon
             </span>
           </div>

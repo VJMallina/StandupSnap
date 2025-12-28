@@ -16,6 +16,7 @@ import { TeamMember } from '../types/teamMember';
 import { AssumptionFormModal } from '../components/assumptions/AssumptionFormModal';
 import { AssumptionDetailPanel } from '../components/assumptions/AssumptionDetailPanel';
 import { ArchiveAssumptionModal } from '../components/assumptions/ArchiveAssumptionModal';
+import { TableSkeleton } from '../components/ui/SkeletonLoader';
 
 const AssumptionsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -283,7 +284,7 @@ const AssumptionsPage: React.FC = () => {
             </button>
             <button
               onClick={handleAddAssumption}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors shadow-sm"
+              className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm"
             >
               + Add Assumption
             </button>
@@ -311,7 +312,7 @@ const AssumptionsPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search title, description..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               />
             </div>
 
@@ -321,7 +322,7 @@ const AssumptionsPage: React.FC = () => {
               <select
                 value={filters.status || ''}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value as AssumptionStatus || undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               >
                 <option value="">All</option>
                 <option value={AssumptionStatus.OPEN}>Open</option>
@@ -336,7 +337,7 @@ const AssumptionsPage: React.FC = () => {
               <select
                 value={filters.ownerId || ''}
                 onChange={(e) => setFilters({ ...filters, ownerId: e.target.value || undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               >
                 <option value="">All</option>
                 {teamMembers.map((member) => (
@@ -351,7 +352,7 @@ const AssumptionsPage: React.FC = () => {
             <div className="flex items-end">
               <button
                 onClick={fetchData}
-                className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors"
+                className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors"
               >
                 Apply Filters
               </button>
@@ -374,7 +375,7 @@ const AssumptionsPage: React.FC = () => {
                       type="checkbox"
                       checked={visibleColumns[column]}
                       onChange={() => toggleColumnVisibility(column)}
-                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                     />
                     <span className="capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
                   </label>
@@ -387,10 +388,25 @@ const AssumptionsPage: React.FC = () => {
         {/* Table */}
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           {loading ? (
-            <div className="p-8 text-center text-gray-600">Loading assumptions...</div>
+            <TableSkeleton rows={8} />
           ) : sortedAssumptions.length === 0 ? (
-            <div className="p-8 text-center text-gray-600">
-              No assumptions found. Click "Add Assumption" to create one.
+            <div className="text-center py-16 px-6">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 flex items-center justify-center">
+                <svg className="w-10 h-10 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Assumptions Found</h3>
+              <p className="text-gray-600 mb-6">Document project assumptions and track their validation status to reduce uncertainty.</p>
+              <button
+                onClick={handleAddAssumption}
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white rounded-lg font-semibold shadow-sm hover:shadow-md active:scale-95 transition-all duration-200"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Your First Assumption
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">

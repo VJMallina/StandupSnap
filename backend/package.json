@@ -24,7 +24,11 @@
     "migration:revert": "npm run typeorm -- migration:revert -d src/config/typeorm.config.ts",
     "cleanup:test-data": "ts-node -r tsconfig-paths/register src/scripts/cleanup-test-data.ts",
     "check:user-projects": "ts-node -r tsconfig-paths/register src/scripts/check-user-projects.ts",
-    "fix:user-projects": "ts-node -r tsconfig-paths/register src/scripts/fix-user-projects.ts"
+    "fix:user-projects": "ts-node -r tsconfig-paths/register src/scripts/fix-user-projects.ts",
+    "fix:artifact-template-column": "ts-node -r tsconfig-paths/register src/scripts/fix-artifact-template-column.ts",
+    "fix:all-artifact-columns": "ts-node -r tsconfig-paths/register src/scripts/fix-all-artifact-columns.ts",
+    "fix:artifact-version-data": "ts-node -r tsconfig-paths/register src/scripts/fix-artifact-version-data-column.ts",
+    "seed:artifact-templates": "ts-node -r tsconfig-paths/register src/scripts/seed-artifact-templates.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

@@ -25,7 +25,7 @@ export const UnauthorizedPage = () => {
           </svg>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">
           Access Denied
         </h1>
 
@@ -42,7 +42,7 @@ export const UnauthorizedPage = () => {
         <div className="space-y-3">
           <button
             onClick={() => navigate(-1)}
-            className="w-full bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700 transition-colors"
+            className="w-full bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
           >
             Go Back
           </button>

@@ -219,7 +219,7 @@ export default function StandupBookDayDetailsPage() {
       <AppLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading day details...</p>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function StandupBookDayDetailsPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-teal-50/30 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-primary-50/30 p-6">
         <div className="max-w-7xl mx-auto">
           {error && (
             <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg mb-6 shadow-sm">
@@ -240,7 +240,7 @@ export default function StandupBookDayDetailsPage() {
           {dayMetadata && (
             <>
               {/* Compact Header Bar */}
-              <div className="bg-gradient-to-r from-teal-600 to-teal-700 shadow-lg rounded-2xl p-5 mb-6 border border-teal-500">
+              <div className="bg-gradient-to-r from-primary-600 to-primary-700 shadow-lg rounded-2xl p-5 mb-6 border border-primary-500">
                 <div className="flex items-center justify-between gap-4">
                   {/* Left: Back button & Day info */}
                   <div className="flex items-center gap-4">
@@ -273,7 +273,7 @@ export default function StandupBookDayDetailsPage() {
                             {dayMetadata.isLocked ? 'Locked' : dayMetadata.dayStatus === 'in_progress' ? 'In Progress' : 'Not Started'}
                           </span>
                         </div>
-                        <p className="text-teal-100 text-sm">{formatDate(dayMetadata.date)}</p>
+                        <p className="text-primary-100 text-sm">{formatDate(dayMetadata.date)}</p>
                       </div>
                     </div>
                   </div>
@@ -282,17 +282,17 @@ export default function StandupBookDayDetailsPage() {
                   <div className="flex items-center gap-6">
                     <div className="text-center">
                       <p className="text-2xl font-bold text-white">{dayMetadata.totalSnaps}</p>
-                      <p className="text-xs text-teal-100">Snaps</p>
+                      <p className="text-xs text-primary-100">Snaps</p>
                     </div>
                     <div className="w-px h-8 bg-white/30"></div>
                     <div className="text-center">
                       <p className="text-2xl font-bold text-white">{dayMetadata.totalCards}</p>
-                      <p className="text-xs text-teal-100">Cards</p>
+                      <p className="text-xs text-primary-100">Cards</p>
                     </div>
                     <div className="w-px h-8 bg-white/30"></div>
                     <div className="text-center">
                       <p className="text-2xl font-bold text-white">{dayMetadata.standupSlotCount}</p>
-                      <p className="text-xs text-teal-100">Slots</p>
+                      <p className="text-xs text-primary-100">Slots</p>
                     </div>
                   </div>
 
@@ -357,8 +357,8 @@ export default function StandupBookDayDetailsPage() {
               {/* Standup Slots */}
               <div className="bg-white shadow-lg rounded-2xl p-6 mb-6 border border-gray-100">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
@@ -367,7 +367,7 @@ export default function StandupBookDayDetailsPage() {
 
                 {slotsData.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
                     <p className="text-gray-500">Loading standup slots...</p>
                   </div>
                 ) : (
@@ -376,16 +376,16 @@ export default function StandupBookDayDetailsPage() {
                       <div key={slot.slotNumber} className="border border-gray-200 rounded-xl p-5 bg-gradient-to-br from-gray-50 to-white hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <h4 className="text-lg font-bold text-teal-700">
+                            <h4 className="text-lg font-bold text-primary-700">
                               Slot {slot.slotNumber}
                             </h4>
                             {sprint?.slotTimes?.[slot.slotNumber.toString()] && (
-                              <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-lg text-sm font-medium border border-teal-200">
+                              <span className="px-3 py-1 bg-primary-50 text-primary-700 rounded-lg text-sm font-medium border border-primary-200">
                                 {sprint.slotTimes[slot.slotNumber.toString()]}
                               </span>
                             )}
                           </div>
-                          <span className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-semibold">
+                          <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-semibold">
                             {slot.snaps.length} snap{slot.snaps.length !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -397,7 +397,7 @@ export default function StandupBookDayDetailsPage() {
                         ) : (
                           <div className="space-y-3">
                             {slot.snaps.map((snap) => (
-                              <div key={snap.id} className="bg-white p-5 rounded-lg border-l-4 border-teal-500 shadow-sm hover:shadow-md transition-shadow">
+                              <div key={snap.id} className="bg-white p-5 rounded-lg border-l-4 border-primary-500 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="font-semibold text-gray-900">{snap.card?.title || 'Untitled Card'}</div>
                                   <div className="text-xs text-gray-500">
@@ -459,7 +459,7 @@ export default function StandupBookDayDetailsPage() {
                     {hasPermission(Permission.EDIT_SPRINT) && !dayMetadata?.isLocked && !dayMom && (
                       <button
                         onClick={() => setShowMomModal(true)}
-                        className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors font-medium text-sm shadow-sm"
+                        className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm shadow-sm"
                       >
                         Create MOM
                       </button>
@@ -469,7 +469,7 @@ export default function StandupBookDayDetailsPage() {
                         {hasPermission(Permission.EDIT_SPRINT) && !dayMetadata?.isLocked && (
                           <button
                             onClick={handleEditMom}
-                            className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors font-medium text-sm shadow-sm"
+                            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm shadow-sm"
                           >
                             Edit MOM
                           </button>
@@ -568,7 +568,7 @@ export default function StandupBookDayDetailsPage() {
                 <textarea
                   value={momRawInput}
                   onChange={(e) => setMomRawInput(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   rows={6}
                   placeholder="Enter your meeting notes or paste a transcript here."
                 />
@@ -597,7 +597,7 @@ export default function StandupBookDayDetailsPage() {
                       <textarea
                         value={editMomData.agenda}
                         onChange={(e) => setEditMomData({ ...editMomData, agenda: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         rows={2}
                         placeholder="Meeting agenda and topics discussed"
                       />
@@ -610,7 +610,7 @@ export default function StandupBookDayDetailsPage() {
                       <textarea
                         value={editMomData.keyDiscussionPoints}
                         onChange={(e) => setEditMomData({ ...editMomData, keyDiscussionPoints: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         rows={3}
                         placeholder="Important points, insights, and discussions"
                       />
@@ -623,7 +623,7 @@ export default function StandupBookDayDetailsPage() {
                       <textarea
                         value={editMomData.decisionsTaken}
                         onChange={(e) => setEditMomData({ ...editMomData, decisionsTaken: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         rows={3}
                         placeholder="Specific decisions, conclusions, or agreements reached"
                       />
@@ -636,7 +636,7 @@ export default function StandupBookDayDetailsPage() {
                       <textarea
                         value={editMomData.actionItems}
                         onChange={(e) => setEditMomData({ ...editMomData, actionItems: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         rows={3}
                         placeholder="Tasks, follow-ups, or action items assigned"
                       />
@@ -662,7 +662,7 @@ export default function StandupBookDayDetailsPage() {
                   <button
                     onClick={handleUpdateMom}
                     disabled={generatingMom}
-                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                   >
                     {generatingMom ? 'Updating...' : 'Update MOM'}
                   </button>
@@ -670,7 +670,7 @@ export default function StandupBookDayDetailsPage() {
                   <button
                     onClick={handleGenerateMom}
                     disabled={generatingMom || !momRawInput.trim()}
-                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                   >
                     {generatingMom ? 'Generating...' : 'Generate MOM with AI'}
                   </button>

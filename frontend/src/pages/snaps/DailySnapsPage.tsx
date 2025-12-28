@@ -211,12 +211,11 @@ Assignee Level:
     <AppLayout>
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-4 md:p-5 shadow-lg mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <p className="text-teal-100 text-sm font-medium mb-1">Daily Updates</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">Daily Snap Management</h1>
-              <p className="text-teal-100 mt-2 text-sm">{sprint.name}</p>
+              <p className="text-primary-100 text-sm font-medium mb-1">Daily Updates</p>
+              <h1 className="text-2xl md:text-2xl font-bold text-white">Daily Snap Management</h1>
             </div>
             <button
               onClick={() => navigate(`/sprints/${sprintId}`)}
@@ -230,7 +229,7 @@ Assignee Level:
         <div className="mb-6">
 
           {/* Date Selector */}
-          <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow">
+          <div className="flex items-center gap-3 bg-white p-4 rounded-lg shadow">
             <label className="font-medium text-gray-700">Select Date:</label>
             <input
               type="date"
@@ -238,7 +237,7 @@ Assignee Level:
               onChange={(e) => setSelectedDate(e.target.value)}
               min={new Date(sprint.startDate).toISOString().split('T')[0]}
               max={new Date(sprint.endDate).toISOString().split('T')[0]}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {isLocked && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
@@ -269,7 +268,7 @@ Assignee Level:
             onClick={() => setViewMode('snaps')}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               viewMode === 'snaps'
-                ? 'bg-teal-600 text-white'
+                ? 'bg-primary-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-100'
             }`}
           >
@@ -280,7 +279,7 @@ Assignee Level:
             disabled={!isLocked && !summary}
             className={`px-4 py-2 rounded-md text-sm font-medium ${
               viewMode === 'summary'
-                ? 'bg-teal-600 text-white'
+                ? 'bg-primary-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'
             }`}
           >
@@ -290,7 +289,7 @@ Assignee Level:
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <svg className="animate-spin h-10 w-10 text-teal-600" viewBox="0 0 24 24">
+            <svg className="animate-spin h-10 w-10 text-primary-600" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
@@ -303,7 +302,7 @@ Assignee Level:
                 <p className="text-gray-600">No cards found in this sprint</p>
                 <button
                   onClick={() => navigate(`/sprints/${sprintId}`)}
-                  className="mt-4 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700"
+                  className="mt-4 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700"
                 >
                   Go to Sprint
                 </button>
@@ -330,7 +329,7 @@ Assignee Level:
                                   {card.description || 'No description'}
                                 </p>
                                 <div className="flex gap-2 mt-2">
-                                  <span className="text-xs px-2 py-1 rounded bg-teal-100 text-blue-700">
+                                  <span className="text-xs px-2 py-1 rounded bg-primary-100 text-blue-700">
                                     ET: {card.estimatedTime}h
                                   </span>
                                   {card.ragStatus && (
@@ -343,7 +342,7 @@ Assignee Level:
                               {!isLocked && (
                                 <button
                                   onClick={() => setCreatingSnapForCard(card)}
-                                  className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700"
+                                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700"
                                 >
                                   + Add Snap
                                 </button>
@@ -389,7 +388,7 @@ Assignee Level:
                   <button
                     onClick={handleGenerateSummary}
                     disabled={generatingSummary}
-                    className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:bg-gray-400"
+                    className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 disabled:bg-gray-400"
                   >
                     {generatingSummary ? 'Generating...' : 'Generate Summary'}
                   </button>
@@ -492,12 +491,12 @@ Assignee Level:
                 {/* Detailed Breakdown by Assignee */}
                 {summary.fullData?.byAssignee && (
                   <details className="bg-white shadow rounded-lg p-6">
-                    <summary className="text-lg font-semibold cursor-pointer hover:text-teal-600">
+                    <summary className="text-lg font-semibold cursor-pointer hover:text-primary-600">
                       View Detailed Breakdown by Team Member
                     </summary>
                     <div className="mt-4 space-y-4">
                       {summary.fullData.byAssignee.map((assigneeData: any, idx: number) => (
-                        <div key={idx} className="border-l-4 border-teal-500 pl-4">
+                        <div key={idx} className="border-l-4 border-primary-500 pl-4">
                           <h4 className="font-semibold text-gray-900 mb-2">{assigneeData.assignee}</h4>
                           <div className="space-y-2">
                             {assigneeData.snaps.map((snap: any, snapIdx: number) => (

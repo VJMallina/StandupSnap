@@ -77,7 +77,21 @@
       "Bash(npm run seed:*)",
       "Bash(powershell -Command \"Stop-Process -Id 17788 -Force\")",
       "Bash(powershell -Command \"Stop-Process -Id 8440 -Force\")",
-      "Bash(npx playwright test sprints-comprehensive.spec.ts --workers=1)"
+      "Bash(npx playwright test sprints-comprehensive.spec.ts --workers=1)",
+      "Bash(powershell -Command \"Get-ChildItem -Recurse -Include *.tsx,*.jsx,*.ts,*.js | ForEach-Object { \\(Get-Content $_FullName\\) -replace ''teal-50'', ''whatsapp-50'' | Set-Content $_FullName }\")",
+      "Bash(powershell -Command:*)",
+      "WebSearch",
+      "Bash(ls:*)",
+      "Bash(timeout 30 bash:*)",
+      "Bash(timeout 60 bash:*)",
+      "Bash(npm run typeorm:*)",
+      "Bash(npm run seed:artifact-templates:*)",
+      "Bash(npm run fix:artifact-template-column:*)",
+      "Bash(npm run fix:all-artifact-columns:*)",
+      "Bash(npm run ts-node:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(Remove-Item \"F:\\\\StandupSnap\\\\frontend\\\\src\\\\pages\\\\FormBuilderPage.tsx\" -Force)"
     ],
     "deny": [],
     "ask": []

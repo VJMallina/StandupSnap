@@ -189,7 +189,7 @@ export default function CreateProjectPage() {
           <div className="mb-8">
             <button
               onClick={() => navigate('/projects')}
-              className="flex items-center text-gray-600 hover:text-teal-600 transition-colors mb-4 group"
+              className="flex items-center text-gray-600 hover:text-primary-600 transition-colors mb-4 group"
             >
               <svg className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -197,13 +197,13 @@ export default function CreateProjectPage() {
               Back to Projects
             </button>
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-teal-100 rounded-xl">
-                <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-3 bg-primary-100 rounded-xl">
+                <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Create New Project</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Create New Project</h1>
                 <p className="text-gray-500 mt-1">Set up your project details and team</p>
               </div>
             </div>
@@ -222,7 +222,7 @@ export default function CreateProjectPage() {
             {/* Basic Info Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Basic Information
@@ -241,14 +241,14 @@ export default function CreateProjectPage() {
                         setFormData({ ...formData, name: e.target.value });
                         if (errors.name) setErrors({ ...errors, name: '' });
                       }}
-                      className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+                      className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all ${
                         errors.name ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                       }`}
                       placeholder="Enter a unique project name"
                     />
                     {checkingName && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <svg className="animate-spin h-5 w-5 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin h-5 w-5 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -273,7 +273,7 @@ export default function CreateProjectPage() {
                       setFormData({ ...formData, description: e.target.value });
                       if (errors.description) setErrors({ ...errors, description: '' });
                     }}
-                    className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all resize-none ${
+                    className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all resize-none ${
                       errors.description ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                     }`}
                     rows={4}
@@ -292,7 +292,7 @@ export default function CreateProjectPage() {
             {/* Timeline Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 Project Timeline
@@ -310,7 +310,7 @@ export default function CreateProjectPage() {
                       setFormData({ ...formData, startDate: e.target.value });
                       if (errors.startDate) setErrors({ ...errors, startDate: '' });
                     }}
-                    className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+                    className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all ${
                       errors.startDate ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   />
@@ -330,7 +330,7 @@ export default function CreateProjectPage() {
                       setFormData({ ...formData, endDate: e.target.value });
                       if (errors.endDate) setErrors({ ...errors, endDate: '' });
                     }}
-                    className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+                    className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all ${
                       errors.endDate ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   />
@@ -344,7 +344,7 @@ export default function CreateProjectPage() {
             {/* Team Assignment Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 Team Assignment
@@ -366,7 +366,7 @@ export default function CreateProjectPage() {
                       }}
                       className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
                         invitePO
-                          ? 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                          ? 'bg-primary-100 text-primary-700 hover:bg-primary-200'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -382,7 +382,7 @@ export default function CreateProjectPage() {
                           setPoEmail(e.target.value);
                           if (errors.poEmail) setErrors({ ...errors, poEmail: '' });
                         }}
-                        className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+                        className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all ${
                           errors.poEmail ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
                         placeholder="email@example.com"
@@ -402,7 +402,7 @@ export default function CreateProjectPage() {
                       <select
                         value={formData.productOwnerId}
                         onChange={(e) => setFormData({ ...formData, productOwnerId: e.target.value })}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all hover:border-gray-300 bg-white"
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-gray-300 bg-white"
                       >
                         <option value="">Not assigned</option>
                         {productOwners.map(user => (
@@ -431,7 +431,7 @@ export default function CreateProjectPage() {
                       }}
                       className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
                         invitePMO
-                          ? 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                          ? 'bg-primary-100 text-primary-700 hover:bg-primary-200'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -447,7 +447,7 @@ export default function CreateProjectPage() {
                           setPmoEmail(e.target.value);
                           if (errors.pmoEmail) setErrors({ ...errors, pmoEmail: '' });
                         }}
-                        className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all ${
+                        className={`w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all ${
                           errors.pmoEmail ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
                         placeholder="email@example.com"
@@ -467,7 +467,7 @@ export default function CreateProjectPage() {
                       <select
                         value={formData.pmoId}
                         onChange={(e) => setFormData({ ...formData, pmoId: e.target.value })}
-                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all hover:border-gray-300 bg-white"
+                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all hover:border-gray-300 bg-white"
                       >
                         <option value="">Not assigned</option>
                         {pmos.map(user => (
@@ -507,7 +507,7 @@ export default function CreateProjectPage() {
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                 </label>
               </div>
             </div>
@@ -517,7 +517,7 @@ export default function CreateProjectPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-teal-600 text-white px-6 py-3.5 rounded-xl font-semibold hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-teal-600/20 hover:shadow-xl hover:shadow-teal-600/30 active:scale-[0.98]"
+                className="flex-1 bg-primary-600 text-white px-6 py-3.5 rounded-xl font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-600/20 hover:shadow-xl hover:shadow-primary-600/30 active:scale-[0.98]"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">

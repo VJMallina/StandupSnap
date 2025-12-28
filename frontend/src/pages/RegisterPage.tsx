@@ -81,7 +81,7 @@ export default function RegisterPage() {
     return (
       <AuthLayout showTagline={true}>
         <div className="flex items-center justify-center py-12">
-          <svg className="animate-spin h-8 w-8 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <svg className="animate-spin h-8 w-8 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -133,7 +133,7 @@ export default function RegisterPage() {
                   name="name"
                   type="text"
                   required
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-150 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition duration-150 sm:text-sm"
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -158,7 +158,7 @@ export default function RegisterPage() {
                   autoComplete="email"
                   required
                   readOnly={!!invitation}
-                  className={`appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-150 sm:text-sm ${invitation ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  className={`appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition duration-150 sm:text-sm ${invitation ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -188,7 +188,7 @@ export default function RegisterPage() {
                   minLength={4}
                   maxLength={50}
                   pattern="[A-Za-z0-9_]+"
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-150 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition duration-150 sm:text-sm"
                   placeholder="Choose a username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -214,7 +214,7 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                   required
                   minLength={8}
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-150 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition duration-150 sm:text-sm"
                   placeholder="Create a strong password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -254,7 +254,7 @@ export default function RegisterPage() {
                     id="role"
                     name="role"
                     required
-                    className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition duration-150 sm:text-sm bg-white"
+                    className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition duration-150 sm:text-sm bg-white"
                     value={roleName}
                     onChange={(e) => setRoleName(e.target.value as RoleName)}
                   >
@@ -271,8 +271,8 @@ export default function RegisterPage() {
                   </div>
                 </div>
               )}
-              <div className="mt-2 p-3 bg-teal-50 rounded-lg border border-teal-100">
-                <p className="text-xs text-teal-800">
+              <div className="mt-2 p-3 bg-primary-50 rounded-lg border border-primary-100">
+                <p className="text-xs text-primary-800">
                   {ROLE_DESCRIPTIONS[roleName]}
                 </p>
               </div>
@@ -286,7 +286,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-lg hover:shadow-xl"
+              className="group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-lg hover:shadow-xl"
             >
               {loading ? (
                 <>
@@ -307,7 +307,7 @@ export default function RegisterPage() {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+                className="font-semibold text-primary-600 hover:text-primary-700 transition-colors"
               >
                 Sign in
               </Link>

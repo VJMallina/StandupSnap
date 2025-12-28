@@ -133,7 +133,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
         <button
           onClick={handleSave}
           disabled={loading}
-          className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50"
+          className="px-6 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:from-primary-700 hover:to-secondary-700 transition-all shadow-lg disabled:opacity-50 active:scale-95 disabled:active:scale-100"
         >
           {loading ? 'Saving...' : 'Save Minutes'}
         </button>
@@ -146,7 +146,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
             onClick={() => setActiveTab('input')}
             className={`px-4 py-2 font-medium transition-colors border-b-2 ${
               activeTab === 'input'
-                ? 'border-teal-600 text-teal-600'
+                ? 'border-primary-600 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -156,7 +156,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
             onClick={() => setActiveTab('output')}
             className={`px-4 py-2 font-medium transition-colors border-b-2 ${
               activeTab === 'output'
-                ? 'border-teal-600 text-teal-600'
+                ? 'border-primary-600 text-primary-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -175,7 +175,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
               <button
                 onClick={handleGenerateAI}
                 disabled={generating || !rawInput.trim()}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:from-primary-700 hover:to-secondary-700 transition-all shadow-lg disabled:opacity-50 flex items-center gap-2 active:scale-95 disabled:active:scale-100"
               >
                 {generating ? (
                   <>
@@ -202,7 +202,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
               onChange={(e) => setRawInput(e.target.value)}
               placeholder="Paste or type your meeting notes here. The AI will help extract key points, decisions, and action items..."
               rows={15}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none font-mono text-sm"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none font-mono text-sm"
             />
             <p className="text-xs text-gray-500 mt-2">
               Tip: Include participant names, decisions made, and tasks assigned for better AI extraction
@@ -219,11 +219,11 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
                 onChange={(e) => setNewAttendee(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddAttendee()}
                 placeholder="Add attendee name"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <button
                 onClick={handleAddAttendee}
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                className="px-4 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:from-primary-700 hover:to-secondary-700 transition-all shadow-lg active:scale-95"
               >
                 Add
               </button>
@@ -232,12 +232,12 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
               {attendees.map((attendee, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-2 px-3 py-1 bg-teal-50 border border-teal-200 rounded-lg"
+                  className="flex items-center gap-2 px-3 py-1 bg-primary-50 border border-primary-200 rounded-lg"
                 >
-                  <span className="text-sm font-medium text-teal-700">{attendee}</span>
+                  <span className="text-sm font-medium text-primary-700">{attendee}</span>
                   <button
                     onClick={() => handleRemoveAttendee(attendee)}
-                    className="text-teal-600 hover:text-teal-800"
+                    className="text-primary-600 hover:text-primary-800"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
@@ -269,7 +269,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
               onChange={(e) => setSummary(e.target.value)}
               placeholder="Summary of the meeting discussion..."
               rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
             />
           </div>
 
@@ -283,11 +283,11 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
                 onChange={(e) => setNewDecision(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddDecision()}
                 placeholder="Add a decision..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <button
                 onClick={handleAddDecision}
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                className="px-4 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:from-primary-700 hover:to-secondary-700 transition-all shadow-lg active:scale-95"
               >
                 Add
               </button>
@@ -296,10 +296,10 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
               {decisions.map((decision, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+                  className="flex items-start gap-3 p-3 bg-primary-50 border border-primary-200 rounded-lg"
                 >
                   <svg
-                    className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5"
+                    className="h-5 w-5 text-primary-600 flex-shrink-0 mt-0.5"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -337,7 +337,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
               <h3 className="text-lg font-semibold text-gray-900">Action Items</h3>
               <button
                 onClick={handleAddActionItem}
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-lg hover:from-primary-700 hover:to-secondary-700 transition-all shadow-lg text-sm flex items-center gap-2 active:scale-95"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -359,7 +359,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
                         handleUpdateActionItem(item.id, 'description', e.target.value)
                       }
                       placeholder="Action item description..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                     />
                     <button
                       onClick={() => handleRemoveActionItem(item.id)}
@@ -381,13 +381,13 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
                       value={item.assignee || ''}
                       onChange={(e) => handleUpdateActionItem(item.id, 'assignee', e.target.value)}
                       placeholder="Assignee"
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                     />
                     <input
                       type="date"
                       value={item.dueDate || ''}
                       onChange={(e) => handleUpdateActionItem(item.id, 'dueDate', e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
+                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
                     />
                   </div>
                 </div>

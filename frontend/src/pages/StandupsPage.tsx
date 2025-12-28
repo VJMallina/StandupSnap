@@ -18,13 +18,13 @@ export default function StandupsPage() {
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Standups</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Standups</h2>
           <p className="text-lg text-gray-600 mb-8">
             Daily standup updates and team collaboration
           </p>
-          <div className="inline-flex items-center px-6 py-3 bg-teal-50 rounded-lg border border-teal-200">
+          <div className="inline-flex items-center px-6 py-3 bg-primary-50 rounded-lg border border-primary-200">
             <svg
-              className="h-5 w-5 text-teal-500 mr-2"
+              className="h-5 w-5 text-primary-500 mr-2"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -34,7 +34,7 @@ export default function StandupsPage() {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-teal-700 font-medium">
+            <span className="text-primary-700 font-medium">
               This feature is coming soon
             </span>
           </div>

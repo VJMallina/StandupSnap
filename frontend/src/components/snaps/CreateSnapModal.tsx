@@ -90,12 +90,12 @@ export default function CreateSnapModal({
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 backdrop-blur-sm">
       <div className="relative top-10 mx-auto w-full max-w-4xl shadow-2xl rounded-xl bg-white mb-10 overflow-hidden">
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-white">Add Snap for {cardTitle}</h3>
             <button
               onClick={onClose}
-              className="text-teal-100 hover:text-white transition-colors"
+              className="text-primary-100 hover:text-white transition-colors"
               disabled={loading || parsing}
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -113,10 +113,10 @@ export default function CreateSnapModal({
 
             {/* Yesterday's Snap */}
             {yesterdaySnap && (
-              <details className="border border-teal-200 rounded-lg overflow-hidden">
-                <summary className="px-4 py-3 bg-teal-50 cursor-pointer hover:bg-teal-100 transition-colors flex items-center justify-between">
+              <details className="border border-primary-200 rounded-lg overflow-hidden">
+                <summary className="px-4 py-3 bg-primary-50 cursor-pointer hover:bg-primary-100 transition-colors flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-teal-900">
+                    <span className="font-medium text-primary-900">
                       Yesterday's Snap ({new Date(yesterdaySnap.snapDate).toLocaleDateString()})
                     </span>
                     {yesterdaySnap.isLocked && (
@@ -143,8 +143,8 @@ export default function CreateSnapModal({
                     </div>
                   )}
                   {yesterdaySnap.toDo && (
-                    <div className="border-l-4 border-teal-500 pl-3">
-                      <span className="font-medium text-teal-700">To Do: </span>
+                    <div className="border-l-4 border-primary-500 pl-3">
+                      <span className="font-medium text-primary-700">To Do: </span>
                       <span className="text-gray-700">{yesterdaySnap.toDo}</span>
                     </div>
                   )}
@@ -190,8 +190,8 @@ export default function CreateSnapModal({
                     </div>
                   )}
                   {snap.toDo && (
-                    <div className="border-l-4 border-teal-500 pl-3">
-                      <span className="font-medium text-teal-700">To Do: </span>
+                    <div className="border-l-4 border-primary-500 pl-3">
+                      <span className="font-medium text-primary-700">To Do: </span>
                       <span className="text-gray-700">{snap.toDo}</span>
                     </div>
                   )}
@@ -224,7 +224,7 @@ export default function CreateSnapModal({
                 value={rawInput}
                 onChange={(e) => setRawInput(e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="Example: Completed API integration for user auth. Working on frontend UI next. Blocked on database permissions."
                 disabled={parsing}
                 required
@@ -242,7 +242,7 @@ export default function CreateSnapModal({
               <select
                 value={slotNumber}
                 onChange={(e) => setSlotNumber(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 disabled={parsing}
                 required
               >
@@ -269,7 +269,7 @@ export default function CreateSnapModal({
               <button
                 type="button"
                 onClick={handleParse}
-                className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 disabled:bg-teal-300"
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 disabled:bg-primary-300"
                 disabled={parsing || !rawInput.trim()}
               >
                 {parsing ? (
@@ -307,20 +307,20 @@ export default function CreateSnapModal({
                   value={done}
                   onChange={(e) => setDone(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="What was completed"
                   disabled={loading}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <span className="text-teal-600">→</span> To Do
+                  <span className="text-primary-600">→</span> To Do
                 </label>
                 <textarea
                   value={toDo}
                   onChange={(e) => setToDo(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="What's planned next"
                   disabled={loading}
                 />
@@ -333,7 +333,7 @@ export default function CreateSnapModal({
                   value={blockers}
                   onChange={(e) => setBlockers(e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Any blockers or issues (leave empty if none)"
                   disabled={loading}
                 />
@@ -344,7 +344,7 @@ export default function CreateSnapModal({
                   <select
                     value={suggestedRAG}
                     onChange={(e) => setSuggestedRAG(e.target.value as SnapRAG | '')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     disabled={loading}
                   >
                     <option value="">None</option>
@@ -358,7 +358,7 @@ export default function CreateSnapModal({
                   <select
                     value={overrideRAG}
                     onChange={(e) => setOverrideRAG(e.target.value as SnapRAG | '')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     disabled={loading}
                   >
                     <option value="">Keep suggested</option>

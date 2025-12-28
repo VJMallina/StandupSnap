@@ -82,10 +82,10 @@ const ScrumRoomsPage: React.FC = () => {
         icon: '📋',
         title: 'Sprint Planning',
         description: 'Plan sprint capacity and prioritize backlog',
-        color: 'from-teal-500 to-teal-600',
-        bgColor: 'bg-teal-50',
-        borderColor: 'border-teal-200',
-        textColor: 'text-teal-600',
+        color: 'from-primary-500 to-primary-600',
+        bgColor: 'bg-primary-50',
+        borderColor: 'border-primary-200',
+        textColor: 'text-primary-600',
       },
       [RoomType.REFINEMENT]: {
         icon: '✨',
@@ -147,7 +147,7 @@ const ScrumRoomsPage: React.FC = () => {
               </button>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-3xl">{typeInfo.icon}</span>
+                  <span className="text-2xl">{typeInfo.icon}</span>
                   <h1 className="text-2xl font-bold text-gray-900">{typeInfo.title} Rooms</h1>
                 </div>
                 <p className="text-gray-600 mt-1">{typeInfo.description}</p>
@@ -156,7 +156,7 @@ const ScrumRoomsPage: React.FC = () => {
 
             <button
               onClick={() => handleCreateRoom(selectedRoomType)}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium flex items-center gap-2"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium flex items-center gap-2"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -168,7 +168,7 @@ const ScrumRoomsPage: React.FC = () => {
           {/* Rooms Grid */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
             </div>
           ) : roomsOfType.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
@@ -177,7 +177,7 @@ const ScrumRoomsPage: React.FC = () => {
               <p className="text-gray-600 mb-6">Create your first {typeInfo.title.toLowerCase()} room to get started</p>
               <button
                 onClick={() => handleCreateRoom(selectedRoomType)}
-                className="inline-flex items-center px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
+                className="inline-flex items-center px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
               >
                 <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -195,7 +195,7 @@ const ScrumRoomsPage: React.FC = () => {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="text-3xl">{typeInfo.icon}</div>
+                      <div className="text-2xl">{typeInfo.icon}</div>
                       <div>
                         <h3 className="font-semibold text-gray-900">{room.name}</h3>
                         <p className="text-xs text-gray-500 mt-1">{typeInfo.title}</p>
@@ -274,7 +274,7 @@ const ScrumRoomsPage: React.FC = () => {
         {/* Loading */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">

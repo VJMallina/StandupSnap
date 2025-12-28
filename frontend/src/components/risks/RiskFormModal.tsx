@@ -197,7 +197,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 my-8">
         {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4 rounded-t-xl flex justify-between items-center">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4 rounded-t-xl flex justify-between items-center">
           <h2 className="text-xl font-semibold text-white">
             {mode === 'create' ? 'Add New Risk' : 'Edit Risk'}
           </h2>
@@ -227,7 +227,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
@@ -239,7 +239,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                   required
                   value={formData.riskType}
                   onChange={(e) => setFormData({ ...formData, riskType: e.target.value as RiskType })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="THREAT">Threat</option>
                   <option value="OPPORTUNITY">Opportunity</option>
@@ -257,7 +257,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                   required
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="e.g., Technical, Financial, Schedule"
                 />
               </div>
@@ -270,7 +270,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                   type="date"
                   value={formData.dateIdentified}
                   onChange={(e) => setFormData({ ...formData, dateIdentified: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -284,7 +284,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 rows={3}
                 value={formData.riskStatement}
                 onChange={(e) => setFormData({ ...formData, riskStatement: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Describe the risk in detail..."
               />
             </div>
@@ -297,7 +297,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 rows={2}
                 value={formData.currentStatusAssumptions}
                 onChange={(e) => setFormData({ ...formData, currentStatusAssumptions: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -315,7 +315,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                   required
                   value={formData.probability}
                   onChange={(e) => setFormData({ ...formData, probability: e.target.value as ProbabilityLevel })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
@@ -331,7 +331,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 <select
                   value={formData.costImpact}
                   onChange={(e) => setFormData({ ...formData, costImpact: e.target.value as ImpactLevel | '' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">None</option>
                   <option value="LOW">Low</option>
@@ -350,7 +350,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 <select
                   value={formData.timeImpact}
                   onChange={(e) => setFormData({ ...formData, timeImpact: e.target.value as ImpactLevel | '' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">None</option>
                   <option value="LOW">Low</option>
@@ -367,7 +367,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 <select
                   value={formData.scheduleImpact}
                   onChange={(e) => setFormData({ ...formData, scheduleImpact: e.target.value as ImpactLevel | '' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">None</option>
                   <option value="LOW">Low</option>
@@ -391,7 +391,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 rows={2}
                 value={formData.rationale}
                 onChange={(e) => setFormData({ ...formData, rationale: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Explain the reasoning behind the assessment..."
               />
             </div>
@@ -410,7 +410,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                   required
                   value={formData.strategy}
                   onChange={(e) => setFormData({ ...formData, strategy: e.target.value as RiskStrategy })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="AVOID">Avoid</option>
                   <option value="MITIGATE">Mitigate</option>
@@ -428,7 +428,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                   required
                   value={formData.ownerId}
                   onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   disabled={teamMembers.length === 0}
                 >
                   <option value="">
@@ -456,7 +456,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 rows={3}
                 value={formData.mitigationPlan}
                 onChange={(e) => setFormData({ ...formData, mitigationPlan: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Describe the plan to mitigate this risk..."
               />
             </div>
@@ -469,7 +469,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 rows={3}
                 value={formData.contingencyPlan}
                 onChange={(e) => setFormData({ ...formData, contingencyPlan: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Describe the contingency plan if the risk occurs..."
               />
             </div>
@@ -483,7 +483,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 value={formData.targetClosureDate}
                 onChange={(e) => setFormData({ ...formData, targetClosureDate: e.target.value })}
                 min={formData.dateIdentified}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -499,7 +499,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as RiskStatus })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="OPEN">Open</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -516,7 +516,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
                 rows={3}
                 value={formData.progressNotes}
                 onChange={(e) => setFormData({ ...formData, progressNotes: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Add notes about the progress..."
               />
             </div>
@@ -536,7 +536,7 @@ export const RiskFormModal: React.FC<RiskFormModalProps> = ({
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className="px-4 py-2 text-white bg-gradient-to-r from-teal-600 to-cyan-600 rounded-lg hover:from-teal-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-4 py-2 text-white bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg hover:from-primary-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? 'Saving...' : mode === 'create' ? 'Create Risk' : 'Update Risk'}
           </button>

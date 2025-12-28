@@ -332,7 +332,7 @@ export default function ResourceTrackerPage() {
             </button>
             <button
               onClick={handleAddResource}
-              className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -384,7 +384,7 @@ export default function ResourceTrackerPage() {
           {loading && resources.length > 0 && (
             <div className="absolute inset-0 bg-white bg-opacity-75 z-10 flex items-center justify-center rounded-lg">
               <div className="flex flex-col items-center">
-                <div className="w-10 h-10 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mb-3"></div>
+                <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mb-3"></div>
                 <p className="text-gray-600 font-medium">Updating resources...</p>
               </div>
             </div>
@@ -398,7 +398,7 @@ export default function ResourceTrackerPage() {
                   type="checkbox"
                   checked={includeArchived}
                   onChange={(e) => setIncludeArchived(e.target.checked)}
-                  className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 />
                 Include Archived
               </label>
@@ -411,12 +411,12 @@ export default function ResourceTrackerPage() {
                 placeholder="Search by name..."
                 value={filterName}
                 onChange={(e) => setFilterName(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value as ResourceRole | '')}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">All Roles</option>
                 {Object.values(ResourceRole).map((role) => (
@@ -428,14 +428,14 @@ export default function ResourceTrackerPage() {
                 placeholder="Min Load %"
                 value={filterMinLoad}
                 onChange={(e) => setFilterMinLoad(e.target.value ? Number(e.target.value) : '')}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <input
                 type="number"
                 placeholder="Max Load %"
                 value={filterMaxLoad}
                 onChange={(e) => setFilterMaxLoad(e.target.value ? Number(e.target.value) : '')}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
               <div className="flex gap-2">
                 <button
@@ -466,7 +466,7 @@ export default function ResourceTrackerPage() {
                 <p className="text-gray-500 mb-4">No resources found</p>
                 <button
                   onClick={handleAddResource}
-                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                 >
                   Add Your First Resource
                 </button>
@@ -585,7 +585,7 @@ export default function ResourceTrackerPage() {
                           {resource.skills.slice(0, 2).map((skill, idx) => (
                             <span
                               key={idx}
-                              className="px-2 py-0.5 text-xs bg-teal-50 text-teal-700 rounded"
+                              className="px-2 py-0.5 text-xs bg-primary-50 text-primary-700 rounded"
                             >
                               {skill}
                             </span>
@@ -638,7 +638,7 @@ export default function ResourceTrackerPage() {
                           </button>
                           <button
                             onClick={() => handleEditResource(resource)}
-                            className="p-1.5 text-teal-600 hover:bg-teal-50 rounded transition-colors"
+                            className="p-1.5 text-primary-600 hover:bg-primary-50 rounded transition-colors"
                             title="Edit"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -728,7 +728,7 @@ export default function ResourceTrackerPage() {
                             {resource.skills.slice(0, 2).map((skill, idx) => (
                               <span
                                 key={idx}
-                                className="px-2 py-0.5 text-xs bg-teal-50 text-teal-700 rounded"
+                                className="px-2 py-0.5 text-xs bg-primary-50 text-primary-700 rounded"
                               >
                                 {skill}
                               </span>
@@ -781,7 +781,7 @@ export default function ResourceTrackerPage() {
                             </button>
                             <button
                               onClick={() => handleEditResource(resource)}
-                              className="p-1.5 text-teal-600 hover:bg-teal-50 rounded transition-colors"
+                              className="p-1.5 text-primary-600 hover:bg-primary-50 rounded transition-colors"
                               title="Edit"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

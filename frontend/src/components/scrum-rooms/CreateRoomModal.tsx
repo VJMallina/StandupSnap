@@ -165,7 +165,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Sprint 24 Planning Poker"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               disabled={loading}
               required
             />
@@ -182,7 +182,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                   key={roomType}
                   className={`relative flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     type === roomType
-                      ? 'border-teal-500 bg-teal-50'
+                      ? 'border-primary-500 bg-primary-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -192,7 +192,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                     value={roomType}
                     checked={type === roomType}
                     onChange={(e) => setType(e.target.value as RoomType)}
-                    className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500"
+                    className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500"
                     disabled={loading}
                   />
                   <div className="ml-3 flex-1">
@@ -223,7 +223,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional: Add context or goals for this room"
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               disabled={loading}
             />
           </div>
@@ -241,7 +241,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading ? (
                 <>

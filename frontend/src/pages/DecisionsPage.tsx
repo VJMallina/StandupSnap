@@ -16,6 +16,7 @@ import { TeamMember } from '../types/teamMember';
 import { DecisionFormModal } from '../components/decisions/DecisionFormModal';
 import { DecisionDetailPanel } from '../components/decisions/DecisionDetailPanel';
 import { ArchiveDecisionModal } from '../components/decisions/ArchiveDecisionModal';
+import { TableSkeleton } from '../components/ui/SkeletonLoader';
 
 const DecisionsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -282,7 +283,7 @@ const DecisionsPage: React.FC = () => {
             </button>
             <button
               onClick={handleAddDecision}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors shadow-sm"
+              className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm"
             >
               + Add Decision
             </button>
@@ -310,7 +311,7 @@ const DecisionsPage: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search title, description..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               />
             </div>
 
@@ -320,7 +321,7 @@ const DecisionsPage: React.FC = () => {
               <select
                 value={filters.status || ''}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value as DecisionStatus || undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               >
                 <option value="">All</option>
                 <option value={DecisionStatus.PENDING}>Pending</option>
@@ -334,7 +335,7 @@ const DecisionsPage: React.FC = () => {
               <select
                 value={filters.ownerId || ''}
                 onChange={(e) => setFilters({ ...filters, ownerId: e.target.value || undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               >
                 <option value="">All</option>
                 {teamMembers.map((member) => (
@@ -349,7 +350,7 @@ const DecisionsPage: React.FC = () => {
             <div className="flex items-end">
               <button
                 onClick={fetchData}
-                className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors"
+                className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-colors"
               >
                 Apply Filters
               </button>
@@ -372,7 +373,7 @@ const DecisionsPage: React.FC = () => {
                       type="checkbox"
                       checked={visibleColumns[column]}
                       onChange={() => toggleColumnVisibility(column)}
-                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                     />
                     <span className="capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
                   </label>
@@ -385,10 +386,25 @@ const DecisionsPage: React.FC = () => {
         {/* Table */}
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           {loading ? (
-            <div className="p-8 text-center text-gray-600">Loading decisions...</div>
+            <TableSkeleton rows={8} />
           ) : sortedDecisions.length === 0 ? (
-            <div className="p-8 text-center text-gray-600">
-              No decisions found. Click "Add Decision" to create one.
+            <div className="text-center py-16 px-6">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Decisions Found</h3>
+              <p className="text-gray-600 mb-6">Track important project decisions and their finalization status for better governance.</p>
+              <button
+                onClick={handleAddDecision}
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white rounded-lg font-semibold shadow-sm hover:shadow-md active:scale-95 transition-all duration-200"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Your First Decision
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">

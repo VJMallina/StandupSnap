@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FormTemplate, FormField, FieldType } from '../../types/formBuilder';
-import { formBuilderTemplateApi } from '../../services/api/formBuilder';
+import { artifactsApi } from '../../services/api/artifacts';
 import { FieldEditor } from './FieldEditor';
 import { FieldPalette } from './FieldPalette';
 import { FormPreview } from './FormPreview';
@@ -9,22 +9,28 @@ interface TemplateBuilderModalProps {
   isOpen: boolean;
   template: FormTemplate;
   onClose: () => void;
+  onSave?: () => void; // Optional callback after successful save
+  artifactTemplateId: string; // Artifact template ID for saving
 }
 
 export const TemplateBuilderModal: React.FC<TemplateBuilderModalProps> = ({
   isOpen,
   template: initialTemplate,
   onClose,
+  onSave,
+  artifactTemplateId,
 }) => {
   const [template, setTemplate] = useState<FormTemplate>(initialTemplate);
   const [fields, setFields] = useState<FormField[]>(initialTemplate.fields || []);
   const [selectedField, setSelectedField] = useState<FormField | null>(null);
   const [mode, setMode] = useState<'design' | 'preview'>('design');
   const [isSaving, setIsSaving] = useState(false);
+  const [savedFields, setSavedFields] = useState<FormField[]>(initialTemplate.fields || []); // Track saved state
 
   useEffect(() => {
     setTemplate(initialTemplate);
     setFields(initialTemplate.fields || []);
+    setSavedFields(initialTemplate.fields || []); // Reset saved state when template changes
   }, [initialTemplate]);
 
   // ESC key handler
@@ -54,16 +60,28 @@ export const TemplateBuilderModal: React.FC<TemplateBuilderModalProps> = ({
   };
 
   const hasUnsavedChanges = () => {
-    return JSON.stringify(fields) !== JSON.stringify(initialTemplate.fields);
+    return JSON.stringify(fields) !== JSON.stringify(savedFields);
   };
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      await formBuilderTemplateApi.update(template.id, { fields });
-      const updatedTemplate = await formBuilderTemplateApi.getById(template.id);
-      setTemplate(updatedTemplate);
+
+      // Save to artifacts API
+      await artifactsApi.updateTemplate(artifactTemplateId, {
+        templateStructure: { fields },
+      });
+      setSavedFields(fields);
+
       alert('Template saved successfully!');
+
+      // Call onSave callback if provided
+      if (onSave) {
+        onSave();
+      }
+
+      // Close the modal after successful save
+      onClose();
     } catch (err: any) {
       alert(err.message || 'Failed to save template');
     } finally {
@@ -164,7 +182,7 @@ export const TemplateBuilderModal: React.FC<TemplateBuilderModalProps> = ({
                 onClick={() => setMode('design')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   mode === 'design'
-                    ? 'bg-white text-teal-700 shadow-sm'
+                    ? 'bg-white text-primary-700 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -174,7 +192,7 @@ export const TemplateBuilderModal: React.FC<TemplateBuilderModalProps> = ({
                 onClick={() => setMode('preview')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   mode === 'preview'
-                    ? 'bg-white text-teal-700 shadow-sm'
+                    ? 'bg-white text-primary-700 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -186,7 +204,7 @@ export const TemplateBuilderModal: React.FC<TemplateBuilderModalProps> = ({
             <button
               onClick={handleSave}
               disabled={isSaving || !hasUnsavedChanges()}
-              className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSaving ? (
                 <>
@@ -256,8 +274,8 @@ export const TemplateBuilderModal: React.FC<TemplateBuilderModalProps> = ({
                           onClick={() => setSelectedField(field)}
                           className={`p-4 border rounded-lg cursor-pointer transition-all ${
                             selectedField?.id === field.id
-                              ? 'border-teal-500 bg-teal-50 shadow-md'
-                              : 'border-gray-200 hover:border-teal-300 bg-white'
+                              ? 'border-primary-500 bg-primary-50 shadow-md'
+                              : 'border-gray-200 hover:border-primary-300 bg-white'
                           }`}
                         >
                           <div className="flex items-center justify-between">

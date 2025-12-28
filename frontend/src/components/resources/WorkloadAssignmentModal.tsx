@@ -226,7 +226,7 @@ export default function WorkloadAssignmentModal({ resource, onClose, onSuccess }
 
           {loading ? (
             <div className="flex flex-col justify-center items-center py-12">
-              <div className="w-12 h-12 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin mb-4"></div>
+              <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mb-4"></div>
               <p className="text-gray-600 font-medium">Loading workload data...</p>
               <p className="text-gray-400 text-sm mt-1">Fetching existing weekly assignments</p>
             </div>
@@ -260,7 +260,7 @@ export default function WorkloadAssignmentModal({ resource, onClose, onSuccess }
                         step="0.5"
                         value={week.availability}
                         onChange={(e) => handleAvailabilityChange(index, parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
 
@@ -274,7 +274,7 @@ export default function WorkloadAssignmentModal({ resource, onClose, onSuccess }
                         step="0.5"
                         value={week.workload}
                         onChange={(e) => handleWorkloadChange(index, parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
 
@@ -297,7 +297,7 @@ export default function WorkloadAssignmentModal({ resource, onClose, onSuccess }
                       placeholder="e.g., On training, Part-time availability, etc."
                       value={week.notes || ''}
                       onChange={(e) => handleNotesChange(index, e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
 
@@ -332,7 +332,7 @@ export default function WorkloadAssignmentModal({ resource, onClose, onSuccess }
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {saving && (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

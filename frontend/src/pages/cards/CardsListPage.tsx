@@ -9,7 +9,7 @@ import { Sprint } from '../../types/sprint';
 import { TeamMember } from '../../types/teamMember';
 import { Project } from '../../types/project';
 import AppLayout from '../../components/AppLayout';
-import Select from '../../components/ui/Select';
+import { Select } from '../../components/ui/Select';
 import CreateCardModal from '../../components/cards/CreateCardModal';
 
 export default function CardsListPage() {
@@ -129,7 +129,7 @@ export default function CardsListPage() {
   const getStatusBadge = (status: CardStatus) => {
     const colors = {
       [CardStatus.NOT_STARTED]: 'bg-gray-100 text-gray-800',
-      [CardStatus.IN_PROGRESS]: 'bg-teal-100 text-teal-800',
+      [CardStatus.IN_PROGRESS]: 'bg-primary-100 text-primary-800',
       [CardStatus.COMPLETED]: 'bg-green-100 text-green-800',
       [CardStatus.CLOSED]: 'bg-gray-100 text-gray-600',
     };
@@ -165,7 +165,7 @@ export default function CardsListPage() {
   const getPriorityBadge = (priority: CardPriority) => {
     const colors = {
       [CardPriority.LOW]: 'bg-gray-100 text-gray-600',
-      [CardPriority.MEDIUM]: 'bg-teal-100 text-teal-700',
+      [CardPriority.MEDIUM]: 'bg-primary-100 text-primary-700',
       [CardPriority.HIGH]: 'bg-orange-100 text-orange-700',
       [CardPriority.CRITICAL]: 'bg-red-100 text-red-700',
     };
@@ -189,12 +189,11 @@ export default function CardsListPage() {
     <AppLayout>
       <div className="p-6">
         {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-6 md:p-8 shadow-lg mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-4 md:p-5 shadow-lg mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <p className="text-teal-100 text-sm font-medium mb-1">Work Items</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-white">Cards</h1>
-              <p className="text-teal-100 mt-2 text-sm">Manage task cards and track progress</p>
+              <p className="text-primary-100 text-sm font-medium mb-1">Work Items</p>
+              <h1 className="text-2xl md:text-2xl font-bold text-white">Cards</h1>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -216,7 +215,7 @@ export default function CardsListPage() {
         )}
 
         {/* Filters Section - M7-UC05 */}
-        <div className="flex flex-wrap items-end gap-4 mb-6">
+        <div className="flex flex-wrap items-end gap-3 mb-6">
           {/* Project Filter */}
           <div className="flex-1 min-w-[150px]">
             <Select
@@ -332,7 +331,7 @@ export default function CardsListPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by title or external ID..."
-              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
+              className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm hover:border-gray-300 transition-colors"
             />
           </div>
         </div>
@@ -341,7 +340,7 @@ export default function CardsListPage() {
           <div className="mb-6">
             <button
               onClick={clearFilters}
-              className="text-sm text-teal-600 hover:underline"
+              className="text-sm text-primary-600 hover:underline"
             >
               Clear all filters
             </button>
@@ -351,7 +350,7 @@ export default function CardsListPage() {
         {/* Cards Grid */}
         {loading && cards.length === 0 ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
           </div>
         ) : cards.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -370,7 +369,7 @@ export default function CardsListPage() {
               <div className="mt-6">
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
                 >
                   Create Card
                 </button>
@@ -378,7 +377,7 @@ export default function CardsListPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {cards.map((card, index) => {
               const statusBadge = getStatusBadge(card.status);
               const ragBadge = getRAGBadge(card.ragStatus);
@@ -398,7 +397,7 @@ export default function CardsListPage() {
                   onClick={() => navigate(`/cards/${card.id}`)}
                   className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer
                     transform transition-all duration-300 ease-out
-                    hover:shadow-xl hover:-translate-y-2 hover:border-teal-200
+                    hover:shadow-xl hover:-translate-y-2 hover:border-primary-200
                     animate-[fadeInUp_0.4s_ease-out_forwards]"
                   style={{
                     animationDelay: `${index * 50}ms`,
@@ -419,7 +418,7 @@ export default function CardsListPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                             </svg>
                           )}
-                          <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-teal-600 transition-colors">
+                          <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
                             {card.title}
                           </h3>
                         </div>
@@ -456,10 +455,10 @@ export default function CardsListPage() {
                       </div>
                       {/* Snaps Count - Middle Right */}
                       <div className="relative flex items-center justify-center">
-                        <svg className="w-12 h-12 text-teal-100" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-12 h-12 text-primary-100" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h6v6h6v10H6z" />
                         </svg>
-                        <span className="absolute text-3xl font-bold text-teal-600">{card.snapsCount || 0}</span>
+                        <span className="absolute text-2xl font-bold text-primary-600">{card.snapsCount || 0}</span>
                       </div>
                     </div>
 
@@ -490,7 +489,7 @@ export default function CardsListPage() {
                   </div>
 
                   {/* Hover Glow Effect */}
-                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-teal-500/5 to-cyan-500/5" />
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gradient-to-br from-primary-500/5 to-secondary-600/5" />
                 </div>
               );
             })}

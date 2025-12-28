@@ -76,7 +76,7 @@ export default function CardDetailsPage() {
   const getStatusBadge = (status: CardStatus) => {
     const configs = {
       [CardStatus.NOT_STARTED]: { color: 'bg-gray-100 text-gray-800 border-gray-200', label: 'Not Started' },
-      [CardStatus.IN_PROGRESS]: { color: 'bg-teal-100 text-teal-800 border-teal-200', label: 'In Progress' },
+      [CardStatus.IN_PROGRESS]: { color: 'bg-primary-100 text-primary-800 border-primary-200', label: 'In Progress' },
       [CardStatus.COMPLETED]: { color: 'bg-green-100 text-green-800 border-green-200', label: 'Completed' },
       [CardStatus.CLOSED]: { color: 'bg-gray-100 text-gray-600 border-gray-200', label: 'Closed' },
     };
@@ -97,7 +97,7 @@ export default function CardDetailsPage() {
   const getPriorityBadge = (priority: CardPriority) => {
     const configs = {
       [CardPriority.LOW]: { color: 'bg-gray-100 text-gray-600', label: 'Low', icon: '↓' },
-      [CardPriority.MEDIUM]: { color: 'bg-teal-100 text-teal-700', label: 'Medium', icon: '−' },
+      [CardPriority.MEDIUM]: { color: 'bg-primary-100 text-primary-700', label: 'Medium', icon: '−' },
       [CardPriority.HIGH]: { color: 'bg-orange-100 text-orange-700', label: 'High', icon: '↑' },
       [CardPriority.CRITICAL]: { color: 'bg-red-100 text-red-700', label: 'Critical', icon: '⚠' },
     };
@@ -147,7 +147,7 @@ export default function CardDetailsPage() {
         {/* Back Navigation */}
         <button
           onClick={() => navigate(`/cards?projectId=${card.project.id}`)}
-          className="flex items-center text-gray-600 hover:text-teal-600 transition-colors mb-4 group"
+          className="flex items-center text-gray-600 hover:text-primary-600 transition-colors mb-4 group"
         >
           <svg className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -160,7 +160,7 @@ export default function CardDetailsPage() {
           <div className="flex justify-between items-start mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold">{card.title}</h1>
+                <h1 className="text-2xl font-bold">{card.title}</h1>
                 {isLocked && (
                   <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -184,7 +184,7 @@ export default function CardDetailsPage() {
               {canEdit && (
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="bg-teal-600 text-white px-4 py-2 rounded-md hover:bg-teal-700"
+                  className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
                 >
                   Edit Card
                 </button>
@@ -242,7 +242,7 @@ export default function CardDetailsPage() {
                 <p className="text-gray-900 font-medium">{card.project.name}</p>
                 <button
                   onClick={() => navigate(`/projects/${card.project.id}`)}
-                  className="text-teal-600 hover:underline text-sm mt-1"
+                  className="text-primary-600 hover:underline text-sm mt-1"
                 >
                   View Project →
                 </button>
@@ -253,7 +253,7 @@ export default function CardDetailsPage() {
                 <p className="text-gray-900 font-medium">{card.sprint.name}</p>
                 <button
                   onClick={() => navigate(`/sprints/${card.sprint.id}`)}
-                  className="text-teal-600 hover:underline text-sm mt-1"
+                  className="text-primary-600 hover:underline text-sm mt-1"
                 >
                   View Sprint →
                 </button>

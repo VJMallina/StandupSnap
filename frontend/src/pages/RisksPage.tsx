@@ -18,6 +18,8 @@ import { SeverityBadge } from '../components/risks/SeverityBadge';
 import { RiskFormModal } from '../components/risks/RiskFormModal';
 import { RiskDetailPanel } from '../components/risks/RiskDetailPanel';
 import { ArchiveRiskModal } from '../components/risks/ArchiveRiskModal';
+import { TableSkeleton } from '../components/ui/SkeletonLoader';
+import { FilterDrawer, FilterChip } from '../components/ui';
 
 const RisksPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,6 +37,9 @@ const RisksPage: React.FC = () => {
     includeArchived: false,
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [tempFilters, setTempFilters] = useState<RiskFilters>({ includeArchived: false });
+  const [tempSearch, setTempSearch] = useState('');
 
   // Sorting
   const [sortField, setSortField] = useState<keyof Risk | null>('riskScore');
@@ -79,6 +84,14 @@ const RisksPage: React.FC = () => {
 
     fetchData();
   }, [selectedProjectId]);
+
+  // Sync tempFilters when drawer opens
+  useEffect(() => {
+    if (isFilterDrawerOpen) {
+      setTempFilters(filters);
+      setTempSearch(searchQuery);
+    }
+  }, [isFilterDrawerOpen, filters, searchQuery]);
 
   const fetchData = async () => {
     try {
@@ -232,6 +245,57 @@ const RisksPage: React.FC = () => {
     }
   };
 
+  // Filter drawer functions
+  const applyFilters = async () => {
+    setFilters(tempFilters);
+    setSearchQuery(tempSearch);
+
+    try {
+      const results = await risksApi.getByProject(selectedProjectId!, {
+        ...tempFilters,
+        search: tempSearch || undefined,
+        includeArchived: false,
+      });
+      setRisks(results);
+    } catch (err: any) {
+      console.error('Error applying filters:', err);
+    }
+  };
+
+  const removeFilter = (filterType: keyof RiskFilters | 'search') => {
+    if (filterType === 'search') {
+      setSearchQuery('');
+      setTempSearch('');
+      handleSearch('');
+    } else {
+      const newFilters = { ...filters };
+      delete newFilters[filterType];
+      setFilters(newFilters);
+      setTempFilters(newFilters);
+      handleFilterChange({});
+    }
+  };
+
+  const activeFilterCount = [
+    filters.status,
+    filters.severity,
+    filters.ownerId,
+    filters.strategy,
+    searchQuery
+  ].filter(Boolean).length;
+
+  const getFilterLabel = (key: string, value: any): string => {
+    if (key === 'status') return value;
+    if (key === 'severity') return value;
+    if (key === 'strategy') return value;
+    if (key === 'ownerId') {
+      const owner = teamMembers.find(m => m.id === value);
+      return owner ? (owner.displayName || owner.fullName) : value;
+    }
+    if (key === 'search') return `"${value}"`;
+    return value;
+  };
+
   const canArchive = (risk: Risk) => {
     return risk.status === 'MITIGATED' || risk.status === 'CLOSED';
   };
@@ -334,11 +398,11 @@ const RisksPage: React.FC = () => {
       );
     }
     return sortDirection === 'asc' ? (
-      <svg className="h-4 w-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
       </svg>
     ) : (
-      <svg className="h-4 w-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     );
@@ -355,7 +419,7 @@ const RisksPage: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Risk Register</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Risk Register</h1>
             <p className="text-gray-600 mt-1">
               Manage and track project risks
             </p>
@@ -385,7 +449,7 @@ const RisksPage: React.FC = () => {
                         <h3 className="text-sm font-semibold text-gray-900">Show/Hide Columns</h3>
                         <button
                           onClick={handleResetColumns}
-                          className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                          className="text-xs text-primary-600 hover:text-primary-700 font-medium"
                         >
                           Reset
                         </button>
@@ -413,7 +477,7 @@ const RisksPage: React.FC = () => {
                             type="checkbox"
                             checked={visibleColumns[col.key]}
                             onChange={() => handleColumnToggle(col.key)}
-                            className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                           />
                           <span className="text-sm text-gray-700">{col.label}</span>
                         </label>
@@ -435,7 +499,7 @@ const RisksPage: React.FC = () => {
             </button>
             <button
               onClick={handleAddRisk}
-              className="px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg hover:from-teal-700 hover:to-cyan-700 transition-all flex items-center gap-2"
+              className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm flex items-center gap-2"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -445,109 +509,74 @@ const RisksPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Filters & Search */}
-        <div className="bg-white rounded-lg shadow p-4 space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-700">Filters</h3>
-            <button
-              onClick={handleClearFilters}
-              className="text-sm text-teal-600 hover:text-teal-700 font-medium"
-            >
-              Clear All
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-            {/* Search */}
-            <div className="md:col-span-2">
-              <input
-                type="text"
-                placeholder="Search risks..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <select
-                value={filters.status || ''}
-                onChange={(e) =>
-                  handleFilterChange({ status: e.target.value ? (e.target.value as RiskStatus) : undefined })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              >
-                <option value="">All Statuses</option>
-                <option value="OPEN">Open</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="MITIGATED">Mitigated</option>
-                <option value="CLOSED">Closed</option>
-              </select>
-            </div>
-
-            {/* Severity Filter */}
-            <div>
-              <select
-                value={filters.severity || ''}
-                onChange={(e) =>
-                  handleFilterChange({ severity: e.target.value ? (e.target.value as RiskSeverity) : undefined })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              >
-                <option value="">All Severities</option>
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
-                <option value="VERY_HIGH">Very High</option>
-              </select>
-            </div>
-
-            {/* Risk Owner Filter */}
-            <div>
-              <select
-                value={filters.ownerId || ''}
-                onChange={(e) =>
-                  handleFilterChange({ ownerId: e.target.value || undefined })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              >
-                <option value="">All Owners</option>
-                {teamMembers.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.displayName || member.fullName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Strategy Filter */}
-            <div>
-              <select
-                value={filters.strategy || ''}
-                onChange={(e) =>
-                  handleFilterChange({ strategy: e.target.value as any || undefined })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              >
-                <option value="">All Strategies</option>
-                <option value="AVOID">Avoid</option>
-                <option value="MITIGATE">Mitigate</option>
-                <option value="ACCEPT">Accept</option>
-                <option value="TRANSFER">Transfer</option>
-                <option value="EXPLOIT">Exploit</option>
-              </select>
-            </div>
-          </div>
+        {/* Filter Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="relative px-5 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-primary-300 transition-all font-bold flex items-center gap-2 active:scale-95"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 bg-gradient-to-br from-primary-600 to-secondary-600 text-white text-xs font-bold rounded-full shadow-lg">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-teal-600 border-r-transparent"></div>
-            <p className="mt-2 text-gray-600">Loading risks...</p>
+        {/* Active Filters */}
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 animate-fadeInUp">
+            <span className="text-sm font-semibold text-gray-600">Active filters:</span>
+            {searchQuery && (
+              <FilterChip
+                label="Search"
+                value={searchQuery}
+                onRemove={() => removeFilter('search')}
+              />
+            )}
+            {filters.status && (
+              <FilterChip
+                label="Status"
+                value={filters.status}
+                onRemove={() => removeFilter('status')}
+              />
+            )}
+            {filters.severity && (
+              <FilterChip
+                label="Severity"
+                value={filters.severity}
+                onRemove={() => removeFilter('severity')}
+              />
+            )}
+            {filters.ownerId && (
+              <FilterChip
+                label="Owner"
+                value={getFilterLabel('ownerId', filters.ownerId)}
+                onRemove={() => removeFilter('ownerId')}
+              />
+            )}
+            {filters.strategy && (
+              <FilterChip
+                label="Strategy"
+                value={filters.strategy}
+                onRemove={() => removeFilter('strategy')}
+              />
+            )}
+            <button
+              onClick={handleClearFilters}
+              className="text-sm text-primary-600 hover:text-primary-700 font-semibold underline"
+            >
+              Clear all
+            </button>
           </div>
         )}
+
+        {/* Loading State */}
+        {loading && <TableSkeleton rows={8} />}
 
         {/* Error State */}
         {error && (
@@ -561,7 +590,7 @@ const RisksPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 sticky top-0 z-10 shadow-sm">
                   <tr>
                     {visibleColumns.id && (
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -678,14 +707,31 @@ const RisksPage: React.FC = () => {
                   {sortedRisks.length === 0 ? (
                     <tr>
                       <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="px-6 py-12 text-center text-gray-500">
-                        No risks found. Click "Add Risk" to create one.
+                        <div className="text-center py-16 px-6">
+                          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                            <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">No Risks Found</h3>
+                          <p className="text-gray-600 mb-6">Start by identifying and documenting project risks to manage them effectively.</p>
+                          <button
+                            onClick={handleAddRisk}
+                            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white rounded-lg font-semibold shadow-sm hover:shadow-md active:scale-95 transition-all duration-200"
+                          >
+                            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Your First Risk
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ) : (
                     sortedRisks.map((risk) => (
                       <tr
                         key={risk.id}
-                        className="hover:bg-gray-50 transition-colors"
+                        className={`even:bg-gray-50/30 hover:bg-primary-50/40 hover:shadow-sm hover:border-l-4 ${risk.severity === 'VERY_HIGH' || risk.severity === 'HIGH' ? 'hover:border-l-red-500' : 'hover:border-l-primary-500'} transition-all duration-200`}
                       >
                         {visibleColumns.id && (
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -694,7 +740,7 @@ const RisksPage: React.FC = () => {
                         )}
                         {visibleColumns.title && (
                           <td
-                            className="px-6 py-4 text-sm font-medium text-gray-900 cursor-pointer hover:text-teal-600"
+                            className="px-6 py-4 text-sm font-medium text-gray-900 cursor-pointer hover:text-primary-600"
                             onClick={() => handleViewRisk(risk)}
                           >
                             {risk.title}
@@ -760,7 +806,7 @@ const RisksPage: React.FC = () => {
                                   e.stopPropagation();
                                   handleEditRisk(risk);
                                 }}
-                                className="text-teal-600 hover:text-teal-900"
+                                className="text-primary-600 hover:text-primary-900"
                                 title="Edit"
                               >
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -903,6 +949,118 @@ const RisksPage: React.FC = () => {
         onConfirm={handleConfirmArchive}
         isLoading={isSubmitting}
       />
+
+      {/* Filter Drawer */}
+      <FilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        onApply={applyFilters}
+        onReset={handleClearFilters}
+        title="Filter Risks"
+      >
+        {/* Search */}
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Search
+          </label>
+          <input
+            type="text"
+            placeholder="Search risks by title or description..."
+            value={tempSearch}
+            onChange={(e) => setTempSearch(e.target.value)}
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all placeholder-gray-400"
+          />
+        </div>
+
+        {/* Status */}
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Status
+          </label>
+          <select
+            value={tempFilters.status || ''}
+            onChange={(e) => setTempFilters({ ...tempFilters, status: e.target.value ? (e.target.value as RiskStatus) : undefined })}
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+          >
+            <option value="">All Statuses</option>
+            <option value="OPEN">Open</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="MITIGATED">Mitigated</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+        </div>
+
+        {/* Severity */}
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Severity
+          </label>
+          <select
+            value={tempFilters.severity || ''}
+            onChange={(e) => setTempFilters({ ...tempFilters, severity: e.target.value ? (e.target.value as RiskSeverity) : undefined })}
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+          >
+            <option value="">All Severities</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="VERY_HIGH">Very High</option>
+          </select>
+        </div>
+
+        {/* Risk Owner */}
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Risk Owner
+          </label>
+          <select
+            value={tempFilters.ownerId || ''}
+            onChange={(e) => setTempFilters({ ...tempFilters, ownerId: e.target.value || undefined })}
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+          >
+            <option value="">All Owners</option>
+            {teamMembers.map((member) => (
+              <option key={member.id} value={member.id}>
+                {member.displayName || member.fullName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Strategy */}
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <svg className="h-4 w-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Mitigation Strategy
+          </label>
+          <select
+            value={tempFilters.strategy || ''}
+            onChange={(e) => setTempFilters({ ...tempFilters, strategy: e.target.value as any || undefined })}
+            className="w-full bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+          >
+            <option value="">All Strategies</option>
+            <option value="AVOID">Avoid</option>
+            <option value="MITIGATE">Mitigate</option>
+            <option value="ACCEPT">Accept</option>
+            <option value="TRANSFER">Transfer</option>
+            <option value="EXPLOIT">Exploit</option>
+          </select>
+        </div>
+      </FilterDrawer>
     </AppLayout>
   );
 };

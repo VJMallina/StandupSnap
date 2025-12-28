@@ -37,10 +37,12 @@ import StandaloneMomListPage from './pages/StandaloneMomListPage';
 import StandaloneMomFormPage from './pages/StandaloneMomFormPage';
 import StandaloneMomDetailPage from './pages/StandaloneMomDetailPage';
 import ChangesPage from './pages/ChangesPage';
-import FormBuilderPage from './pages/FormBuilderPage';
 import ScrumRoomsPage from './pages/ScrumRoomsPage';
 import ScrumRoomDetailPage from './pages/ScrumRoomDetailPage';
 import ResourceTrackerPage from './pages/ResourceTrackerPage';
+import ScheduleBuilderPage from './pages/ScheduleBuilderPage';
+import DocumentTemplatesPage from './pages/DocumentTemplatesPage';
+import DocumentDetailPage from './pages/DocumentDetailPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ProjectSelectionProvider } from './context/ProjectSelectionContext';
 
@@ -259,14 +261,6 @@ function App() {
               }
             />
             <Route
-              path="/artifacts/form-builder"
-              element={
-                <ProtectedRoute>
-                  <FormBuilderPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/artifacts/raci"
               element={
                 <ProtectedRoute>
@@ -351,6 +345,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ResourceTrackerPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/schedule-builder"
+              element={
+                <ProtectedRoute>
+                  <ScheduleBuilderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/documents"
+              element={
+                <ProtectedRoute>
+                  <DocumentTemplatesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/artifacts/documents/:id"
+              element={
+                <ProtectedRoute>
+                  <DocumentDetailPage />
                 </ProtectedRoute>
               }
             />

@@ -282,8 +282,8 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
 
         <div className="flex items-center gap-3">
           {data?.votingEnabled && data.maxVotesPerPerson && (
-            <div className="px-4 py-2 bg-teal-50 border border-teal-200 rounded-lg">
-              <span className="text-sm font-medium text-teal-700">
+            <div className="px-4 py-2 bg-primary-50 border border-primary-200 rounded-lg">
+              <span className="text-sm font-medium text-primary-700">
                 Votes remaining: {getRemainingVotes()} / {data.maxVotesPerPerson}
               </span>
             </div>
@@ -294,7 +294,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               data?.votingEnabled
                 ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                : 'bg-teal-600 text-white hover:bg-teal-700'
+                : 'bg-primary-600 text-white hover:bg-primary-700'
             } disabled:opacity-50`}
           >
             {data?.votingEnabled ? 'Disable Voting' : 'Enable Voting'}
@@ -309,7 +309,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
           .map((column) => (
             <div key={column.columnId} className="bg-white rounded-lg border border-gray-200 flex flex-col h-[600px]">
               {/* Column Header */}
-              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
+              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-secondary-50">
                 <h3 className="font-semibold text-gray-900">{column.title}</h3>
                 <p className="text-xs text-gray-600 mt-1">{column.items.length} items</p>
               </div>
@@ -358,7 +358,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
                             disabled={loading}
                             className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
                               item.votes.includes(currentUserId)
-                                ? 'bg-teal-600 text-white'
+                                ? 'bg-primary-600 text-white'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                           >
@@ -404,13 +404,13 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
                       e.key === 'Enter' && handleAddItem(column.columnId)
                     }
                     placeholder="Add item..."
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     disabled={loading}
                   />
                   <button
                     onClick={() => handleAddItem(column.columnId)}
                     disabled={loading || !newItemContent[column.columnId]?.trim()}
-                    className="px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -425,7 +425,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
         {!showAddColumn ? (
           <button
             onClick={() => setShowAddColumn(true)}
-            className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-teal-400 hover:bg-teal-50 transition-all flex flex-col items-center justify-center gap-2 text-gray-500 hover:text-teal-600 h-[600px]"
+            className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-primary-400 hover:bg-primary-50 transition-all flex flex-col items-center justify-center gap-2 text-gray-500 hover:text-primary-600 h-[600px]"
           >
             <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -441,14 +441,14 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
               onChange={(e) => setNewColumnTitle(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddColumn()}
               placeholder="Column title (e.g., Kudos)"
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent mb-4"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent mb-4"
               autoFocus
             />
             <div className="flex gap-2">
               <button
                 onClick={handleAddColumn}
                 disabled={loading || !newColumnTitle.trim()}
-                className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
               >
                 Add
               </button>
@@ -527,7 +527,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
                   onChange={(e) => setDiscussion(e.target.value)}
                   placeholder="Add discussion notes or outcomes..."
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                 />
               </div>
 
@@ -541,7 +541,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
                 <button
                   onClick={handleSaveDiscussion}
                   disabled={loading}
-                  className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50"
+                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
                 >
                   Save Discussion
                 </button>

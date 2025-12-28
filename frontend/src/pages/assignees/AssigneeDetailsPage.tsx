@@ -106,7 +106,7 @@ export default function AssigneeDetailsPage() {
   const getStatusBadge = (status: CardStatus) => {
     const configs = {
       [CardStatus.NOT_STARTED]: { color: 'bg-gray-100 text-gray-800', label: 'Not Started' },
-      [CardStatus.IN_PROGRESS]: { color: 'bg-teal-100 text-teal-800', label: 'In Progress' },
+      [CardStatus.IN_PROGRESS]: { color: 'bg-primary-100 text-primary-800', label: 'In Progress' },
       [CardStatus.COMPLETED]: { color: 'bg-green-100 text-green-800', label: 'Completed' },
       [CardStatus.CLOSED]: { color: 'bg-gray-100 text-gray-600', label: 'Closed' },
     };
@@ -117,7 +117,7 @@ export default function AssigneeDetailsPage() {
     return (
       <AppLayout>
         <div className="flex justify-center items-center py-12">
-          <svg className="animate-spin h-10 w-10 text-teal-600" viewBox="0 0 24 24">
+          <svg className="animate-spin h-10 w-10 text-primary-600" viewBox="0 0 24 24">
             <circle
               className="opacity-25"
               cx="12"
@@ -166,7 +166,7 @@ export default function AssigneeDetailsPage() {
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center">
               {/* Avatar */}
-              <div className="h-16 w-16 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-2xl mr-4">
+              <div className="h-16 w-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-2xl mr-4">
                 {assignee.fullName
                   .split(' ')
                   .map((n) => n[0])
@@ -175,7 +175,7 @@ export default function AssigneeDetailsPage() {
                   .slice(0, 2)}
               </div>
               <div>
-                <h1 className="text-3xl font-bold">{assignee.fullName}</h1>
+                <h1 className="text-2xl font-bold">{assignee.fullName}</h1>
                 <p className="text-gray-600">{assignee.designationRole}</p>
                 {assignee.displayName && (
                   <p className="text-sm text-gray-500">@{assignee.displayName}</p>
@@ -194,7 +194,7 @@ export default function AssigneeDetailsPage() {
           {/* Stats Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
             <div className="text-center">
-              <p className="text-3xl font-bold text-teal-600">
+              <p className="text-2xl font-bold text-primary-600">
                 {assignee.assignedCardsCount}
               </p>
               <p className="text-sm text-gray-500">Assigned Cards</p>
@@ -214,7 +214,7 @@ export default function AssigneeDetailsPage() {
                   onClick={() => setViewMode('cards')}
                   className={`px-3 py-1 text-xs font-medium rounded-md ${
                     viewMode === 'cards'
-                      ? 'bg-teal-600 text-white'
+                      ? 'bg-primary-600 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 >
@@ -224,7 +224,7 @@ export default function AssigneeDetailsPage() {
                   onClick={() => setViewMode('snaps')}
                   className={`px-3 py-1 text-xs font-medium rounded-md ${
                     viewMode === 'snaps'
-                      ? 'bg-teal-600 text-white'
+                      ? 'bg-primary-600 text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                   }`}
                 >
@@ -255,7 +255,7 @@ export default function AssigneeDetailsPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">All Statuses</option>
                     <option value={CardStatus.NOT_STARTED}>Not Started</option>
@@ -272,7 +272,7 @@ export default function AssigneeDetailsPage() {
                   <select
                     value={ragFilter}
                     onChange={(e) => setRagFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">All RAG</option>
                     <option value="green">Green</option>
@@ -290,7 +290,7 @@ export default function AssigneeDetailsPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Card name or ID..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                 </div>
 
@@ -341,13 +341,13 @@ export default function AssigneeDetailsPage() {
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cardRAGBadge.color}`}>
                               RAG: {cardRAGBadge.label}
                             </span>
-                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary-100 text-primary-700">
                               ET: {card.estimatedTime}h
                             </span>
                           </div>
                         </div>
 
-                        <button className="text-teal-600 hover:text-teal-800 text-sm font-medium">
+                        <button className="text-primary-600 hover:text-primary-800 text-sm font-medium">
                           View →
                         </button>
                       </div>
