@@ -6,10 +6,14 @@ node_modules/
 # Testing
 coverage/
 *.log
+test-results/
+playwright-report/
+.last-run.json
 
 # Production
 dist/
 build/
+*.tsbuildinfo
 
 # Environment variables
 .env
@@ -39,3 +43,10 @@ postgres_data/
 # Misc
 *.tgz
 .cache/
+
+# Screenshots
+screens/
+screenshots/
+
+# Word temporary files
+~$*

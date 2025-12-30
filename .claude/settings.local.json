@@ -91,7 +91,10 @@
       "Bash(npm run ts-node:*)",
       "Bash(npx ts-node:*)",
       "Bash(npm uninstall:*)",
-      "Bash(Remove-Item \"F:\\\\StandupSnap\\\\frontend\\\\src\\\\pages\\\\FormBuilderPage.tsx\" -Force)"
+      "Bash(Remove-Item \"F:\\\\StandupSnap\\\\frontend\\\\src\\\\pages\\\\FormBuilderPage.tsx\" -Force)",
+      "Bash(rd /s /q \"F:\\\\StandupSnap\\\\frontend\\\\screens\")",
+      "Bash(del /f /q \"F:\\\\StandupSnap\\\\backend\\\\test-output.log\" \"F:\\\\StandupSnap\\\\backend\\\\test-run-latest.log\" \"F:\\\\StandupSnap\\\\backend\\\\test-run-latest2.log\")",
+      "Bash(del /f /q \"F:\\\\StandupSnap\\\\documents\\\\~$e cases for StandupSnap.docx\" \"F:\\\\StandupSnap\\\\documents\\\\~$e cases for standupSnap\")"
     ],
     "deny": [],
     "ask": []
