@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsUUID, IsInt, Min, IsEnum } from 'class-validator';
-import { CardPriority } from '../../entities/card.entity';
+import { CardPriority, CardStatus } from '../../entities/card.entity';
 
 export class UpdateCardDto {
   @IsString()
@@ -17,6 +17,10 @@ export class UpdateCardDto {
   @IsEnum(CardPriority)
   @IsOptional()
   priority?: CardPriority;
+
+  @IsEnum(CardStatus)
+  @IsOptional()
+  status?: CardStatus;
 
   @IsInt()
   @Min(1)

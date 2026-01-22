@@ -14,7 +14,7 @@ const systemTemplates = [
       fields: [
         {
           id: 'project-name',
-          type: 'text',
+          type: 'TEXT',
           label: 'Project Name',
           required: true,
         },
@@ -79,10 +79,17 @@ const systemTemplates = [
       fields: [
         {
           id: 'governance-model',
-          type: 'select',
+          type: 'DROPDOWN',
           label: 'Governance Model',
           required: true,
-          options: ['Steering Committee', 'Project Board', 'Executive Sponsor', 'Custom'],
+          properties: {
+            options: [
+              { label: 'Steering Committee', value: 'steering_committee' },
+              { label: 'Project Board', value: 'project_board' },
+              { label: 'Executive Sponsor', value: 'executive_sponsor' },
+              { label: 'Custom', value: 'custom' },
+            ],
+          },
         },
         {
           id: 'decision-authority',
@@ -100,10 +107,17 @@ const systemTemplates = [
         },
         {
           id: 'reporting-frequency',
-          type: 'select',
+          type: 'DROPDOWN',
           label: 'Reporting Frequency',
           required: true,
-          options: ['Daily', 'Weekly', 'Bi-weekly', 'Monthly'],
+          properties: {
+            options: [
+              { label: 'Daily', value: 'daily' },
+              { label: 'Weekly', value: 'weekly' },
+              { label: 'Bi-weekly', value: 'bi_weekly' },
+              { label: 'Monthly', value: 'monthly' },
+            ],
+          },
         },
       ],
     },
@@ -119,42 +133,42 @@ const systemTemplates = [
       fields: [
         {
           id: 'total-budget',
-          type: 'text',
+          type: 'TEXT',
           label: 'Total Approved Budget',
           required: true,
           placeholder: '$0.00',
         },
         {
           id: 'labor-costs',
-          type: 'text',
+          type: 'TEXT',
           label: 'Labor Costs',
           required: false,
           placeholder: '$0.00',
         },
         {
           id: 'material-costs',
-          type: 'text',
+          type: 'TEXT',
           label: 'Material/Equipment Costs',
           required: false,
           placeholder: '$0.00',
         },
         {
           id: 'contractor-costs',
-          type: 'text',
+          type: 'TEXT',
           label: 'Contractor/Vendor Costs',
           required: false,
           placeholder: '$0.00',
         },
         {
           id: 'contingency-reserve',
-          type: 'text',
+          type: 'TEXT',
           label: 'Contingency Reserve',
           required: false,
           placeholder: '$0.00',
         },
         {
           id: 'budget-notes',
-          type: 'textarea',
+          type: 'TEXTAREA',
           label: 'Budget Notes',
           required: false,
           placeholder: 'Additional budget details and assumptions',
@@ -211,17 +225,23 @@ const systemTemplates = [
       fields: [
         {
           id: 'reporting-period',
-          type: 'text',
+          type: 'TEXT',
           label: 'Reporting Period',
           required: true,
           placeholder: 'e.g., Week of Jan 1-7, 2025',
         },
         {
           id: 'overall-status',
-          type: 'select',
+          type: 'DROPDOWN',
           label: 'Overall Status',
           required: true,
-          options: ['On Track', 'At Risk', 'Off Track'],
+          properties: {
+            options: [
+              { label: 'On Track', value: 'on_track' },
+              { label: 'At Risk', value: 'at_risk' },
+              { label: 'Off Track', value: 'off_track' },
+            ],
+          },
         },
         {
           id: 'accomplishments',
@@ -246,14 +266,14 @@ const systemTemplates = [
         },
         {
           id: 'schedule-variance',
-          type: 'text',
+          type: 'TEXT',
           label: 'Schedule Variance',
           required: false,
           placeholder: 'Days ahead/behind schedule',
         },
         {
           id: 'budget-variance',
-          type: 'text',
+          type: 'TEXT',
           label: 'Budget Variance',
           required: false,
           placeholder: 'Amount over/under budget',
@@ -270,32 +290,39 @@ const systemTemplates = [
       fields: [
         {
           id: 'action-item',
-          type: 'textarea',
+          type: 'TEXTAREA',
           label: 'Action Item Description',
           required: true,
         },
         {
           id: 'owner',
-          type: 'text',
+          type: 'TEXT',
           label: 'Owner',
           required: true,
         },
         {
           id: 'due-date',
-          type: 'date',
+          type: 'DATE',
           label: 'Due Date',
           required: true,
         },
         {
           id: 'status',
-          type: 'select',
+          type: 'DROPDOWN',
           label: 'Status',
           required: true,
-          options: ['Not Started', 'In Progress', 'Completed', 'Blocked'],
+          properties: {
+            options: [
+              { label: 'Not Started', value: 'not_started' },
+              { label: 'In Progress', value: 'in_progress' },
+              { label: 'Completed', value: 'completed' },
+              { label: 'Blocked', value: 'blocked' },
+            ],
+          },
         },
         {
           id: 'notes',
-          type: 'textarea',
+          type: 'TEXTAREA',
           label: 'Notes',
           required: false,
         },
@@ -471,14 +498,14 @@ const systemTemplates = [
         },
         {
           id: 'final-budget',
-          type: 'text',
+          type: 'TEXT',
           label: 'Final Budget vs. Actual',
           required: false,
           placeholder: 'Budget variance summary',
         },
         {
           id: 'final-schedule',
-          type: 'text',
+          type: 'TEXT',
           label: 'Final Schedule vs. Actual',
           required: false,
           placeholder: 'Schedule variance summary',
@@ -532,7 +559,7 @@ const systemTemplates = [
         },
         {
           id: 'responsible-party',
-          type: 'text',
+          type: 'TEXT',
           label: 'Responsible Party',
           required: true,
           placeholder: 'Who owns communication?',
@@ -549,26 +576,26 @@ const systemTemplates = [
       fields: [
         {
           id: 'meeting-title',
-          type: 'text',
+          type: 'TEXT',
           label: 'Meeting Title',
           required: true,
         },
         {
           id: 'meeting-date',
-          type: 'date',
+          type: 'DATE',
           label: 'Meeting Date',
           required: true,
         },
         {
           id: 'attendees',
-          type: 'textarea',
+          type: 'TEXTAREA',
           label: 'Attendees',
           required: true,
           placeholder: 'List attendees',
         },
         {
           id: 'agenda',
-          type: 'textarea',
+          type: 'TEXTAREA',
           label: 'Agenda',
           required: false,
           placeholder: 'Meeting agenda items',
@@ -589,7 +616,7 @@ const systemTemplates = [
         },
         {
           id: 'next-meeting',
-          type: 'text',
+          type: 'TEXT',
           label: 'Next Meeting',
           required: false,
           placeholder: 'Date and time of next meeting',

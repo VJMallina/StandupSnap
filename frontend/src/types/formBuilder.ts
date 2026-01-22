@@ -1,12 +1,10 @@
 // ========== ENUMS ==========
 
-export enum TemplateCategory {
-  GOVERNANCE = 'GOVERNANCE',
-  PLANNING = 'PLANNING',
-  REPORTING = 'REPORTING',
-  COMMUNICATION = 'COMMUNICATION',
-  CUSTOM = 'CUSTOM',
-}
+// Import ArtifactCategory from artifact types for consistency
+import { ArtifactCategory } from './artifact';
+
+// Re-export for backward compatibility
+export { ArtifactCategory as TemplateCategory };
 
 export enum TemplateStatus {
   DRAFT = 'DRAFT',
@@ -140,7 +138,7 @@ export interface FormTemplate {
   id: string;
   name: string;
   description?: string;
-  category: TemplateCategory;
+  category: ArtifactCategory;
   status: TemplateStatus;
   visibility: TemplateVisibility;
   version: number;
@@ -217,7 +215,7 @@ export interface CreateFormTemplateInput {
   projectId?: string;
   name: string;
   description?: string;
-  category?: TemplateCategory;
+  category?: ArtifactCategory;
   status?: TemplateStatus;
   visibility?: TemplateVisibility;
   fields?: FormField[];
@@ -227,7 +225,7 @@ export interface CreateFormTemplateInput {
 export interface UpdateFormTemplateInput {
   name?: string;
   description?: string;
-  category?: TemplateCategory;
+  category?: ArtifactCategory;
   status?: TemplateStatus;
   visibility?: TemplateVisibility;
   fields?: FormField[];
@@ -259,7 +257,7 @@ export interface UpdateFieldOrderInput {
 
 export interface TemplateFilters {
   status?: TemplateStatus;
-  category?: TemplateCategory;
+  category?: ArtifactCategory;
   includeArchived?: boolean;
   search?: string;
 }

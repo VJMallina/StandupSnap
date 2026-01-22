@@ -11,6 +11,9 @@ import { Project } from '../../types/project';
 import AppLayout from '../../components/AppLayout';
 import { Select } from '../../components/ui/Select';
 import CreateCardModal from '../../components/cards/CreateCardModal';
+import { KanbanBoard } from '../../components/cards/KanbanBoard';
+
+type ViewMode = 'grid' | 'kanban';
 
 export default function CardsListPage() {
   const navigate = useNavigate();
@@ -32,6 +35,10 @@ export default function CardsListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('cardsViewMode');
+    return (saved as ViewMode) || 'kanban';
+  });
 
   useEffect(() => {
     loadProjects();
@@ -51,17 +58,40 @@ export default function CardsListPage() {
   const loadProjects = async () => {
     try {
       const data = await projectsApi.getAll();
-      setProjects(data.filter((p: Project) => !p.isArchived));
+      const activeProjects = data.filter((p: Project) => !p.isArchived);
+      setProjects(activeProjects);
 
       // If project ID in URL, validate it exists
-      if (selectedProjectId) {
-        const projectExists = data.some((p: Project) => p.id === selectedProjectId);
-        if (!projectExists) {
-          setSelectedProjectId('');
+      if (searchParams.get('projectId')) {
+        const urlProjectId = searchParams.get('projectId')!;
+        const projectExists = activeProjects.some((p: Project) => p.id === urlProjectId);
+        if (projectExists) {
+          setSelectedProjectId(urlProjectId);
+          localStorage.setItem('lastSelectedProjectId', urlProjectId);
+          return;
+        }
+      }
+
+      // Use localStorage to sync with Dashboard project selection
+      if (activeProjects.length === 1) {
+        setSelectedProjectId(activeProjects[0].id);
+      } else if (activeProjects.length > 1) {
+        const lastSelectedProjectId = localStorage.getItem('lastSelectedProjectId');
+        if (lastSelectedProjectId && activeProjects.find((p: Project) => p.id === lastSelectedProjectId)) {
+          setSelectedProjectId(lastSelectedProjectId);
+        } else {
+          setSelectedProjectId(activeProjects[0].id);
         }
       }
     } catch (err: any) {
       setError(err.message);
+    }
+  };
+
+  const handleProjectChange = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    if (projectId) {
+      localStorage.setItem('lastSelectedProjectId', projectId);
     }
   };
 
@@ -117,13 +147,27 @@ export default function CardsListPage() {
   };
 
   const clearFilters = () => {
-    setSelectedProjectId('');
+    handleProjectChange('');
     setSelectedSprintId('');
     setSelectedAssigneeId('');
     setSelectedRAG('');
     setSelectedStatus('');
     setSelectedPriority('');
     setSearchQuery('');
+  };
+
+  const handleStatusChange = async (cardId: string, newStatus: CardStatus) => {
+    try {
+      await cardsApi.update(cardId, { status: newStatus });
+      await loadCards(); // Reload cards to reflect the change
+    } catch (err: any) {
+      alert('Failed to update card status: ' + err.message);
+    }
+  };
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem('cardsViewMode', mode);
   };
 
   const getStatusBadge = (status: CardStatus) => {
@@ -195,16 +239,48 @@ export default function CardsListPage() {
               <p className="text-primary-100 text-sm font-medium mb-1">Work Items</p>
               <h1 className="text-2xl md:text-2xl font-bold text-white">Cards</h1>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              disabled={!canCreateCard}
-              className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Create Card
-            </button>
+            <div className="flex items-center gap-3">
+              {/* View Toggle */}
+              <div className="flex items-center bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-1">
+                <button
+                  onClick={() => handleViewModeChange('kanban')}
+                  className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    viewMode === 'kanban'
+                      ? 'bg-white text-primary-600 shadow-sm'
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                  </svg>
+                  Kanban
+                </button>
+                <button
+                  onClick={() => handleViewModeChange('grid')}
+                  className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    viewMode === 'grid'
+                      ? 'bg-white text-primary-600 shadow-sm'
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  Grid
+                </button>
+              </div>
+              {/* Create Card Button */}
+              <button
+                onClick={() => setShowCreateModal(true)}
+                disabled={!canCreateCard}
+                className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Card
+              </button>
+            </div>
           </div>
         </div>
 
@@ -222,7 +298,7 @@ export default function CardsListPage() {
               label="Project"
               value={selectedProjectId}
               onChange={(value) => {
-                setSelectedProjectId(value);
+                handleProjectChange(value);
                 setSelectedSprintId('');
                 setSelectedAssigneeId('');
               }}
@@ -347,7 +423,7 @@ export default function CardsListPage() {
           </div>
         )}
 
-        {/* Cards Grid */}
+        {/* Cards View */}
         {loading && cards.length === 0 ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
@@ -376,6 +452,13 @@ export default function CardsListPage() {
               </div>
             )}
           </div>
+        ) : viewMode === 'kanban' ? (
+          <KanbanBoard
+            cards={cards}
+            onStatusChange={handleStatusChange}
+            onCardClick={(card) => navigate(`/cards/${card.id}`)}
+            onDelete={handleDelete}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {cards.map((card, index) => {

@@ -56,6 +56,7 @@ export interface UpdateCardRequest {
   description?: string;
   externalId?: string;
   priority?: CardPriority;
+  status?: CardStatus;
   estimatedTime?: number;
   assigneeId?: string;
   sprintId?: string;

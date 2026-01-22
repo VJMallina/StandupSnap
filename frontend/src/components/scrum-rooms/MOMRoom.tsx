@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { scrumRoomsApi } from '../../services/api/scrumRooms';
 import { ScrumRoom, MOMData, MOMActionItem } from '../../types/scrumRooms';
+import { useToast } from '../../hooks/useToast';
 
 interface MOMRoomProps {
   room: ScrumRoom;
@@ -10,6 +11,7 @@ interface MOMRoomProps {
 
 export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
   const navigate = useNavigate();
+  const toast = useToast();
   const data = room.data as MOMData;
 
   const [rawInput, setRawInput] = useState(data?.rawInput || '');
@@ -25,7 +27,7 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
 
   const handleGenerateAI = async () => {
     if (!rawInput.trim()) {
-      alert('Please enter meeting notes first');
+      toast.warning('Please enter meeting notes first');
       return;
     }
 
@@ -37,9 +39,10 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
       setDecisions(result.decisions);
       setActionItems(result.actionItems);
       setActiveTab('output');
+      toast.success('AI summary generated successfully');
     } catch (err: any) {
       console.error('Error generating summary:', err);
-      alert(err.message || 'Failed to generate summary');
+      toast.error(err.message || 'Failed to generate summary');
     } finally {
       setGenerating(false);
     }
@@ -60,10 +63,10 @@ export const MOMRoom: React.FC<MOMRoomProps> = ({ room, onUpdate }) => {
 
       await scrumRoomsApi.updateData(room.id, { data: updatedData });
       onUpdate();
-      alert('Meeting minutes saved successfully');
+      toast.success('Meeting minutes saved successfully');
     } catch (err: any) {
       console.error('Error saving:', err);
-      alert(err.message || 'Failed to save');
+      toast.error(err.message || 'Failed to save');
     } finally {
       setLoading(false);
     }

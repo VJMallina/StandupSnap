@@ -18,6 +18,19 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'demo-recording',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1920, height: 1080 },
+        video: {
+          mode: 'on',
+          size: { width: 1920, height: 1080 },
+        },
+        actionTimeout: 10000,
+        navigationTimeout: 30000,
+      },
+    },
   ],
 
   webServer: {

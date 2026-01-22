@@ -1,15 +1,169 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  useDraggable,
+  useDroppable,
+} from '@dnd-kit/core';
 import { scrumRoomsApi } from '../../services/api/scrumRooms';
 import { ScrumRoom, RetrospectiveData, RetroColumn, RetroItem } from '../../types/scrumRooms';
+import { useToast } from '../../hooks/useToast';
+import DeleteConfirmationModal from '../DeleteConfirmationModal';
 
 interface RetrospectiveRoomProps {
   room: ScrumRoom;
   onUpdate: () => void;
 }
 
+// Draggable Item Component
+interface DraggableRetroItemProps {
+  item: RetroItem;
+  columnId: string;
+  currentUserId: string;
+  votingEnabled: boolean;
+  loading: boolean;
+  onDelete: (columnId: string, itemId: string) => void;
+  onVote: (columnId: string, itemId: string) => void;
+  onClick: (item: RetroItem) => void;
+}
+
+const DraggableRetroItem: React.FC<DraggableRetroItemProps> = ({
+  item,
+  columnId,
+  currentUserId,
+  votingEnabled,
+  loading,
+  onDelete,
+  onVote,
+  onClick,
+}) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: item.itemId,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDragging ? 0.5 : 1,
+      }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+      onClick={(e) => {
+        // Only trigger onClick if not dragging
+        if (!isDragging) {
+          onClick(item);
+        }
+      }}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <p className="text-sm text-gray-900 flex-1">{item.content}</p>
+        {item.createdBy === currentUserId && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(columnId, item.itemId);
+            }}
+            className="text-red-500 hover:text-red-700 ml-2"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-600">
+            {item.createdBy === currentUserId ? 'You' : item.createdByName}
+          </span>
+          {votingEnabled && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onVote(columnId, item.itemId);
+              }}
+              disabled={loading}
+              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                item.votes.includes(currentUserId)
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+              </svg>
+              {item.votes.length}
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {item.discussion && (
+            <svg className="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                clipRule="evenodd"
+              />
+            </svg>
+          )}
+          {item.actionItem && (
+            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
+              Action
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Droppable Column Component
+interface DroppableColumnProps {
+  column: RetroColumn;
+  children: React.ReactNode;
+}
+
+const DroppableColumn: React.FC<DroppableColumnProps> = ({ column, children }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: column.columnId,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`bg-white rounded-lg border ${
+        isOver ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
+      } flex flex-col h-[600px] transition-colors`}
+    >
+      {children}
+    </div>
+  );
+};
+
 export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUpdate }) => {
   const navigate = useNavigate();
+  const toast = useToast();
   const data = room.data as RetrospectiveData;
 
   const [newItemContent, setNewItemContent] = useState<Record<string, string>>({});
@@ -18,9 +172,20 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
   const [loading, setLoading] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [showAddColumn, setShowAddColumn] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ columnId: string; itemId: string } | null>(null);
+  const [activeItem, setActiveItem] = useState<RetroItem | null>(null);
 
   const currentUserId = localStorage.getItem('userId') || 'anonymous';
   const currentUserEmail = localStorage.getItem('userEmail') || 'Anonymous';
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px movement required to start drag
+      },
+    })
+  );
 
   const getRemainingVotes = () => {
     if (!data?.votingEnabled || !data.maxVotesPerPerson) return 0;
@@ -63,9 +228,10 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
       await scrumRoomsApi.updateData(room.id, { data: updatedData });
       setNewItemContent({ ...newItemContent, [columnId]: '' });
       onUpdate();
+      toast.success('Item added successfully');
     } catch (err: any) {
       console.error('Error adding item:', err);
-      alert(err.message || 'Failed to add item');
+      toast.error(err.message || 'Failed to add item');
     } finally {
       setLoading(false);
     }
@@ -74,7 +240,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
   const handleVote = async (columnId: string, itemId: string) => {
     if (!data.votingEnabled) return;
     if (data.maxVotesPerPerson && getRemainingVotes() <= 0) {
-      alert('You have used all your votes');
+      toast.warning('You have used all your votes');
       return;
     }
 
@@ -107,23 +273,28 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
       onUpdate();
     } catch (err: any) {
       console.error('Error voting:', err);
-      alert(err.message || 'Failed to vote');
+      toast.error(err.message || 'Failed to vote');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteItem = async (columnId: string, itemId: string) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
+  const handleDeleteItem = (columnId: string, itemId: string) => {
+    setItemToDelete({ columnId, itemId });
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
 
     try {
       setLoading(true);
 
       const updatedColumns = data.columns.map((col) => {
-        if (col.columnId !== columnId) return col;
+        if (col.columnId !== itemToDelete.columnId) return col;
         return {
           ...col,
-          items: col.items.filter((item) => item.itemId !== itemId),
+          items: col.items.filter((item) => item.itemId !== itemToDelete.itemId),
         };
       });
 
@@ -133,11 +304,14 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
       };
 
       await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      if (selectedItem?.itemId === itemId) setSelectedItem(null);
+      if (selectedItem?.itemId === itemToDelete.itemId) setSelectedItem(null);
       onUpdate();
+      toast.success('Item deleted successfully');
+      setShowDeleteModal(false);
+      setItemToDelete(null);
     } catch (err: any) {
       console.error('Error deleting item:', err);
-      alert(err.message || 'Failed to delete item');
+      toast.error(err.message || 'Failed to delete item');
     } finally {
       setLoading(false);
     }
@@ -167,7 +341,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
       onUpdate();
     } catch (err: any) {
       console.error('Error toggling action item:', err);
-      alert(err.message || 'Failed to toggle action item');
+      toast.error(err.message || 'Failed to toggle action item');
     } finally {
       setLoading(false);
     }
@@ -196,9 +370,10 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
       setSelectedItem(null);
       setDiscussion('');
       onUpdate();
+      toast.success('Discussion saved successfully');
     } catch (err: any) {
       console.error('Error saving discussion:', err);
-      alert(err.message || 'Failed to save discussion');
+      toast.error(err.message || 'Failed to save discussion');
     } finally {
       setLoading(false);
     }
@@ -217,7 +392,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
       onUpdate();
     } catch (err: any) {
       console.error('Error toggling voting:', err);
-      alert(err.message || 'Failed to toggle voting');
+      toast.error(err.message || 'Failed to toggle voting');
     } finally {
       setLoading(false);
     }
@@ -245,9 +420,10 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
       setNewColumnTitle('');
       setShowAddColumn(false);
       onUpdate();
+      toast.success('Column added successfully');
     } catch (err: any) {
       console.error('Error adding column:', err);
-      alert(err.message || 'Failed to add column');
+      toast.error(err.message || 'Failed to add column');
     } finally {
       setLoading(false);
     }
@@ -256,6 +432,79 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
   const openDiscussion = (item: RetroItem) => {
     setSelectedItem(item);
     setDiscussion(item.discussion || '');
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const itemId = event.active.id as string;
+    // Find the item across all columns
+    for (const column of data.columns) {
+      const item = column.items.find((i) => i.itemId === itemId);
+      if (item) {
+        setActiveItem(item);
+        break;
+      }
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveItem(null);
+
+    if (!over) return;
+
+    const itemId = active.id as string;
+    const targetColumnId = over.id as string;
+
+    // Find source column and item
+    let sourceColumnId: string | null = null;
+    let item: RetroItem | null = null;
+
+    for (const column of data.columns) {
+      const foundItem = column.items.find((i) => i.itemId === itemId);
+      if (foundItem) {
+        sourceColumnId = column.columnId;
+        item = foundItem;
+        break;
+      }
+    }
+
+    if (!sourceColumnId || !item || sourceColumnId === targetColumnId) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Remove item from source column and add to target column
+      const updatedColumns = data.columns.map((col) => {
+        if (col.columnId === sourceColumnId) {
+          return {
+            ...col,
+            items: col.items.filter((i) => i.itemId !== itemId),
+          };
+        } else if (col.columnId === targetColumnId) {
+          return {
+            ...col,
+            items: [...col.items, item],
+          };
+        }
+        return col;
+      });
+
+      const updatedData: RetrospectiveData = {
+        ...data,
+        columns: updatedColumns,
+      };
+
+      await scrumRoomsApi.updateData(room.id, { data: updatedData });
+      onUpdate();
+      toast.success('Item moved successfully');
+    } catch (err: any) {
+      console.error('Error moving item:', err);
+      toast.error(err.message || 'Failed to move item');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -303,11 +552,17 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
       </div>
 
       {/* Columns Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {data?.columns
-          .sort((a, b) => a.order - b.order)
-          .map((column) => (
-            <div key={column.columnId} className="bg-white rounded-lg border border-gray-200 flex flex-col h-[600px]">
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {data?.columns
+            .sort((a, b) => a.order - b.order)
+            .map((column) => (
+              <DroppableColumn key={column.columnId} column={column}>
               {/* Column Header */}
               <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-secondary-50">
                 <h3 className="font-semibold text-gray-900">{column.title}</h3>
@@ -317,77 +572,17 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
               {/* Items List */}
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
                 {column.items.map((item) => (
-                  <div
+                  <DraggableRetroItem
                     key={item.itemId}
-                    className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => openDiscussion(item)}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="text-sm text-gray-900 flex-1">{item.content}</p>
-                      {item.createdBy === currentUserId && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteItem(column.columnId, item.itemId);
-                          }}
-                          className="text-red-500 hover:text-red-700 ml-2"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600">
-                          {item.createdBy === currentUserId ? 'You' : item.createdByName}
-                        </span>
-                        {data.votingEnabled && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleVote(column.columnId, item.itemId);
-                            }}
-                            disabled={loading}
-                            className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                              item.votes.includes(currentUserId)
-                                ? 'bg-primary-600 text-white'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          >
-                            <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                            </svg>
-                            {item.votes.length}
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {item.discussion && (
-                          <svg className="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                              fillRule="evenodd"
-                              d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                        {item.actionItem && (
-                          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
-                            Action
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    item={item}
+                    columnId={column.columnId}
+                    currentUserId={currentUserId}
+                    votingEnabled={data.votingEnabled}
+                    loading={loading}
+                    onDelete={handleDeleteItem}
+                    onVote={handleVote}
+                    onClick={openDiscussion}
+                  />
                 ))}
               </div>
 
@@ -418,7 +613,7 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
                   </button>
                 </div>
               </div>
-            </div>
+              </DroppableColumn>
           ))}
 
         {/* Add Column Button */}
@@ -465,6 +660,16 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
           </div>
         )}
       </div>
+
+        {/* Drag Overlay */}
+        <DragOverlay>
+          {activeItem ? (
+            <div className="bg-yellow-50 border-2 border-primary-500 rounded-lg p-3 shadow-xl opacity-90">
+              <p className="text-sm text-gray-900">{activeItem.content}</p>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {/* Discussion Modal */}
       {selectedItem && (
@@ -550,6 +755,19 @@ export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUp
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Retrospective Item"
+        message="Are you sure you want to delete this item? This action cannot be undone."
+        confirmText="DELETE"
+      />
     </div>
   );
 };

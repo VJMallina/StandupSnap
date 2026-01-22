@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -50,8 +51,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ProjectSelectionProvider>
-          <Routes>
+        <ToastProvider>
+          <ProjectSelectionProvider>
+            <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -390,7 +392,8 @@ function App() {
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </ProjectSelectionProvider>
+          </ProjectSelectionProvider>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

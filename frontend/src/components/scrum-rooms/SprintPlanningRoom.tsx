@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { scrumRoomsApi } from '../../services/api/scrumRooms';
 import { ScrumRoom, SprintPlanningData, SprintPlanningItem } from '../../types/scrumRooms';
+import { useToast } from '../../hooks/useToast';
 
 interface SprintPlanningRoomProps {
   room: ScrumRoom;
@@ -10,6 +11,7 @@ interface SprintPlanningRoomProps {
 
 export const SprintPlanningRoom: React.FC<SprintPlanningRoomProps> = ({ room, onUpdate }) => {
   const navigate = useNavigate();
+  const toast = useToast();
   const data = room.data as SprintPlanningData;
 
   const [capacity, setCapacity] = useState(data?.capacity || 0);
@@ -37,10 +39,10 @@ export const SprintPlanningRoom: React.FC<SprintPlanningRoomProps> = ({ room, on
 
       await scrumRoomsApi.updateData(room.id, { data: updatedData });
       onUpdate();
-      alert('Sprint plan saved successfully');
+      toast.success('Sprint plan saved successfully');
     } catch (err: any) {
       console.error('Error saving:', err);
-      alert(err.message || 'Failed to save');
+      toast.error(err.message || 'Failed to save');
     } finally {
       setLoading(false);
     }

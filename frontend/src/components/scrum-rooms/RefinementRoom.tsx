@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { scrumRoomsApi } from '../../services/api/scrumRooms';
 import { ScrumRoom, RefinementData, RefinementItem } from '../../types/scrumRooms';
+import { useToast } from '../../hooks/useToast';
+import { AddNoteModal } from './modals/AddNoteModal';
+import { AddCriteriaModal } from './modals/AddCriteriaModal';
+import DeleteConfirmationModal from '../DeleteConfirmationModal';
 
 interface RefinementRoomProps {
   room: ScrumRoom;
@@ -10,11 +14,17 @@ interface RefinementRoomProps {
 
 export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }) => {
   const navigate = useNavigate();
+  const toast = useToast();
   const data = room.data as RefinementData;
 
   const [items, setItems] = useState<RefinementItem[]>(data?.items || []);
   const [selectedItem, setSelectedItem] = useState<RefinementItem | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+  const [showAddCriteriaModal, setShowAddCriteriaModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [selectedItemForModal, setSelectedItemForModal] = useState<string | null>(null);
 
   const handleSave = async () => {
     try {
@@ -26,10 +36,10 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
 
       await scrumRoomsApi.updateData(room.id, { data: updatedData });
       onUpdate();
-      alert('Refinement saved successfully');
+      toast.success('Refinement saved successfully');
     } catch (err: any) {
       console.error('Error saving:', err);
-      alert(err.message || 'Failed to save');
+      toast.error(err.message || 'Failed to save');
     } finally {
       setLoading(false);
     }
@@ -49,9 +59,18 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
   };
 
   const handleDeleteItem = (itemId: string) => {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-    setItems(items.filter((item) => item.itemId !== itemId));
-    if (selectedItem?.itemId === itemId) setSelectedItem(null);
+    setItemToDelete(itemId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      setItems(items.filter((item) => item.itemId !== itemToDelete));
+      if (selectedItem?.itemId === itemToDelete) setSelectedItem(null);
+      toast.success('Story deleted successfully');
+    }
+    setShowDeleteModal(false);
+    setItemToDelete(null);
   };
 
   const handleUpdateItem = (itemId: string, updates: Partial<RefinementItem>) => {
@@ -62,15 +81,20 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
   };
 
   const handleAddNote = (itemId: string) => {
-    const note = prompt('Enter note:');
-    if (!note?.trim()) return;
+    setSelectedItemForModal(itemId);
+    setShowAddNoteModal(true);
+  };
 
-    const item = items.find((i) => i.itemId === itemId);
+  const addNote = (note: string) => {
+    if (!selectedItemForModal) return;
+
+    const item = items.find((i) => i.itemId === selectedItemForModal);
     if (!item) return;
 
-    handleUpdateItem(itemId, {
-      notes: [...item.notes, note.trim()],
+    handleUpdateItem(selectedItemForModal, {
+      notes: [...item.notes, note],
     });
+    toast.success('Note added successfully');
   };
 
   const handleRemoveNote = (itemId: string, noteIndex: number) => {
@@ -83,15 +107,20 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
   };
 
   const handleAddAcceptanceCriteria = (itemId: string) => {
-    const criteria = prompt('Enter acceptance criteria:');
-    if (!criteria?.trim()) return;
+    setSelectedItemForModal(itemId);
+    setShowAddCriteriaModal(true);
+  };
 
-    const item = items.find((i) => i.itemId === itemId);
+  const addCriteria = (criteria: string) => {
+    if (!selectedItemForModal) return;
+
+    const item = items.find((i) => i.itemId === selectedItemForModal);
     if (!item) return;
 
-    handleUpdateItem(itemId, {
-      acceptanceCriteria: [...item.acceptanceCriteria, criteria.trim()],
+    handleUpdateItem(selectedItemForModal, {
+      acceptanceCriteria: [...item.acceptanceCriteria, criteria],
     });
+    toast.success('Acceptance criteria added successfully');
   };
 
   const handleRemoveAcceptanceCriteria = (itemId: string, criteriaIndex: number) => {
@@ -412,6 +441,28 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <AddNoteModal
+        isOpen={showAddNoteModal}
+        onClose={() => setShowAddNoteModal(false)}
+        onAdd={addNote}
+      />
+
+      <AddCriteriaModal
+        isOpen={showAddCriteriaModal}
+        onClose={() => setShowAddCriteriaModal(false)}
+        onAdd={addCriteria}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Story"
+        message="Are you sure you want to delete this story? This action cannot be undone."
+        confirmText="DELETE"
+      />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import {
   PlanningPokerRound,
   DeckType,
 } from '../../types/scrumRooms';
+import { useToast } from '../../hooks/useToast';
 
 interface PlanningPokerRoomProps {
   room: ScrumRoom;
@@ -22,6 +23,7 @@ const DECK_OPTIONS = {
 
 export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUpdate }) => {
   const navigate = useNavigate();
+  const toast = useToast();
   const data = room.data as PlanningPokerData;
 
   const [itemName, setItemName] = useState('');
@@ -45,7 +47,7 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
 
   const handleStartNewRound = async () => {
     if (!itemName.trim()) {
-      alert('Please enter an item name');
+      toast.warning('Please enter an item name');
       return;
     }
 
@@ -73,9 +75,10 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
       setItemName('');
       setSelectedCard(null);
       onUpdate();
+      toast.success('New round started');
     } catch (err: any) {
       console.error('Error starting round:', err);
-      alert(err.message || 'Failed to start round');
+      toast.error(err.message || 'Failed to start round');
     } finally {
       setLoading(false);
     }
@@ -106,7 +109,7 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
       onUpdate();
     } catch (err: any) {
       console.error('Error voting:', err);
-      alert(err.message || 'Failed to vote');
+      toast.error(err.message || 'Failed to vote');
     } finally {
       setLoading(false);
     }
@@ -160,9 +163,10 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
 
       await scrumRoomsApi.updateData(room.id, { data: updatedData });
       onUpdate();
+      toast.success('Votes revealed');
     } catch (err: any) {
       console.error('Error revealing:', err);
-      alert(err.message || 'Failed to reveal votes');
+      toast.error(err.message || 'Failed to reveal votes');
     } finally {
       setLoading(false);
     }
@@ -185,9 +189,10 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
 
       await scrumRoomsApi.updateData(room.id, { data: updatedData });
       onUpdate();
+      toast.success('Final estimate saved');
     } catch (err: any) {
       console.error('Error saving estimate:', err);
-      alert(err.message || 'Failed to save estimate');
+      toast.error(err.message || 'Failed to save estimate');
     } finally {
       setLoading(false);
     }

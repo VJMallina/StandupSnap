@@ -87,14 +87,28 @@ export default function SnapsPage() {
     try {
       const data = await projectsApi.getAll(false);
       setProjects(data);
-      if (data.length > 0) {
+
+      // Use localStorage to sync with Dashboard project selection
+      if (data.length === 1) {
         setSelectedProjectId(data[0].id);
+      } else if (data.length > 1) {
+        const lastSelectedProjectId = localStorage.getItem('lastSelectedProjectId');
+        if (lastSelectedProjectId && data.find((p) => p.id === lastSelectedProjectId)) {
+          setSelectedProjectId(lastSelectedProjectId);
+        } else {
+          setSelectedProjectId(data[0].id);
+        }
       }
     } catch (err: any) {
       setError('Failed to load projects');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleProjectChange = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    localStorage.setItem('lastSelectedProjectId', projectId);
   };
 
   const loadSprints = async () => {
@@ -602,7 +616,7 @@ export default function SnapsPage() {
             <Select
               label="Project"
               value={selectedProjectId}
-              onChange={setSelectedProjectId}
+              onChange={handleProjectChange}
               placeholder="Select a project"
               options={[
                 { value: '', label: 'Select a project' },

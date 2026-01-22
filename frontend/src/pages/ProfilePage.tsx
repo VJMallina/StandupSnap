@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/AppLayout';
 import { ROLE_LABELS } from '../constants/roles';
+import { profileApi } from '../services/api/profile';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -26,14 +27,21 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      // API call to update profile will go here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
+      await profileApi.updateProfile({
+        name: formData.name,
+        email: formData.email,
+      });
 
       setMessage({
         type: 'success',
         text: 'Profile updated successfully!',
       });
       setIsEditing(false);
+
+      // Refresh the page to update the user context
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (err) {
       setMessage({
         type: 'error',
@@ -67,8 +75,10 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      // API call to change password will go here
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated API call
+      await profileApi.changePassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+      });
 
       setMessage({
         type: 'success',

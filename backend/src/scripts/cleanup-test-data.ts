@@ -20,7 +20,11 @@ async function cleanupTestData() {
           OR username LIKE 'testuser%'
           OR email LIKE 'test%@example.com'
           OR username LIKE 'momtest%'
-          OR email LIKE 'momtest%@example.com') as test_users,
+          OR email LIKE 'momtest%@example.com'
+          OR username LIKE 'entiresprint%'
+          OR email LIKE 'entiresprint%'
+          OR username LIKE 'progressive%'
+          OR email LIKE 'progressive%') as test_users,
         (SELECT COUNT(*) FROM projects WHERE
           name LIKE '%Test Project%'
           OR name LIKE '%Standup Test%'
@@ -29,7 +33,9 @@ async function cleanupTestData() {
           OR name LIKE 'Project with%'
           OR name LIKE 'Updated E2E%'
           OR name LIKE 'Auto-Gen Test%'
-          OR name LIKE 'Sprint Test%') as test_projects,
+          OR name LIKE 'Sprint Test%'
+          OR name LIKE '%Complete Sprint%'
+          OR name LIKE '%Progressive Sprint%') as test_projects,
         (SELECT COUNT(*) FROM sprints WHERE
           name LIKE '%Test Sprint%'
           OR name LIKE 'Past Sprint%'
@@ -37,7 +43,9 @@ async function cleanupTestData() {
           OR name LIKE 'Completed Sprint%'
           OR name LIKE 'Upcoming Sprint%'
           OR name LIKE 'Auto Sprint%'
-          OR name LIKE 'Gap Sprint%') as test_sprints
+          OR name LIKE 'Gap Sprint%'
+          OR name LIKE '%Complete Sprint%'
+          OR name LIKE '%Progressive Sprint%') as test_sprints
     `);
 
     console.log('📊 Test data found:');
@@ -66,6 +74,8 @@ async function cleanupTestData() {
          OR name LIKE 'Updated E2E%'
          OR name LIKE 'Auto-Gen Test%'
          OR name LIKE 'Sprint Test%'
+         OR name LIKE '%Complete Sprint%'
+         OR name LIKE '%Progressive Sprint%'
          OR description LIKE '%Test project for standup book%'
          OR description LIKE '%Dedicated project for%testing%'
          OR description LIKE '%E2E test%'
@@ -105,6 +115,8 @@ async function cleanupTestData() {
          OR name LIKE 'Updated E2E%'
          OR name LIKE 'Auto-Gen Test%'
          OR name LIKE 'Sprint Test%'
+         OR name LIKE '%Complete Sprint%'
+         OR name LIKE '%Progressive Sprint%'
          OR description LIKE '%Test project for standup book%'
          OR description LIKE '%Dedicated project for%testing%'
          OR description LIKE '%E2E test%'
@@ -125,6 +137,10 @@ async function cleanupTestData() {
          OR email LIKE 'test%@example.com'
          OR username LIKE 'momtest%'
          OR email LIKE 'momtest%@example.com'
+         OR username LIKE 'entiresprint%'
+         OR email LIKE 'entiresprint%'
+         OR username LIKE 'progressive%'
+         OR email LIKE 'progressive%'
     `);
 
     if (testUserIds.length > 0) {
@@ -157,6 +173,10 @@ async function cleanupTestData() {
          OR email LIKE 'test%@example.com'
          OR username LIKE 'momtest%'
          OR email LIKE 'momtest%@example.com'
+         OR username LIKE 'entiresprint%'
+         OR email LIKE 'entiresprint%'
+         OR username LIKE 'progressive%'
+         OR email LIKE 'progressive%'
     `);
     console.log(`   ✓ Deleted test users and all related data`);
 
@@ -172,6 +192,8 @@ async function cleanupTestData() {
          OR name LIKE 'Upcoming Sprint%'
          OR name LIKE 'Auto Sprint%'
          OR name LIKE 'Gap Sprint%'
+         OR name LIKE '%Complete Sprint%'
+         OR name LIKE '%Progressive Sprint%'
     `);
     console.log(`   ✓ Deleted orphaned test sprints`);
 

@@ -17,6 +17,8 @@ import { Invitation, InvitationStatus } from '../entities/invitation.entity';
 import { Project } from '../entities/project.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { AuthResponse } from './interfaces/auth-response.interface';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { MailService } from '../mail/mail.service';
@@ -272,6 +274,75 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+      const existingUser = await this.userRepository.findOne({
+        where: { email: updateProfileDto.email },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Email already in use');
+      }
+
+      user.email = updateProfileDto.email;
+    }
+
+    // Update name if provided
+    if (updateProfileDto.name) {
+      user.name = updateProfileDto.name;
+    }
+
+    const updatedUser = await this.userRepository.save(user);
+
+    return updatedUser;
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(
+      changePasswordDto.currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    // Check if new password is same as current password
+    const isSamePassword = await bcrypt.compare(
+      changePasswordDto.newPassword,
+      user.password,
+    );
+
+    if (isSamePassword) {
+      throw new BadRequestException('New password must be different from current password');
+    }
+
+    // Hash and save new password
+    user.password = await bcrypt.hash(changePasswordDto.newPassword, 10);
+    await this.userRepository.save(user);
+
+    return { message: 'Password changed successfully' };
   }
 
   private async generateTokens(user: User): Promise<AuthResponse> {
