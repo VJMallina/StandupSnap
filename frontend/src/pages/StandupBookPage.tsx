@@ -7,6 +7,7 @@ import { Project } from '../types/project';
 import { Sprint } from '../types/sprint';
 import { SprintDay } from '../types/standupbook';
 import AppLayout from '../components/AppLayout';
+import { useProjectSelection } from '../context/ProjectSelectionContext';
 
 interface DayBook extends SprintDay {
   isLocked?: boolean;
@@ -18,7 +19,7 @@ export default function StandupBookPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const { selectedProjectId, setSelectedProjectId } = useProjectSelection();
   const [activeSprint, setActiveSprint] = useState<Sprint | null>(null);
   const [dayBooks, setDayBooks] = useState<DayBook[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,7 +48,12 @@ export default function StandupBookPage() {
   const loadProjects = async () => {
     try {
       const data = await projectsApi.getAll();
-      setProjects(data.filter((p: Project) => !p.isArchived));
+      const active = data.filter((p: Project) => !p.isArchived);
+      setProjects(active);
+
+      if (active.length > 0 && (!selectedProjectId || !active.find((p: Project) => p.id === selectedProjectId))) {
+        setSelectedProjectId(active[0].id);
+      }
     } catch (err: any) {
       setError(err.message);
     }
@@ -334,7 +340,7 @@ export default function StandupBookPage() {
                               <span className="text-xs font-bold text-purple-700">MOM</span>
                             </div>
                           )}
-                          {day.snapCount > 0 && (
+                          {(day.snapCount ?? 0) > 0 && (
                             <div className="flex items-center justify-center gap-1 bg-white/90 rounded-full px-2 py-0.5">
                               <svg className="w-3 h-3 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />

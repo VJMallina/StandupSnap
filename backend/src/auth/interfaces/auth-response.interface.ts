@@ -14,5 +14,9 @@ export interface AuthResponse {
       description: string;
       permissions: Permission[];
     }[];
+    // Enterprise org context (optional during migration)
+    organizationId?: string;
+    orgSlug?: string;
+    orgRole?: string;
   };
 }

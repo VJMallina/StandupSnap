@@ -97,7 +97,17 @@
       "Bash(del /f /q \"F:\\\\StandupSnap\\\\documents\\\\~$e cases for StandupSnap.docx\" \"F:\\\\StandupSnap\\\\documents\\\\~$e cases for standupSnap\")",
       "Bash(wc:*)",
       "Bash(npx playwright test:*)",
-      "Bash(npm i:*)"
+      "Bash(npm i:*)",
+      "Bash(sed -n '50,70p' backend/src/artifacts/assumption.service.ts)",
+      "Bash(sed -n '50,70p' backend/src/artifacts/issue.service.ts)",
+      "Bash(sed -n '22,80p' F:/StandupSnap/backend/src/artifacts/change.service.ts)",
+      "Bash(sed -n '45,100p' F:/StandupSnap/backend/src/artifacts/stakeholder.service.ts)",
+      "Bash(PGPASSWORD=MwrmnPZbQVAtGCRZVadMteSeVOHpdknI psql -h yamanote.proxy.rlwy.net -p 41606 -U postgres -d railway -c \"SELECT COUNT\\(*\\) as count FROM role_permissions;\")",
+      "Bash(xargs basename -a)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(Get-ChildItem -Path \"F:\\\\StandupSnap\\\\frontend\\\\src\\\\pages\" -Recurse -File)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"F:\\\\StandupSnap\\\\backend\\\\src\" -Recurse -Filter \"*.controller.ts\")"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Injectable,
   NotFoundException,
   BadRequestException,
@@ -33,7 +33,7 @@ export class RaciMatrixService {
   /**
    * Create a new RACI matrix for a project
    */
-  async create(createRaciMatrixDto: CreateRaciMatrixDto, userId: string): Promise<RaciMatrix> {
+  async create(createRaciMatrixDto: CreateRaciMatrixDto, userId: string, orgId?: string): Promise<RaciMatrix> {
     const { projectId, name, description } = createRaciMatrixDto;
 
     // Verify project exists
@@ -52,6 +52,7 @@ export class RaciMatrixService {
       teamMemberColumns: [],
       createdBy: { id: userId } as User,
       updatedBy: { id: userId } as User,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
     return this.raciMatrixRepository.save(raciMatrix);

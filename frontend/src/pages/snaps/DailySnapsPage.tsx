@@ -176,16 +176,11 @@ Assignee Level:
 
   // Helper to get snaps for a specific card on the selected date
   const getSnapsForCard = (cardId: string) => {
-    return snaps.filter(snap => snap.card.id === cardId);
+    return snaps.filter(snap => snap.card?.id === cardId);
   };
 
   // Helper to get yesterday's snap for a card
-  const getYesterdaySnapForCard = (cardId: string) => {
-    const yesterday = new Date(selectedDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-    // This would need to be fetched separately, for now return null
+  const getYesterdaySnapForCard = (_cardId?: string) => {
     // TODO: Implement proper yesterday snap fetching
     return null;
   };

@@ -5,10 +5,11 @@ import { projectsApi } from '../../services/api/projects';
 import { Sprint, SprintStatus } from '../../types/sprint';
 import { Project } from '../../types/project';
 import AppLayout from '../../components/AppLayout';
-import { Select } from '../../components/ui/Select';
 import { Pagination } from '../../components/ui/Pagination';
 import { TableSkeleton } from '../../components/ui/SkeletonLoader';
 import { FilterDrawer, FilterChip } from '../../components/ui';
+import { Can } from '../../components/Can';
+import { PERMISSIONS } from '../../constants/permissions';
 
 export default function SprintsListPage() {
   const [sprints, setSprints] = useState<Sprint[]>([]);
@@ -202,15 +203,17 @@ export default function SprintsListPage() {
                   </span>
                 )}
               </button>
-              <button
-                onClick={() => navigate('/sprints/new')}
-                className="flex items-center px-5 py-2.5 bg-white text-primary-700 font-semibold rounded-xl shadow-md hover:shadow-lg transition active:scale-95"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Create Sprint
-              </button>
+              <Can permission={PERMISSIONS.SPRINT_CREATE}>
+                <button
+                  onClick={() => navigate('/sprints/new')}
+                  className="flex items-center px-5 py-2.5 bg-white text-primary-700 font-semibold rounded-xl shadow-md hover:shadow-lg transition active:scale-95"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Sprint
+                </button>
+              </Can>
             </div>
           </div>
         </div>

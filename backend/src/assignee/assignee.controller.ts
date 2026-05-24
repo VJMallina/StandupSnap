@@ -14,7 +14,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-import { Permission } from '../entities/role.entity';
+import { PERMISSIONS } from '../common/constants/permissions';
 
 @Controller('assignees')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -27,7 +27,7 @@ export class AssigneeController {
    * Shows all team members with aggregated stats
    */
   @Get()
-  @RequirePermissions(Permission.VIEW_TEAM_MEMBER)
+  @RequirePermissions(PERMISSIONS.TEAM_MEMBER_VIEW)
   getAssigneeList(
     @Query('projectId') projectId?: string,
     @Query('sprintId') sprintId?: string,
@@ -41,7 +41,7 @@ export class AssigneeController {
    * Returns assignee details with cards and RAG
    */
   @Get(':id')
-  @RequirePermissions(Permission.VIEW_TEAM_MEMBER)
+  @RequirePermissions(PERMISSIONS.TEAM_MEMBER_VIEW)
   getAssigneeDetails(
     @Param('id') assigneeId: string,
     @Query('sprintId') sprintId?: string,
@@ -54,7 +54,7 @@ export class AssigneeController {
    * GET /api/assignees/:id/cards?sprintId=xxx&status=xxx&rag=xxx&search=xxx
    */
   @Get(':id/cards')
-  @RequirePermissions(Permission.VIEW_CARD)
+  @RequirePermissions(PERMISSIONS.CARD_VIEW)
   getAssigneeCards(
     @Param('id') assigneeId: string,
     @Query('sprintId') sprintId?: string,
@@ -77,7 +77,7 @@ export class AssigneeController {
    * Returns snaps grouped by date (today, yesterday, older)
    */
   @Get(':id/snaps')
-  @RequirePermissions(Permission.VIEW_SNAP)
+  @RequirePermissions(PERMISSIONS.SNAP_VIEW_OWN, PERMISSIONS.SNAP_VIEW_ALL)
   getAssigneeSnaps(
     @Param('id') assigneeId: string,
     @Query('sprintId') sprintId?: string,

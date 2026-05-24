@@ -46,6 +46,14 @@ import DocumentTemplatesPage from './pages/DocumentTemplatesPage';
 import DocumentDetailPage from './pages/DocumentDetailPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ProjectSelectionProvider } from './context/ProjectSelectionContext';
+import InviteAcceptPage from './pages/InviteAcceptPage';
+import OrgUsersPage from './pages/org/OrgUsersPage';
+import OrgSettingsPage from './pages/org/OrgSettingsPage';
+import OrgRolesPage from './pages/org/OrgRolesPage';
+import OrgBillingPage from './pages/org/OrgBillingPage';
+import OrgAuditPage from './pages/org/OrgAuditPage';
+import NotificationsPage from './pages/NotificationsPage';
+import MyWorkPage from './pages/MyWorkPage';
 
 function App() {
   return (
@@ -58,6 +66,63 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/invite/accept" element={<InviteAcceptPage />} />
+            <Route
+              path="/org/users"
+              element={
+                <ProtectedRoute>
+                  <OrgUsersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/org/settings"
+              element={
+                <ProtectedRoute>
+                  <OrgSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/org/roles"
+              element={
+                <ProtectedRoute>
+                  <OrgRolesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/org/billing"
+              element={
+                <ProtectedRoute>
+                  <OrgBillingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/org/audit"
+              element={
+                <ProtectedRoute>
+                  <OrgAuditPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <NotificationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-work"
+              element={
+                <ProtectedRoute>
+                  <MyWorkPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/"
               element={

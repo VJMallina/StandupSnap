@@ -42,7 +42,7 @@ export class SprintService {
    * - No sprint overlap across ALL sprints (manual or auto)
    * - Sprint name unique
    */
-  async create(createSprintDto: CreateSprintDto): Promise<Sprint> {
+  async create(createSprintDto: CreateSprintDto, orgId?: string): Promise<Sprint> {
     const { projectId, name, goal, startDate, endDate, dailyStandupCount, slotTimes } = createSprintDto;
 
     // Find the project
@@ -85,6 +85,7 @@ export class SprintService {
       dailyStandupCount: dailyStandupCount || 1,
       slotTimes: slotTimes || null,
       project,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
     return this.sprintRepository.save(sprint);
@@ -158,7 +159,7 @@ export class SprintService {
    * - Duration fits inside project timeline
    * - Project has valid end date
    */
-  async generateSprints(generateDto: GenerateSprintsDto): Promise<Sprint[]> {
+  async generateSprints(generateDto: GenerateSprintsDto, orgId?: string): Promise<Sprint[]> {
     const { projectId, sprintDurationWeeks, namePrefix, dailyStandupCount, slotTimes } = generateDto;
 
     // Find the project
@@ -226,6 +227,7 @@ export class SprintService {
         dailyStandupCount: dailyStandupCount || 1,
         slotTimes: slotTimes || null,
         project,
+        ...(orgId ? { organizationId: orgId } : {}),
       });
 
       sprints.push(sprint);
@@ -258,11 +260,16 @@ export class SprintService {
     projectId?: string,
     status?: SprintStatus,
     search?: string,
+    orgId?: string,
   ): Promise<Sprint[]> {
     const queryBuilder = this.sprintRepository
       .createQueryBuilder('sprint')
       .leftJoinAndSelect('sprint.project', 'project')
       .orderBy('sprint.startDate', 'ASC');
+
+    if (orgId) {
+      queryBuilder.andWhere('sprint.organizationId = :orgId', { orgId });
+    }
 
     // Filter by project if provided
     if (projectId) {
@@ -290,9 +297,11 @@ export class SprintService {
   /**
    * M6-UC02: Find one sprint with details
    */
-  async findOne(id: string): Promise<Sprint> {
+  async findOne(id: string, organizationId?: string): Promise<Sprint> {
+    const where: any = { id };
+    if (organizationId) where.organizationId = organizationId;
     const sprint = await this.sprintRepository.findOne({
-      where: { id },
+      where,
       relations: ['project'],
     });
 
@@ -316,8 +325,8 @@ export class SprintService {
    * - Updated dates do NOT overlap with ANY other sprint
    * - Sprint Name remains unique
    */
-  async update(id: string, updateSprintDto: UpdateSprintDto): Promise<Sprint> {
-    const sprint = await this.findOne(id);
+  async update(id: string, updateSprintDto: UpdateSprintDto, organizationId?: string): Promise<Sprint> {
+    const sprint = await this.findOne(id, organizationId);
 
     // Validate project is not archived
     if (sprint.project.isArchived) {
@@ -375,9 +384,11 @@ export class SprintService {
    * - Sprint cannot be deleted if active today
    * - Project must not be archived
    */
-  async remove(id: string): Promise<void> {
+  async remove(id: string, organizationId?: string): Promise<void> {
+    const where: any = { id };
+    if (organizationId) where.organizationId = organizationId;
     const sprint = await this.sprintRepository.findOne({
-      where: { id },
+      where,
       relations: ['project', 'standupUpdates'],
     });
 
@@ -415,8 +426,8 @@ export class SprintService {
    * - Only SM/PO can close sprint
    * - Project not archived
    */
-  async closeSprint(id: string): Promise<Sprint> {
-    const sprint = await this.findOne(id);
+  async closeSprint(id: string, organizationId?: string): Promise<Sprint> {
+    const sprint = await this.findOne(id, organizationId);
 
     // Validate project is not archived
     if (sprint.project.isArchived) {

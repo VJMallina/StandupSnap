@@ -6,6 +6,8 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { Project } from './project.entity';
 import { User } from './user.entity';
@@ -132,6 +134,11 @@ export class ScrumRoom {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  /** Organization ID for tenant isolation */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
+
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
@@ -183,4 +190,8 @@ export class ScrumRoom {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  /** Soft delete timestamp */
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

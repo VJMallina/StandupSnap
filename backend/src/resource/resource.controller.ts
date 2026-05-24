@@ -18,7 +18,7 @@ import { CreateResourceWorkloadDto } from './dto/resource-workload.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-import { Permission } from '../entities/role.entity';
+import { PERMISSIONS } from '../common/constants/permissions';
 import { ResourceRole } from '../entities/resource.entity';
 
 @Controller('resources')
@@ -31,7 +31,7 @@ export class ResourceController {
    * POST /api/resources
    */
   @Post()
-  @RequirePermissions(Permission.CREATE_PROJECT) // Reusing project permission for MVP
+  @RequirePermissions(PERMISSIONS.RESOURCE_CREATE)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createResourceDto: CreateResourceDto) {
     return this.resourceService.create(createResourceDto);
@@ -42,7 +42,7 @@ export class ResourceController {
    * GET /api/resources?projectId=xxx&includeArchived=false
    */
   @Get()
-  @RequirePermissions(Permission.VIEW_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_VIEW)
   findAll(
     @Query('projectId') projectId: string,
     @Query('includeArchived') includeArchived?: string,
@@ -56,7 +56,7 @@ export class ResourceController {
    * GET /api/resources/filter?projectId=xxx&role=Developer&name=John&minLoad=80&maxLoad=100
    */
   @Get('filter')
-  @RequirePermissions(Permission.VIEW_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_VIEW)
   filter(
     @Query('projectId') projectId: string,
     @Query('role') role?: ResourceRole,
@@ -80,7 +80,7 @@ export class ResourceController {
    * GET /api/resources/:id
    */
   @Get(':id')
-  @RequirePermissions(Permission.VIEW_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_VIEW)
   findOne(@Param('id') id: string) {
     return this.resourceService.findOne(id);
   }
@@ -90,7 +90,7 @@ export class ResourceController {
    * PATCH /api/resources/:id
    */
   @Patch(':id')
-  @RequirePermissions(Permission.EDIT_PROJECT) // Reusing project permission for MVP
+  @RequirePermissions(PERMISSIONS.RESOURCE_EDIT)
   update(@Param('id') id: string, @Body() updateResourceDto: UpdateResourceDto) {
     return this.resourceService.update(id, updateResourceDto);
   }
@@ -100,7 +100,7 @@ export class ResourceController {
    * PATCH /api/resources/:id/archive
    */
   @Patch(':id/archive')
-  @RequirePermissions(Permission.EDIT_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_EDIT)
   archive(@Param('id') id: string) {
     return this.resourceService.archive(id);
   }
@@ -110,7 +110,7 @@ export class ResourceController {
    * DELETE /api/resources/:id
    */
   @Delete(':id')
-  @RequirePermissions(Permission.DELETE_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_DELETE)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
     await this.resourceService.remove(id);
@@ -121,7 +121,7 @@ export class ResourceController {
    * POST /api/resources/workload
    */
   @Post('workload')
-  @RequirePermissions(Permission.EDIT_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_EDIT)
   @HttpCode(HttpStatus.CREATED)
   createOrUpdateWorkload(@Body() createWorkloadDto: CreateResourceWorkloadDto) {
     return this.resourceService.createOrUpdateWeeklyWorkload(createWorkloadDto);
@@ -132,7 +132,7 @@ export class ResourceController {
    * GET /api/resources/:id/workload
    */
   @Get(':id/workload')
-  @RequirePermissions(Permission.VIEW_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_VIEW)
   getResourceWorkload(@Param('id') id: string) {
     return this.resourceService.getResourceWorkload(id);
   }
@@ -142,7 +142,7 @@ export class ResourceController {
    * GET /api/resources/heatmap?projectId=xxx&startDate=2025-01-01&endDate=2025-12-31
    */
   @Get('heatmap/data')
-  @RequirePermissions(Permission.VIEW_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_VIEW)
   getHeatmapData(
     @Query('projectId') projectId: string,
     @Query('startDate') startDate: string,
@@ -158,7 +158,7 @@ export class ResourceController {
    * GET /api/resources/summary?projectId=xxx
    */
   @Get('summary/capacity')
-  @RequirePermissions(Permission.VIEW_PROJECT)
+  @RequirePermissions(PERMISSIONS.RESOURCE_VIEW)
   getCapacitySummary(@Query('projectId') projectId: string) {
     return this.resourceService.getCapacitySummary(projectId);
   }

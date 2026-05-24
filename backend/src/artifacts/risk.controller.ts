@@ -33,12 +33,13 @@ export class RiskController {
   @Post()
   async create(@Body() dto: CreateRiskDto, @Request() req) {
     const userId = req.user.id || req.user.userId;
-    return this.riskService.create(dto, userId);
+    return this.riskService.create(dto, userId, req.user.organizationId);
   }
 
   @Get('project/:projectId')
   async findByProject(
     @Param('projectId') projectId: string,
+    @Request() req,
     @Query('status') status?: RiskStatus,
     @Query('category') category?: string,
     @Query('severity') severity?: RiskSeverity,
@@ -57,6 +58,7 @@ export class RiskController {
       riskType,
       includeArchived: includeArchived === 'true',
       search,
+      orgId: req.user.organizationId,
     });
   }
 

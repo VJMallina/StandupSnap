@@ -1,4 +1,7 @@
-import { IsString, IsOptional, IsUUID, IsInt, Min, IsEnum } from 'class-validator';
+import {
+  IsString, IsOptional, IsUUID, IsInt, Min, IsEnum,
+  IsArray, IsDateString,
+} from 'class-validator';
 import { CardPriority, CardStatus } from '../../entities/card.entity';
 
 export class UpdateCardDto {
@@ -9,6 +12,15 @@ export class UpdateCardDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsString()
+  @IsOptional()
+  acceptanceCriteria?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  labels?: string[];
 
   @IsString()
   @IsOptional()
@@ -25,13 +37,32 @@ export class UpdateCardDto {
   @IsInt()
   @Min(1)
   @IsOptional()
-  estimatedTime?: number; // ET in hours - MANDATORY if provided
+  storyPoints?: number;
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  estimatedTime?: number;
 
   @IsUUID()
   @IsOptional()
   assigneeId?: string;
 
+  // null = move to Backlog
   @IsUUID()
   @IsOptional()
-  sprintId?: string; // Allow sprint change with restrictions
+  sprintId?: string | null;
+
+  // Move to a different lane (triggers status sync + activity log entry)
+  @IsUUID()
+  @IsOptional()
+  laneId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  parentId?: string;
+
+  @IsDateString()
+  @IsOptional()
+  dueDate?: string;
 }

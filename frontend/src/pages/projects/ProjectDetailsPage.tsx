@@ -4,9 +4,10 @@ import { projectsApi } from '../../services/api/projects';
 import { invitationsApi, Invitation } from '../../services/api/invitations';
 import { Project } from '../../types/project';
 import { usePermissions } from '../../hooks/usePermissions';
-import { Permission } from '../../constants/roles';
+import { PERMISSIONS } from '../../constants/permissions';
 import AppLayout from '../../components/AppLayout';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
+import WorkflowSettings from '../../components/projects/WorkflowSettings';
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,9 +22,10 @@ export default function ProjectDetailsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(true);
   const [isTeamExpanded, setIsTeamExpanded] = useState(true);
+  const [isWorkflowExpanded, setIsWorkflowExpanded] = useState(false);
 
-  const canEdit = hasPermission(Permission.EDIT_PROJECT);
-  const canDelete = hasPermission(Permission.DELETE_PROJECT);
+  const canEdit = hasPermission(PERMISSIONS.PROJECT_EDIT);
+  const canDelete = hasPermission(PERMISSIONS.PROJECT_DELETE);
 
   // Reload project when id changes or when navigating back (location.key changes)
   useEffect(() => {
@@ -445,6 +447,40 @@ export default function ProjectDetailsPage() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* Workflow Section */}
+        <div className="bg-white shadow-lg rounded-xl overflow-hidden mt-6">
+          <div
+            className="px-8 py-6 bg-gradient-to-r from-primary-50 to-secondary-50 border-b cursor-pointer hover:from-primary-100 hover:to-primary-100 transition-colors"
+            onClick={() => setIsWorkflowExpanded(!isWorkflowExpanded)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Workflow</h2>
+                <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full">Kanban lanes</span>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${isWorkflowExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {isWorkflowExpanded && (
+            <div className="px-8 py-6">
+              <WorkflowSettings projectId={id!} canEdit={canEdit && !project.isArchived} />
             </div>
           )}
         </div>

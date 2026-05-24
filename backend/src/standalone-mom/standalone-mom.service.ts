@@ -71,7 +71,7 @@ export class StandaloneMomService {
     return { meetingType, customMeetingType: null };
   }
 
-  async create(dto: CreateStandaloneMomDto, userId: string): Promise<StandaloneMom> {
+  async create(dto: CreateStandaloneMomDto, userId: string, orgId?: string): Promise<StandaloneMom> {
     const meetingDate = this.validateMeetingDate(dto.meetingDate);
     const { project, sprint } = await this.resolveProjectAndSprint(dto.projectId, dto.sprintId);
     const { meetingType, customMeetingType } = this.computeMeetingType(dto.meetingType, dto.customMeetingType);
@@ -90,6 +90,7 @@ export class StandaloneMomService {
       actionItems: dto.actionItems || null,
       createdBy: { id: userId } as User,
       updatedBy: { id: userId } as User,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
     return this.standaloneMomRepo.save(mom);
@@ -130,16 +131,18 @@ export class StandaloneMomService {
     return this.standaloneMomRepo.save(mom);
   }
 
-  async findOne(id: string): Promise<StandaloneMom> {
+  async findOne(id: string, organizationId?: string): Promise<StandaloneMom> {
+    const where: any = { id, archived: false };
+    if (organizationId) where.organizationId = organizationId;
     const mom = await this.standaloneMomRepo.findOne({
-      where: { id, archived: false },
+      where,
       relations: ['project', 'sprint', 'createdBy', 'updatedBy'],
     });
     if (!mom) throw new NotFoundException('MOM not found');
     return mom;
   }
 
-  async findAll(filter: FilterStandaloneMomDto) {
+  async findAll(filter: FilterStandaloneMomDto, organizationId?: string) {
     if (filter.dateFrom && filter.dateTo && new Date(filter.dateTo) < new Date(filter.dateFrom)) {
       throw new BadRequestException('Invalid date range');
     }
@@ -152,6 +155,10 @@ export class StandaloneMomService {
       .leftJoinAndSelect('mom.updatedBy', 'updatedBy')
       .where('mom.project = :projectId', { projectId: filter.projectId })
       .andWhere('mom.archived = false');
+
+    if (organizationId) {
+      qb.andWhere('mom.organizationId = :organizationId', { organizationId });
+    }
 
     if (filter.sprintId) {
       qb.andWhere('mom.sprint = :sprintId', { sprintId: filter.sprintId });

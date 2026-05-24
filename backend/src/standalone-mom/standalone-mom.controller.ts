@@ -16,6 +16,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { RequirePermissions } from '../auth/decorators/permissions.decorator';
+import { PERMISSIONS } from '../common/constants/permissions';
 import { StandaloneMomService } from './standalone-mom.service';
 import { CreateStandaloneMomDto } from './dto/create-standalone-mom.dto';
 import { UpdateStandaloneMomDto } from './dto/update-standalone-mom.dto';
@@ -24,14 +27,14 @@ import { GenerateStandaloneMomDto } from './dto/generate-ai.dto';
 import { Response, Request } from 'express';
 
 @Controller('standalone-mom')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class StandaloneMomController {
   constructor(private readonly standaloneMomService: StandaloneMomService) {}
 
   @Post()
   async create(@Body() dto: CreateStandaloneMomDto, @Req() req: Request) {
-    const userId = (req as any).user?.sub;
-    return this.standaloneMomService.create(dto, userId);
+    const user = (req as any).user;
+    return this.standaloneMomService.create(dto, user?.id || user?.sub, user?.organizationId);
   }
 
   @Put(':id')
@@ -41,8 +44,10 @@ export class StandaloneMomController {
   }
 
   @Get()
-  async findAll(@Query() query: FilterStandaloneMomDto) {
-    return this.standaloneMomService.findAll(query);
+  @RequirePermissions(PERMISSIONS.MOM_VIEW)
+  async findAll(@Query() query: FilterStandaloneMomDto, @Req() req: Request) {
+    const organizationId = (req as any).user?.organizationId;
+    return this.standaloneMomService.findAll(query, organizationId);
   }
 
   @Post(':id/archive')
@@ -77,7 +82,9 @@ export class StandaloneMomController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.standaloneMomService.findOne(id);
+  @RequirePermissions(PERMISSIONS.MOM_VIEW)
+  async findOne(@Param('id') id: string, @Req() req: Request) {
+    const organizationId = (req as any).user?.organizationId;
+    return this.standaloneMomService.findOne(id, organizationId);
   }
 }

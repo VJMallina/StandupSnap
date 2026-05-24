@@ -17,7 +17,7 @@ import { AddToProjectDto } from './dto/add-to-project.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-import { Permission } from '../entities/role.entity';
+import { PERMISSIONS } from '../common/constants/permissions';
 
 @Controller('team-members')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -25,32 +25,32 @@ export class TeamMemberController {
   constructor(private readonly teamMemberService: TeamMemberService) {}
 
   @Post()
-  @RequirePermissions(Permission.ADD_TEAM_MEMBER)
+  @RequirePermissions(PERMISSIONS.TEAM_MEMBER_ADD)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createTeamMemberDto: CreateTeamMemberDto) {
     return this.teamMemberService.create(createTeamMemberDto);
   }
 
   @Get()
-  @RequirePermissions(Permission.VIEW_TEAM_MEMBER)
+  @RequirePermissions(PERMISSIONS.TEAM_MEMBER_VIEW)
   findAll() {
     return this.teamMemberService.findAll();
   }
 
   @Get(':id')
-  @RequirePermissions(Permission.VIEW_TEAM_MEMBER)
+  @RequirePermissions(PERMISSIONS.TEAM_MEMBER_VIEW)
   findOne(@Param('id') id: string) {
     return this.teamMemberService.findOne(id);
   }
 
   @Patch(':id')
-  @RequirePermissions(Permission.EDIT_TEAM_MEMBER)
+  @RequirePermissions(PERMISSIONS.TEAM_MEMBER_EDIT)
   update(@Param('id') id: string, @Body() updateTeamMemberDto: UpdateTeamMemberDto) {
     return this.teamMemberService.update(id, updateTeamMemberDto);
   }
 
   @Delete(':id')
-  @RequirePermissions(Permission.REMOVE_TEAM_MEMBER)
+  @RequirePermissions(PERMISSIONS.TEAM_MEMBER_REMOVE)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
     await this.teamMemberService.remove(id);

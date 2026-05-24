@@ -13,6 +13,7 @@ import { Card } from '../entities/card.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { AddMemberDto } from './dto/add-member.dto';
+import { WorkflowService } from '../workflow/workflow.service';
 
 @Injectable()
 export class ProjectService {
@@ -25,12 +26,13 @@ export class ProjectService {
     private userRepository: Repository<User>,
     @InjectRepository(Card)
     private cardRepository: Repository<Card>,
+    private workflowService: WorkflowService,
   ) {}
 
-  async create(createProjectDto: CreateProjectDto, creatorUserId: string): Promise<Project> {
+  async create(createProjectDto: CreateProjectDto, creatorUserId: string, orgId?: string): Promise<Project> {
     const { productOwnerId, pmoId, ...projectData } = createProjectDto;
 
-    const project = this.projectRepository.create(projectData);
+    const project = this.projectRepository.create({ ...projectData, ...(orgId ? { organizationId: orgId } : {}) });
 
     // Set Product Owner if provided
     if (productOwnerId) {
@@ -56,6 +58,13 @@ export class ProjectService {
 
     const savedProject = await this.projectRepository.save(project);
 
+    // Seed default workflow (To Do → In Progress → QA → Done) for the new project
+    try {
+      await this.workflowService.seedDefaultWorkflow(savedProject.id, savedProject.organizationId || orgId || '');
+    } catch (e) {
+      // Non-fatal — workflow can be created later if seeding fails
+    }
+
     // Automatically add the creator (Scrum Master) as a project member
     const creator = await this.userRepository.findOne({
       where: { id: creatorUserId },
@@ -66,6 +75,7 @@ export class ProjectService {
         project: savedProject,
         user: creator,
         role: 'Scrum Master',
+        ...(orgId ? { organizationId: orgId } : {}),
         startDate: new Date(),
         isActive: true,
       });
@@ -76,14 +86,11 @@ export class ProjectService {
     return savedProject;
   }
 
-  async findAll(isActive?: boolean, isArchived?: boolean): Promise<Project[]> {
+  async findAll(orgId?: string, isActive?: boolean, isArchived?: boolean): Promise<Project[]> {
     const where: any = {};
-    if (isActive !== undefined) {
-      where.isActive = isActive;
-    }
-    if (isArchived !== undefined) {
-      where.isArchived = isArchived;
-    }
+    if (orgId) where.organizationId = orgId;
+    if (isActive !== undefined) where.isActive = isActive;
+    if (isArchived !== undefined) where.isArchived = isArchived;
 
     return this.projectRepository.find({
       where,
@@ -92,9 +99,12 @@ export class ProjectService {
     });
   }
 
-  async findOne(id: string): Promise<Project & { cards?: any[] }> {
+  async findOne(id: string, orgId?: string): Promise<Project & { cards?: any[] }> {
+    const where: any = { id };
+    if (orgId) where.organizationId = orgId;
+
     const project = await this.projectRepository.findOne({
-      where: { id },
+      where,
       relations: ['members', 'members.user', 'sprints', 'productOwner', 'pmo', 'teamMembers'],
     });
 
@@ -218,21 +228,16 @@ export class ProjectService {
     await this.projectMemberRepository.remove(member);
   }
 
-  async isNameUnique(name: string, excludeId?: string): Promise<boolean> {
+  async isNameUnique(name: string, orgId?: string, excludeId?: string): Promise<boolean> {
     const where: any = { name };
+    if (orgId) where.organizationId = orgId;
 
     const project = await this.projectRepository.findOne({ where });
 
-    if (!project) {
-      return true; // No project with this name exists
-    }
+    if (!project) return true;
+    if (excludeId && project.id === excludeId) return true;
 
-    // If excludeId is provided and matches the found project, name is still unique for that project
-    if (excludeId && project.id === excludeId) {
-      return true;
-    }
-
-    return false; // Name is already taken by another project
+    return false;
   }
 
   async archive(id: string): Promise<Project> {

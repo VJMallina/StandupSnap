@@ -23,7 +23,7 @@ export class ChangeController {
 
   @Post()
   create(@Body() dto: CreateChangeDto, @Request() req: any) {
-    return this.changeService.create(dto, req.user.userId);
+    return this.changeService.create(dto, req.user.id || req.user.userId, req.user.organizationId);
   }
 
   @Put(':id')

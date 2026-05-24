@@ -10,10 +10,12 @@ import { Sprint } from '../entities/sprint.entity';
 import { Snap } from '../entities/snap.entity';
 import { Card } from '../entities/card.entity';
 import { User } from '../entities/user.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Mom, DailyLock, Sprint, Snap, Card, User]),
+    AuthModule,
   ],
   controllers: [StandupBookController],
   providers: [StandupBookService, MomService, DailyLockService],

@@ -8,12 +8,13 @@ import { dashboardApi, ProjectSummary } from '../services/api/dashboard';
 import { sprintsApi } from '../services/api/sprints';
 import { DailySummary } from '../types/snap';
 import { Sprint } from '../types/sprint';
+import { useProjectSelection } from '../context/ProjectSelectionContext';
 
 export default function ReportsPage() {
+  const { selectedProjectId, setSelectedProjectId } = useProjectSelection();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [summaries, setSummaries] = useState<DailySummary[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [selectedSprintId, setSelectedSprintId] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -43,13 +44,10 @@ export default function ReportsPage() {
     try {
       const data = await dashboardApi.getUserProjects();
       setProjects(data);
-      if (data.length > 0) {
-        const lastProject = localStorage.getItem('lastSelectedProjectId');
-        if (lastProject && data.find(p => p.id === lastProject)) {
-          setSelectedProjectId(lastProject);
-        } else {
-          setSelectedProjectId(data[0].id);
-        }
+      if (data.length === 0) {
+        setSelectedProjectId('');
+      } else if (!selectedProjectId || !data.find(p => p.id === selectedProjectId)) {
+        setSelectedProjectId(data[0].id);
       }
     } catch (err: any) {
       setError(err.message);
@@ -88,7 +86,6 @@ export default function ReportsPage() {
   const handleProjectChange = (projectId: string) => {
     setSelectedProjectId(projectId);
     setSelectedSprintId('');
-    localStorage.setItem('lastSelectedProjectId', projectId);
   };
 
   const getRAGConfig = (rag: string) => {

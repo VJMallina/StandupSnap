@@ -123,25 +123,6 @@ export default function AssigneeListPage() {
     loadSprintAssignees();
   }, [selectedSprintId]);
 
-  const loadAssignees = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const data = await assigneesApi.getAll({
-        projectId: selectedProjectId || undefined,
-        sprintId: selectedSprintId || undefined,
-      });
-
-      setAssignees(data);
-    } catch (err: any) {
-      setError(err.message);
-      console.error('Error loading assignees:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleProjectChange = (projectId: string) => {
     setSelectedProjectId(projectId);
     setSelectedSprintId('');

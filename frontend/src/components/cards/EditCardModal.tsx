@@ -24,8 +24,8 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
     externalId: card.externalId || '',
     priority: card.priority,
     estimatedTime: card.estimatedTime,
-    assigneeId: card.assignee.id,
-    sprintId: card.sprint.id,
+    assigneeId: card.assignee?.id || '',
+    sprintId: card.sprint?.id || '',
   });
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
     try {
       const data = await sprintsApi.getAll({ projectId: card.project.id });
       // Filter out closed sprints (except current sprint)
-      const availableSprints = data.filter(s => !s.isClosed || s.id === card.sprint.id);
+      const availableSprints = data.filter(s => !s.isClosed || s.id === card.sprint?.id);
       setSprints(availableSprints);
     } catch (err: any) {
       setError('Failed to load sprints: ' + err.message);
@@ -65,8 +65,8 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
         externalId: formData.externalId || undefined,
         priority: formData.priority,
         estimatedTime: formData.estimatedTime,
-        assigneeId: formData.assigneeId !== card.assignee.id ? formData.assigneeId : undefined,
-        sprintId: formData.sprintId !== card.sprint.id ? formData.sprintId : undefined,
+        assigneeId: formData.assigneeId !== (card.assignee?.id || '') ? formData.assigneeId : undefined,
+        sprintId: formData.sprintId !== (card.sprint?.id || '') ? formData.sprintId : undefined,
       });
 
       onSuccess();
@@ -84,10 +84,10 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
     formData.externalId !== (card.externalId || '') ||
     formData.priority !== card.priority ||
     formData.estimatedTime !== card.estimatedTime ||
-    formData.assigneeId !== card.assignee.id ||
-    formData.sprintId !== card.sprint.id;
+    formData.assigneeId !== (card.assignee?.id || '') ||
+    formData.sprintId !== (card.sprint?.id || '');
 
-  const isSprintChanging = formData.sprintId !== card.sprint.id;
+  const isSprintChanging = formData.sprintId !== (card.sprint?.id || '');
 
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50 backdrop-blur-sm">
@@ -150,7 +150,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
               {sprints.map((sprint) => (
                 <option key={sprint.id} value={sprint.id}>
                   {sprint.name} ({new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()})
-                  {sprint.id === card.sprint.id && ' (Current)'}
+                  {sprint.id === card.sprint?.id && ' (Current)'}
                 </option>
               ))}
             </select>
@@ -173,7 +173,7 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
               {teamMembers.map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.fullName} - {member.designationRole}
-                  {member.id === card.assignee.id && ' (Current)'}
+                  {member.id === card.assignee?.id && ' (Current)'}
                 </option>
               ))}
             </select>

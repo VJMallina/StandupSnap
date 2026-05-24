@@ -4,23 +4,37 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   OneToMany,
   ManyToOne,
   ManyToMany,
   JoinColumn,
   JoinTable,
+  Index,
 } from 'typeorm';
 import { ProjectMember } from './project-member.entity';
 import { Sprint } from './sprint.entity';
 import { User } from './user.entity';
 import { TeamMember } from './team-member.entity';
+import { Organization } from './organization.entity';
 
 @Entity('projects')
 export class Project {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  /**
+   * FK to organization - tenant isolation
+   */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
+
+  @Column()
   name: string;
 
   @Column({ type: 'text', nullable: true })
@@ -37,6 +51,13 @@ export class Project {
 
   @Column({ default: false })
   isArchived: boolean;
+
+  /**
+   * Confidential projects require explicit membership even for PMO users
+   * Only ORG_ADMIN can set this flag
+   */
+  @Column({ default: false })
+  isConfidential: boolean;
 
   @ManyToOne(() => User, { nullable: true, eager: true })
   @JoinColumn({ name: 'product_owner_id' })
@@ -65,4 +86,7 @@ export class Project {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -42,7 +42,7 @@ export class StakeholderService {
     }
   }
 
-  async create(dto: CreateStakeholderDto, userId: string): Promise<Stakeholder> {
+  async create(dto: CreateStakeholderDto, userId: string, orgId?: string): Promise<Stakeholder> {
     // Validate project exists
     const project = await this.projectRepository.findOne({ where: { id: dto.projectId } });
     if (!project) {
@@ -105,6 +105,7 @@ export class StakeholderService {
       isArchived: false,
       createdBy: { id: userId } as User,
       updatedBy: { id: userId } as User,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
     const saved = await this.stakeholderRepository.save(stakeholder);

@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Sprint } from './sprint.entity';
 
@@ -12,6 +13,10 @@ import { Sprint } from './sprint.entity';
 export class DailySummary {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
 
   @ManyToOne(() => Sprint, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'sprint_id' })

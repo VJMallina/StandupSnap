@@ -3,8 +3,7 @@ import { usePermissions } from '../hooks/usePermissions';
 
 export const UnauthorizedPage = () => {
   const navigate = useNavigate();
-  const { getRoleLabels } = usePermissions();
-  const userRoles = getRoleLabels();
+  const { userRoles } = usePermissions();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

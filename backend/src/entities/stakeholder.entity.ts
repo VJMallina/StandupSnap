@@ -6,6 +6,8 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { Project } from './project.entity';
 import { TeamMember } from './team-member.entity';
@@ -41,6 +43,11 @@ export enum StakeholderQuadrant {
 export class Stakeholder {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  /** Organization ID for tenant isolation */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
 
   @ManyToOne(() => Project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
@@ -105,4 +112,8 @@ export class Stakeholder {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  /** Soft delete timestamp */
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

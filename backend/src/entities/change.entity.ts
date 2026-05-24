@@ -5,7 +5,9 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Project } from './project.entity';
 import { TeamMember } from './team-member.entity';
@@ -39,6 +41,11 @@ export enum ChangeStatus {
 export class Change {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  /** Organization ID for tenant isolation */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
 
   @ManyToOne(() => Project, { nullable: false })
   @JoinColumn({ name: 'projectId' })
@@ -140,4 +147,8 @@ export class Change {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  /** Soft delete timestamp */
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

@@ -1,17 +1,12 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
 import { usePermissions } from '../hooks/usePermissions';
-import { Permission } from '../constants/roles';
 
 interface ProtectedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  permission: Permission;
+  permission: string;
   children: ReactNode;
   fallback?: ReactNode;
 }
 
-/**
- * A button component that only renders if the user has the required permission.
- * Optionally shows a fallback component if permission is missing.
- */
 export const ProtectedButton = ({
   permission,
   children,

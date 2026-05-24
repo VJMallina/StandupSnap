@@ -73,6 +73,7 @@ export interface RAGOverview {
 export interface DailySummary {
   id: string;
   sprintId: string;
+  sprint?: { id: string; name: string };
   summaryDate: string;
   done: string;
   toDo: string;

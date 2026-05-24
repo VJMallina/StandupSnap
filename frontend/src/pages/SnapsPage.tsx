@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, ShadingType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import AppLayout from '../components/AppLayout';
 import { Select } from '../components/ui/Select';
@@ -11,8 +10,11 @@ import { projectsApi } from '../services/api/projects';
 import { cardsApi } from '../services/api/cards';
 import { snapsApi } from '../services/api/snaps';
 import { Sprint } from '../types/sprint';
-import { Card } from '../types/card';
+import { Card, CardStatus } from '../types/card';
 import { Snap, SnapRAG } from '../types/snap';
+import { Can } from '../components/Can';
+import { PERMISSIONS } from '../constants/permissions';
+import { useProjectSelection } from '../context/ProjectSelectionContext';
 
 interface Project {
   id: string;
@@ -22,13 +24,12 @@ interface Project {
 type TabType = 'overview' | 'management';
 
 export default function SnapsPage() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('management');
+  const { selectedProjectId, setSelectedProjectId } = useProjectSelection();
 
   // Filter State
   const [projects, setProjects] = useState<Project[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState('');
   const [selectedSprintId, setSelectedSprintId] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -88,16 +89,8 @@ export default function SnapsPage() {
       const data = await projectsApi.getAll(false);
       setProjects(data);
 
-      // Use localStorage to sync with Dashboard project selection
-      if (data.length === 1) {
+      if (data.length > 0 && (!selectedProjectId || !data.find((p: Project) => p.id === selectedProjectId))) {
         setSelectedProjectId(data[0].id);
-      } else if (data.length > 1) {
-        const lastSelectedProjectId = localStorage.getItem('lastSelectedProjectId');
-        if (lastSelectedProjectId && data.find((p) => p.id === lastSelectedProjectId)) {
-          setSelectedProjectId(lastSelectedProjectId);
-        } else {
-          setSelectedProjectId(data[0].id);
-        }
       }
     } catch (err: any) {
       setError('Failed to load projects');
@@ -108,7 +101,6 @@ export default function SnapsPage() {
 
   const handleProjectChange = (projectId: string) => {
     setSelectedProjectId(projectId);
-    localStorage.setItem('lastSelectedProjectId', projectId);
   };
 
   const loadSprints = async () => {
@@ -234,19 +226,6 @@ export default function SnapsPage() {
     }
   };
 
-  const getRAGColor = (rag: SnapRAG | null) => {
-    switch (rag) {
-      case SnapRAG.GREEN:
-        return 'bg-green-500';
-      case SnapRAG.AMBER:
-        return 'bg-amber-500';
-      case SnapRAG.RED:
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-300';
-    }
-  };
-
   const getRAGLabel = (rag: SnapRAG | null) => {
     switch (rag) {
       case SnapRAG.GREEN:
@@ -258,24 +237,6 @@ export default function SnapsPage() {
       default:
         return 'Not Set';
     }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      active: 'bg-green-100 text-green-800',
-      in_progress: 'bg-primary-100 text-blue-800',
-      completed: 'bg-gray-100 text-gray-800',
-    };
-    return styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getStatusLabel = (status: string) => {
-    const labels = {
-      active: 'Active',
-      in_progress: 'In Progress',
-      completed: 'Completed',
-    };
-    return labels[status as keyof typeof labels] || status;
   };
 
   const downloadSummary = () => {
@@ -349,7 +310,7 @@ export default function SnapsPage() {
     const redCount = snaps.filter(s => (s.finalRAG || s.suggestedRAG) === SnapRAG.RED).length;
 
     // Create document sections
-    const children: Paragraph[] = [];
+    const children: (Paragraph | Table)[] = [];
 
     // Title with Project Name
     children.push(
@@ -596,16 +557,18 @@ export default function SnapsPage() {
               <h1 className="text-2xl md:text-2xl font-bold text-white">Daily Snaps</h1>
             </div>
             {activeTab === 'management' && (
-              <button
-                onClick={openCardSelection}
-                disabled={!selectedSprintId || isLocked}
-                className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Create Snap
-              </button>
+              <Can permission={PERMISSIONS.SNAP_CREATE}>
+                <button
+                  onClick={openCardSelection}
+                  disabled={!selectedSprintId || isLocked}
+                  className="flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Snap
+                </button>
+              </Can>
             )}
           </div>
         </div>
@@ -939,30 +902,32 @@ export default function SnapsPage() {
                       </>
                     )}
                   </div>
-                  {!isLocked && snaps.length > 0 && (
-                    <button
-                      onClick={handleLockDay}
-                      disabled={locking}
-                      className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 text-white rounded-lg hover:from-amber-600 hover:to-yellow-700 transition-all shadow-md hover:shadow-lg flex items-center font-medium"
-                    >
-                      {locking ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Locking...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                          Lock Day
-                        </>
-                      )}
-                    </button>
-                  )}
+                  <Can permission={PERMISSIONS.SNAP_LOCK_DAILY}>
+                    {!isLocked && snaps.length > 0 && (
+                      <button
+                        onClick={handleLockDay}
+                        disabled={locking}
+                        className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 text-white rounded-lg hover:from-amber-600 hover:to-yellow-700 transition-all shadow-md hover:shadow-lg flex items-center font-medium"
+                      >
+                        {locking ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            Locking...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            Lock Day
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </Can>
                 </div>
               </div>
             )}
@@ -1180,7 +1145,7 @@ export default function SnapsPage() {
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <span className="text-gray-500">
-                              {card.assignee ? (card.assignee.fullName || card.assignee.displayName || card.assignee.username) : 'Unassigned'}
+                              {card.assignee ? (card.assignee.fullName || card.assignee.displayName) : 'Unassigned'}
                             </span>
                             {card.externalId && (
                               <>
@@ -1192,15 +1157,13 @@ export default function SnapsPage() {
                           {card.status && (
                             <div className="mt-2">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                card.status === 'in_progress' ? 'bg-primary-100 text-blue-700' :
-                                card.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                card.status === 'blocked' ? 'bg-red-100 text-red-700' :
+                                card.status === CardStatus.IN_PROGRESS ? 'bg-primary-100 text-blue-700' :
+                                card.status === CardStatus.COMPLETED ? 'bg-green-100 text-green-700' :
                                 'bg-gray-100 text-gray-700'
                               }`}>
-                                {card.status === 'in_progress' ? 'In Progress' :
-                                 card.status === 'completed' ? 'Completed' :
-                                 card.status === 'blocked' ? 'Blocked' :
-                                 card.status === 'not_started' ? 'Not Started' :
+                                {card.status === CardStatus.IN_PROGRESS ? 'In Progress' :
+                                 card.status === CardStatus.COMPLETED ? 'Completed' :
+                                 card.status === CardStatus.NOT_STARTED ? 'Not Started' :
                                  card.status}
                               </span>
                             </div>
@@ -1238,7 +1201,7 @@ export default function SnapsPage() {
         <CreateSnapModal
           cardId={selectedCard.id}
           cardTitle={selectedCard.title}
-          dailyStandupCount={selectedCard.sprint.dailyStandupCount || 1}
+          dailyStandupCount={selectedCard.sprint?.dailyStandupCount || 1}
           yesterdaySnap={yesterdaySnap}
           olderSnaps={olderSnaps}
           onClose={() => {

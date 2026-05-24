@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { projectsApi } from '../../services/api/projects';
 import { Project } from '../../types/project';
 import { usePermissions } from '../../hooks/usePermissions';
-import { Permission } from '../../constants/roles';
+import { PERMISSIONS } from '../../constants/permissions';
 import AppLayout from '../../components/AppLayout';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 import { Pagination } from '../../components/ui/Pagination';
@@ -25,9 +25,9 @@ export default function ProjectsListPage() {
   const location = useLocation();
   const { hasPermission} = usePermissions();
 
-  const canCreate = hasPermission(Permission.CREATE_PROJECT);
-  const canEdit = hasPermission(Permission.EDIT_PROJECT);
-  const canDelete = hasPermission(Permission.DELETE_PROJECT);
+  const canCreate = hasPermission(PERMISSIONS.PROJECT_CREATE);
+  const canEdit = hasPermission(PERMISSIONS.PROJECT_EDIT);
+  const canDelete = hasPermission(PERMISSIONS.PROJECT_DELETE);
 
   // Reload when page loads or when navigating back
   useEffect(() => {

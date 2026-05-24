@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -28,7 +28,7 @@ export class IssueController {
   @Post()
   async create(@Body() dto: CreateIssueDto, @Request() req) {
     const userId = req.user.id || req.user.userId;
-    return this.issueService.create(dto, userId);
+    return this.issueService.create(dto, userId, req.user?.organizationId);
   }
 
   @Get('project/:projectId')

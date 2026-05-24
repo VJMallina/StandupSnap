@@ -4,11 +4,14 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Card } from './card.entity';
 import { User } from './user.entity';
+import { Organization } from './organization.entity';
 
 export enum SnapRAG {
   GREEN = 'green',
@@ -20,6 +23,17 @@ export enum SnapRAG {
 export class Snap {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  /**
+   * FK to organization - tenant isolation
+   */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @ManyToOne(() => Card, (card) => card.snaps, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'card_id' })
@@ -81,4 +95,7 @@ export class Snap {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

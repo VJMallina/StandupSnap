@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Risk, RiskHistory } from '../../types/risk';
-import { SeverityBadge } from './SeverityBadge';
 import { RiskScoreDisplay } from './RiskScoreDisplay';
 import { risksApi } from '../../services/api/risks';
 

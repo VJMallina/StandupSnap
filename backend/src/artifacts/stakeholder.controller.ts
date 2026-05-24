@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -28,7 +28,7 @@ export class StakeholderController {
   @Post()
   async create(@Body() dto: CreateStakeholderDto, @Request() req) {
     const userId = req.user.id || req.user.userId;
-    return this.stakeholderService.create(dto, userId);
+    return this.stakeholderService.create(dto, userId, req.user?.organizationId);
   }
 
   @Get('project/:projectId')

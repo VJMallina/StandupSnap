@@ -115,7 +115,7 @@ const CustomTooltip: React.FC<{ task: Task; fontSize: string; fontFamily: string
         {originalTask.assignee && (
           <div className="flex justify-between">
             <span className="text-gray-400">Assignee:</span>
-            <span>{originalTask.assignee.user?.name || originalTask.assignee.user?.email}</span>
+            <span>{originalTask.assignee.user?.email}</span>
           </div>
         )}
         <div className="flex justify-between">

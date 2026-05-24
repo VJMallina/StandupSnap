@@ -6,10 +6,12 @@ import { TeamMember } from '../entities/team-member.entity';
 import { Card } from '../entities/card.entity';
 import { Snap } from '../entities/snap.entity';
 import { Sprint } from '../entities/sprint.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([TeamMember, Card, Snap, Sprint]),
+    AuthModule,
   ],
   controllers: [AssigneeController],
   providers: [AssigneeService],

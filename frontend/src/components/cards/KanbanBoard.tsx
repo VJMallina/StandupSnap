@@ -9,102 +9,80 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Card, CardStatus } from '../../types/card';
+import { Card, WorkflowLane, TransitionMode } from '../../types/card';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanCard } from './KanbanCard';
 
 interface KanbanBoardProps {
   cards: Card[];
-  onStatusChange: (cardId: string, newStatus: CardStatus) => Promise<void>;
+  lanes: WorkflowLane[];
+  onLaneChange: (cardId: string, laneId: string) => Promise<void>;
   onCardClick: (card: Card) => void;
   onDelete: (card: Card) => void;
+  transitionMode?: TransitionMode;
 }
 
-const COLUMNS = [
-  {
-    id: CardStatus.NOT_STARTED,
-    title: 'Not Started',
-    color: 'from-gray-500 to-gray-600',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
-  },
-  {
-    id: CardStatus.IN_PROGRESS,
-    title: 'In Progress',
-    color: 'from-primary-500 to-primary-600',
-    bgColor: 'bg-primary-50',
-    borderColor: 'border-primary-200',
-  },
-  {
-    id: CardStatus.COMPLETED,
-    title: 'Completed',
-    color: 'from-green-500 to-green-600',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
-  },
-  {
-    id: CardStatus.CLOSED,
-    title: 'Closed',
-    color: 'from-gray-700 to-gray-800',
-    bgColor: 'bg-gray-100',
-    borderColor: 'border-gray-300',
-  },
-];
-
-export function KanbanBoard({ cards, onStatusChange, onCardClick, onDelete }: KanbanBoardProps) {
+export function KanbanBoard({ cards, lanes, onLaneChange, onCardClick, onDelete, transitionMode = TransitionMode.FREE }: KanbanBoardProps) {
   const [activeCard, setActiveCard] = useState<Card | null>(null);
-  const [dragStartColumn, setDragStartColumn] = useState<CardStatus | null>(null);
+  const [dragStartLaneId, setDragStartLaneId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 8px movement required to start drag
-      },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
+
+  const sortedLanes = [...lanes].sort((a, b) => a.order - b.order);
 
   const handleDragStart = (event: DragStartEvent) => {
     const card = cards.find((c) => c.id === event.active.id);
     if (card) {
       setActiveCard(card);
-      setDragStartColumn(card.status);
+      setDragStartLaneId(card.laneId ?? null);
     }
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (!over) {
-      setActiveCard(null);
-      setDragStartColumn(null);
-      return;
-    }
+    // Clear drag state immediately so the overlay disappears at once
+    setActiveCard(null);
+    setDragStartLaneId(null);
+
+    if (!over) return;
 
     const cardId = active.id as string;
-    const newStatus = over.id as CardStatus;
-
+    const newLaneId = over.id as string;
     const card = cards.find((c) => c.id === cardId);
 
-    if (card && card.status !== newStatus) {
-      try {
-        await onStatusChange(cardId, newStatus);
-      } catch (error) {
-        console.error('Failed to update card status:', error);
-      }
+    if (card && card.laneId !== newLaneId) {
+      onLaneChange(cardId, newLaneId).catch((err) => {
+        console.error('Failed to move card:', err);
+      });
     }
-
-    setActiveCard(null);
-    setDragStartColumn(null);
   };
 
   const handleDragCancel = () => {
     setActiveCard(null);
-    setDragStartColumn(null);
+    setDragStartLaneId(null);
   };
 
-  const getCardsForColumn = (status: CardStatus) => {
-    return cards.filter((card) => card.status === status);
-  };
+  const getCardsForLane = (laneId: string) =>
+    cards.filter((card) => card.laneId === laneId);
+
+  const unassignedCards = cards.filter((card) => !card.laneId);
+
+  if (sortedLanes.length === 0) {
+    return (
+      <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+        <p className="text-gray-500">No workflow lanes configured for this project.</p>
+      </div>
+    );
+  }
+
+  const gridCols =
+    sortedLanes.length <= 2 ? 'grid-cols-2' :
+    sortedLanes.length === 3 ? 'grid-cols-3' :
+    sortedLanes.length === 4 ? 'grid-cols-4' :
+    'grid-cols-4';
 
   return (
     <DndContext
@@ -113,42 +91,61 @@ export function KanbanBoard({ cards, onStatusChange, onCardClick, onDelete }: Ka
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {COLUMNS.map((column) => {
-          const columnCards = getCardsForColumn(column.id);
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:${gridCols} gap-4 mb-8`}>
+        {sortedLanes.map((lane) => {
+          const laneCards = getCardsForLane(lane.id);
           return (
             <SortableContext
-              key={column.id}
-              id={column.id}
-              items={columnCards.map((c) => c.id)}
+              key={lane.id}
+              id={lane.id}
+              items={laneCards.map((c) => c.id)}
               strategy={verticalListSortingStrategy}
             >
               <KanbanColumn
-                id={column.id}
-                title={column.title}
-                color={column.color}
-                bgColor={column.bgColor}
-                borderColor={column.borderColor}
-                count={columnCards.length}
-                cards={columnCards}
+                id={lane.id}
+                title={lane.name}
+                color={lane.color}
+                count={laneCards.length}
+                cards={laneCards}
+                lanes={sortedLanes}
                 onCardClick={onCardClick}
                 onDelete={onDelete}
-                isHighlighted={dragStartColumn !== null && dragStartColumn !== column.id}
+                onLaneChange={onLaneChange}
+                isHighlighted={dragStartLaneId !== null && dragStartLaneId !== lane.id}
+                transitionMode={transitionMode}
               />
             </SortableContext>
           );
         })}
+
+        {/* Unassigned column shown only if cards lack a lane */}
+        {unassignedCards.length > 0 && (
+          <SortableContext
+            id="unassigned"
+            items={unassignedCards.map((c) => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <KanbanColumn
+              id="unassigned"
+              title="Unassigned"
+              color="#6B7280"
+              count={unassignedCards.length}
+              cards={unassignedCards}
+              lanes={sortedLanes}
+              onCardClick={onCardClick}
+              onDelete={onDelete}
+              onLaneChange={onLaneChange}
+              isHighlighted={dragStartLaneId !== null}
+              transitionMode={transitionMode}
+            />
+          </SortableContext>
+        )}
       </div>
 
       <DragOverlay>
         {activeCard ? (
           <div className="rotate-3 scale-105 opacity-90">
-            <KanbanCard
-              card={activeCard}
-              onClick={() => {}}
-              onDelete={() => {}}
-              isDragging
-            />
+            <KanbanCard card={activeCard} onClick={() => {}} onDelete={() => {}} isDragging />
           </div>
         ) : null}
       </DragOverlay>

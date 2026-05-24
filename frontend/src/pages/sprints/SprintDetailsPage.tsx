@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { sprintsApi } from '../../services/api/sprints';
 import { Sprint, SprintStatus } from '../../types/sprint';
 import AppLayout from '../../components/AppLayout';
+import { Can } from '../../components/Can';
+import { PERMISSIONS } from '../../constants/permissions';
 
 export default function SprintDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -215,30 +217,36 @@ export default function SprintDetailsPage() {
               </span>
             </div>
             <div className="flex gap-3">
-              {canEdit && (
-                <button
-                  onClick={() => setShowEditModal(true)}
-                  className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
-                >
-                  Edit Sprint
-                </button>
-              )}
-              {canClose && (
-                <button
-                  onClick={() => setShowCloseModal(true)}
-                  className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
-                >
-                  Close Sprint
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  onClick={handleDelete}
-                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              )}
+              <Can permission={PERMISSIONS.SPRINT_EDIT}>
+                {canEdit && (
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700"
+                  >
+                    Edit Sprint
+                  </button>
+                )}
+              </Can>
+              <Can permission={PERMISSIONS.SPRINT_CLOSE}>
+                {canClose && (
+                  <button
+                    onClick={() => setShowCloseModal(true)}
+                    className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700"
+                  >
+                    Close Sprint
+                  </button>
+                )}
+              </Can>
+              <Can permission={PERMISSIONS.SPRINT_DELETE}>
+                {canDelete && (
+                  <button
+                    onClick={handleDelete}
+                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                )}
+              </Can>
             </div>
           </div>
 

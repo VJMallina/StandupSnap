@@ -3,7 +3,7 @@ import { DashboardService, DashboardData } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-import { Permission } from '../entities/role.entity';
+import { PERMISSIONS } from '../common/constants/permissions';
 
 @Controller('dashboard')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -16,13 +16,14 @@ export class DashboardController {
    * Returns all dashboard widgets for the selected/default project
    */
   @Get()
-  @RequirePermissions(Permission.VIEW_PROJECT)
+  @RequirePermissions(PERMISSIONS.PROJECT_VIEW)
   async getDashboard(
     @Request() req,
     @Query('projectId') projectId?: string,
   ): Promise<DashboardData> {
     const userId = req.user.userId;
-    return this.dashboardService.getDashboardData(userId, projectId);
+    const organizationId = req.user.organizationId;
+    return this.dashboardService.getDashboardData(userId, projectId, organizationId);
   }
 
   /**
@@ -31,9 +32,10 @@ export class DashboardController {
    * Returns list of projects the user has access to
    */
   @Get('projects')
-  @RequirePermissions(Permission.VIEW_PROJECT)
+  @RequirePermissions(PERMISSIONS.PROJECT_VIEW)
   async getUserProjects(@Request() req) {
     const userId = req.user.userId;
-    return this.dashboardService.getUserProjects(userId);
+    const organizationId = req.user.organizationId;
+    return this.dashboardService.getUserProjects(userId, organizationId);
   }
 }

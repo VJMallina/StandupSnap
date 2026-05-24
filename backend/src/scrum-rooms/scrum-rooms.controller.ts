@@ -28,17 +28,21 @@ export class ScrumRoomsController {
   @Post()
   async createRoom(@Body() dto: CreateRoomDto, @Request() req) {
     const userId = req.user.id || req.user.userId;
-    return this.scrumRoomsService.createRoom(dto, userId);
+    const organizationId = req.user.organizationId;
+    return this.scrumRoomsService.createRoom(dto, userId, organizationId);
   }
 
   @Get()
   async findAll(
+    @Request() req,
     @Query('projectId') projectId?: string,
     @Query('type') type?: RoomType,
     @Query('status') status?: RoomStatus,
     @Query('includeArchived') includeArchived?: string,
   ) {
+    const organizationId = req.user.organizationId;
     return this.scrumRoomsService.findAll({
+      organizationId,
       projectId,
       type,
       status,
@@ -47,8 +51,9 @@ export class ScrumRoomsController {
   }
 
   @Get(':id')
-  async findById(@Param('id') id: string) {
-    return this.scrumRoomsService.findById(id);
+  async findById(@Param('id') id: string, @Request() req) {
+    const organizationId = req.user.organizationId;
+    return this.scrumRoomsService.findById(id, organizationId);
   }
 
   @Put(':id')

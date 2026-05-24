@@ -288,7 +288,7 @@ const ScheduleBuilderPage: React.FC = () => {
         new Date(task.endDate).toLocaleDateString(),
         task.status,
         `${task.progress}%`,
-        task.assignee?.user?.name || task.assignee?.user?.email || '',
+        task.assignee?.user?.email || '',
         duration,
         dependencies
       ];
@@ -333,7 +333,7 @@ const ScheduleBuilderPage: React.FC = () => {
         'Duration (days)': duration,
         'Status': task.status,
         'Progress': `${task.progress}%`,
-        'Assignee': task.assignee?.user?.name || task.assignee?.user?.email || '',
+        'Assignee': task.assignee?.user?.email || '',
         'Dependencies': dependencies,
         'Notes': task.notes || ''
       };
@@ -440,7 +440,7 @@ const ScheduleBuilderPage: React.FC = () => {
           `${duration}d`,
           task.status,
           `${task.progress}%`,
-          task.assignee?.user?.name || task.assignee?.user?.email || ''
+          task.assignee?.user?.email || ''
         ];
       });
 

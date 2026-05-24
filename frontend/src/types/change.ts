@@ -1,6 +1,6 @@
 import { Project } from './project';
 import { TeamMember } from './teamMember';
-import { User } from './user';
+import { User } from './auth';
 
 export enum ChangeType {
   MINOR = 'MINOR',

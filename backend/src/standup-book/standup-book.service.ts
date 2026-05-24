@@ -37,15 +37,27 @@ export class StandupBookService {
 
   /**
    * SB-UC01: Get active sprint for a project
+   * Queries by date range instead of stored status so stale status values don't hide active sprints.
    */
   async getActiveSprint(projectId: string): Promise<Sprint | null> {
-    return this.sprintRepository.findOne({
-      where: {
-        project: { id: projectId },
-        status: SprintStatus.ACTIVE,
-      },
-      relations: ['project'],
-    });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const sprint = await this.sprintRepository
+      .createQueryBuilder('sprint')
+      .leftJoinAndSelect('sprint.project', 'project')
+      .where('sprint.project.id = :projectId', { projectId })
+      .andWhere('sprint.isClosed = :isClosed', { isClosed: false })
+      .andWhere('CAST(sprint.startDate AS date) <= CAST(:today AS date)', { today })
+      .andWhere('CAST(sprint.endDate AS date) >= CAST(:today AS date)', { today })
+      .getOne();
+
+    if (sprint && sprint.status !== SprintStatus.ACTIVE) {
+      sprint.status = SprintStatus.ACTIVE;
+      await this.sprintRepository.save(sprint);
+    }
+
+    return sprint;
   }
 
   /**

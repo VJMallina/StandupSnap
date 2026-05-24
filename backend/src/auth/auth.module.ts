@@ -13,10 +13,31 @@ import { Role } from '../entities/role.entity';
 import { Invitation } from '../entities/invitation.entity';
 import { Project } from '../entities/project.entity';
 import { MailModule } from '../mail/mail.module';
+// Enterprise entities for permission system
+import { Organization } from '../entities/organization.entity';
+import { OrgUser } from '../entities/org-user.entity';
+import { OrgRole } from '../entities/org-role.entity';
+import { RolePermission } from '../entities/role-permission.entity';
+import { ProjectMember } from '../entities/project-member.entity';
+import { PermissionResolverService } from './services/permission-resolver.service';
+import { PermissionsGuard } from './guards/permissions.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RefreshToken, Role, Invitation, Project]),
+    TypeOrmModule.forFeature([
+      User,
+      RefreshToken,
+      Role,
+      Invitation,
+      Project,
+      // Enterprise entities
+      Organization,
+      OrgUser,
+      OrgRole,
+      RolePermission,
+      ProjectMember,
+    ]),
     PassportModule,
     MailModule,
     JwtModule.registerAsync({
@@ -31,7 +52,7 @@ import { MailModule } from '../mail/mail.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LocalStrategy],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, LocalStrategy, PermissionResolverService, PermissionsGuard, JwtAuthGuard],
+  exports: [AuthService, PermissionResolverService, PermissionsGuard, JwtAuthGuard],
 })
 export class AuthModule {}

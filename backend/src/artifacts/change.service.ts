@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Change, ChangeStatus } from '../entities/change.entity';
@@ -19,7 +19,7 @@ export class ChangeService {
     private teamMemberRepo: Repository<TeamMember>,
   ) {}
 
-  async create(dto: CreateChangeDto, userId: string): Promise<Change> {
+  async create(dto: CreateChangeDto, userId: string, orgId?: string): Promise<Change> {
     const project = await this.projectRepo.findOne({ where: { id: dto.projectId } });
     if (!project) {
       throw new NotFoundException(`Project with ID ${dto.projectId} not found`);
@@ -64,6 +64,7 @@ export class ChangeService {
       approver,
       createdBy: { id: userId } as User,
       updatedBy: { id: userId } as User,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
     return this.changeRepo.save(change);

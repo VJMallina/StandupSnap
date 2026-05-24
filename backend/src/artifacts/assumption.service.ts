@@ -19,7 +19,7 @@ export class AssumptionService {
     private readonly teamMemberRepository: Repository<TeamMember>,
   ) {}
 
-  async create(dto: CreateAssumptionDto, userId: string): Promise<Assumption> {
+  async create(dto: CreateAssumptionDto, userId: string, orgId?: string): Promise<Assumption> {
     // Validate project exists
     const project = await this.projectRepository.findOne({ where: { id: dto.projectId } });
     if (!project) {
@@ -60,6 +60,7 @@ export class AssumptionService {
       isArchived: false,
       createdBy: { id: userId } as User,
       updatedBy: { id: userId } as User,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
     const saved = await this.assumptionRepository.save(assumption);

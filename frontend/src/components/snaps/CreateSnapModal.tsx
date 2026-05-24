@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { snapsApi } from '../../services/api/snaps';
 import { Snap, SnapRAG, CreateSnapRequest } from '../../types/snap';
 

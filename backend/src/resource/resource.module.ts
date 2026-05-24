@@ -5,10 +5,12 @@ import { ResourceController } from './resource.controller';
 import { Resource } from '../entities/resource.entity';
 import { ResourceWorkload } from '../entities/resource-workload.entity';
 import { Project } from '../entities/project.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Resource, ResourceWorkload, Project]),
+    AuthModule,
   ],
   controllers: [ResourceController],
   providers: [ResourceService],

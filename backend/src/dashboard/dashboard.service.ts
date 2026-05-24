@@ -92,9 +92,10 @@ export class DashboardService {
   async getDashboardData(
     userId: string,
     projectId?: string,
+    organizationId?: string,
   ): Promise<DashboardData> {
     // Get user's projects
-    const userProjects = await this.getUserProjects(userId);
+    const userProjects = await this.getUserProjects(userId, organizationId);
 
     if (userProjects.length === 0) {
       // M11-UC07: Empty state
@@ -165,18 +166,20 @@ export class DashboardService {
   /**
    * M11-UC02: Get user's assigned projects
    */
-  async getUserProjects(userId: string): Promise<Project[]> {
-    // Get user's project memberships
-    const projectMemberships = await this.projectMemberRepository.find({
-      where: { user: { id: userId }, isActive: true },
-      relations: ['project'],
-    });
+  async getUserProjects(userId: string, organizationId?: string): Promise<Project[]> {
+    const qb = this.projectMemberRepository
+      .createQueryBuilder('pm')
+      .leftJoinAndSelect('pm.project', 'project')
+      .where('pm.user_id = :userId', { userId })
+      .andWhere('pm.isActive = true')
+      .andWhere('project.isArchived = false');
 
-    if (!projectMemberships || projectMemberships.length === 0) {
-      return [];
+    if (organizationId) {
+      qb.andWhere('project.organizationId = :organizationId', { organizationId });
     }
 
-    return projectMemberships.map((pm) => pm.project);
+    const memberships = await qb.getMany();
+    return memberships.filter((pm) => pm.project).map((pm) => pm.project);
   }
 
   /**

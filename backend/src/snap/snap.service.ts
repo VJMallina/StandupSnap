@@ -61,7 +61,7 @@ export class SnapService {
    * - AI suggests RAG status
    * - SM can override AI output
    */
-  async create(createSnapDto: CreateSnapDto, userId: string): Promise<Snap> {
+  async create(createSnapDto: CreateSnapDto, userId: string, orgId?: string): Promise<Snap> {
     try {
       console.log('[SnapService.create] Starting snap creation:', { cardId: createSnapDto.cardId, userId });
       const { cardId, rawInput, done, toDo, blockers, suggestedRAG, finalRAG, slotNumber } = createSnapDto;
@@ -135,6 +135,7 @@ export class SnapService {
       snapDate,
       slotNumber,
       isLocked: false,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
       // 9. Save snap
@@ -643,11 +644,20 @@ export class SnapService {
     sprintId?: string,
     startDate?: string,
     endDate?: string,
+    organizationId?: string,
   ): Promise<DailySummary[]> {
     const query = this.summaryRepository
       .createQueryBuilder('summary')
       .leftJoinAndSelect('summary.sprint', 'sprint')
       .where('sprint.project_id = :projectId', { projectId });
+
+    // Enforce org isolation: only return summaries for projects in the user's org
+    if (organizationId) {
+      query.andWhere(
+        'sprint.project_id IN (SELECT id FROM projects WHERE organization_id = :organizationId AND deleted_at IS NULL)',
+        { organizationId },
+      );
+    }
 
     if (sprintId) {
       query.andWhere('summary.sprintId = :sprintId', { sprintId });

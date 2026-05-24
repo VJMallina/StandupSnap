@@ -39,6 +39,14 @@ export class User {
   @Column({ nullable: true })
   passwordResetExpires: Date;
 
+  /**
+   * Version counter for permission caching
+   * Incremented when org role or project role changes
+   * Used to detect stale JWT tokens
+   */
+  @Column({ type: 'int', default: 0 })
+  permissionsVersion: number;
+
   @ManyToMany(() => Role, (role) => role.users, { eager: true })
   @JoinTable({
     name: 'user_roles',

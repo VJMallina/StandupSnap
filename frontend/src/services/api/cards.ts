@@ -5,6 +5,9 @@ import {
   CardRAG,
   CardStatus,
   CardPriority,
+  CardType,
+  CardActivity,
+  CardComment,
 } from '../../types/card';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
@@ -24,11 +27,14 @@ interface GetCardsOptions {
   ragStatus?: CardRAG;
   status?: CardStatus;
   priority?: CardPriority;
+  cardType?: CardType;
+  laneId?: string;
+  parentId?: string;
+  backlog?: boolean;
   search?: string;
 }
 
 export const cardsApi = {
-  // M7-UC05: Get all cards with filtering and search
   getAll: async (options?: GetCardsOptions): Promise<Card[]> => {
     const params = new URLSearchParams();
     if (options?.projectId) params.append('projectId', options.projectId);
@@ -37,91 +43,117 @@ export const cardsApi = {
     if (options?.ragStatus) params.append('ragStatus', options.ragStatus);
     if (options?.status) params.append('status', options.status);
     if (options?.priority) params.append('priority', options.priority);
+    if (options?.cardType) params.append('cardType', options.cardType);
+    if (options?.laneId) params.append('laneId', options.laneId);
+    if (options?.parentId) params.append('parentId', options.parentId);
+    if (options?.backlog) params.append('backlog', 'true');
     if (options?.search) params.append('search', options.search);
 
     const url = `${API_URL}/cards${params.toString() ? `?${params.toString()}` : ''}`;
-
-    const response = await fetch(url, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch cards');
-    }
-
+    const response = await fetch(url, { headers: getAuthHeaders() });
+    if (!response.ok) throw new Error('Failed to fetch cards');
     return response.json();
   },
 
-  // M7-UC04: Get card by ID with details
   getById: async (id: string): Promise<Card> => {
-    const response = await fetch(`${API_URL}/cards/${id}`, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch card');
-    }
-
+    const response = await fetch(`${API_URL}/cards/${id}`, { headers: getAuthHeaders() });
+    if (!response.ok) throw new Error('Failed to fetch card');
     return response.json();
   },
 
-  // M7-UC01: Create card
   create: async (data: CreateCardRequest): Promise<Card> => {
     const response = await fetch(`${API_URL}/cards`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
-
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to create card');
     }
-
     return response.json();
   },
 
-  // M7-UC02: Update card
   update: async (id: string, data: UpdateCardRequest): Promise<Card> => {
     const response = await fetch(`${API_URL}/cards/${id}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
-
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to update card');
     }
-
     return response.json();
   },
 
-  // M7-UC06: Mark card as completed
+  moveToLane: async (id: string, laneId: string): Promise<Card> => {
+    return cardsApi.update(id, { laneId });
+  },
+
   markAsCompleted: async (id: string): Promise<Card> => {
     const response = await fetch(`${API_URL}/cards/${id}/complete`, {
       method: 'POST',
       headers: getAuthHeaders(),
     });
-
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to mark card as completed');
     }
-
     return response.json();
   },
 
-  // M7-UC03: Delete card
   delete: async (id: string): Promise<void> => {
     const response = await fetch(`${API_URL}/cards/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to delete card');
+    }
+  },
+
+  getActivity: async (id: string): Promise<CardActivity> => {
+    const response = await fetch(`${API_URL}/cards/${id}/activity`, { headers: getAuthHeaders() });
+    if (!response.ok) throw new Error('Failed to fetch card activity');
+    return response.json();
+  },
+
+  addComment: async (id: string, body: string): Promise<CardComment> => {
+    const response = await fetch(`${API_URL}/cards/${id}/comments`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ body }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to add comment');
+    }
+    return response.json();
+  },
+
+  updateComment: async (cardId: string, commentId: string, body: string): Promise<CardComment> => {
+    const response = await fetch(`${API_URL}/cards/${cardId}/comments/${commentId}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ body }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update comment');
+    }
+    return response.json();
+  },
+
+  deleteComment: async (cardId: string, commentId: string): Promise<void> => {
+    const response = await fetch(`${API_URL}/cards/${cardId}/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete comment');
     }
   },
 };

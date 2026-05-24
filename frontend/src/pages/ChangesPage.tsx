@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/AppLayout';
 import ArtifactsNavigation from '../components/artifacts/ArtifactsNavigation';
 import { useProjectSelection } from '../context/ProjectSelectionContext';
 import { changesApi } from '../services/api/changes';
 import { teamMembersApi } from '../services/api/teamMembers';
-import { Change, CreateChangeInput, UpdateChangeInput, ChangeType, ChangePriority, ChangeStatus } from '../types/change';
+import { Change, ChangeType, ChangePriority, ChangeStatus } from '../types/change';
 import { TeamMember } from '../types/teamMember';
 
 export default function ChangesPage() {
@@ -23,7 +23,7 @@ export default function ChangesPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedChange, setSelectedChange] = useState<Change | null>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-  const [showArchived, setShowArchived] = useState(false);
+  const [showArchived] = useState(false);
 
   useEffect(() => {
     if (!selectedProjectId) {

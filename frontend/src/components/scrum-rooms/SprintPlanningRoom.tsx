@@ -343,7 +343,7 @@ interface ItemCardProps {
   color: 'gray' | 'teal' | 'red';
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, onMove, color }) => {
+const ItemCard: React.FC<ItemCardProps> = ({ item, onUpdate, onDelete, onMove: _onMove, color }) => {
   const colorClasses = {
     gray: 'bg-gray-50 border-gray-200',
     teal: 'bg-primary-50 border-primary-200',

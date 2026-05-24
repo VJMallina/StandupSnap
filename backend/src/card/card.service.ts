@@ -2,14 +2,18 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Card, CardStatus, CardRAG, CardPriority } from '../entities/card.entity';
+import { Repository, IsNull } from 'typeorm';
+import { Card, CardStatus, CardRAG, CardPriority, CardType } from '../entities/card.entity';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
 import { TeamMember } from '../entities/team-member.entity';
 import { Project } from '../entities/project.entity';
+import { WorkflowLane, LaneType } from '../entities/workflow-lane.entity';
+import { WorkflowTemplate } from '../entities/workflow-template.entity';
+import { CardAssignmentHistory } from '../entities/card-assignment-history.entity';
+import { CardComment, CardCommentType } from '../entities/card-comment.entity';
+import { User } from '../entities/user.entity';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 
@@ -17,374 +21,453 @@ import { UpdateCardDto } from './dto/update-card.dto';
 export class CardService {
   constructor(
     @InjectRepository(Card)
-    private cardRepository: Repository<Card>,
+    private cardRepo: Repository<Card>,
     @InjectRepository(Sprint)
-    private sprintRepository: Repository<Sprint>,
+    private sprintRepo: Repository<Sprint>,
     @InjectRepository(TeamMember)
-    private teamMemberRepository: Repository<TeamMember>,
+    private teamMemberRepo: Repository<TeamMember>,
     @InjectRepository(Project)
-    private projectRepository: Repository<Project>,
+    private projectRepo: Repository<Project>,
+    @InjectRepository(WorkflowLane)
+    private laneRepo: Repository<WorkflowLane>,
+    @InjectRepository(WorkflowTemplate)
+    private workflowRepo: Repository<WorkflowTemplate>,
+    @InjectRepository(CardAssignmentHistory)
+    private historyRepo: Repository<CardAssignmentHistory>,
+    @InjectRepository(CardComment)
+    private commentRepo: Repository<CardComment>,
   ) {}
 
-  /**
-   * M7-UC01: Create Card
-   * Business Validations:
-   * - ET is MANDATORY
-   * - Sprint exists and is not Closed
-   * - Assignee is in Project Team
-   * - Mandatory fields present
-   */
-  async create(createCardDto: CreateCardDto): Promise<Card> {
-    const { projectId, sprintId, assigneeId, title, description, externalId, priority, estimatedTime } = createCardDto;
+  // ─── Helpers ────────────────────────────────────────────────────────────────
 
-    // Find and validate project
-    const project = await this.projectRepository.findOne({
-      where: { id: projectId },
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Project with ID ${projectId} not found`);
-    }
-
-    if (project.isArchived) {
-      throw new BadRequestException('Cannot create cards in archived project');
-    }
-
-    // Find and validate sprint
-    const sprint = await this.sprintRepository.findOne({
-      where: { id: sprintId },
-      relations: ['project'],
-    });
-
-    if (!sprint) {
-      throw new NotFoundException(`Sprint with ID ${sprintId} not found`);
-    }
-
-    if (sprint.project.id !== projectId) {
-      throw new BadRequestException('Sprint does not belong to the specified project');
-    }
-
-    if (sprint.isClosed) {
-      throw new BadRequestException('Cannot create cards in a closed sprint');
-    }
-
-    // Validate ET is provided (mandatory)
-    if (!estimatedTime || estimatedTime < 1) {
-      throw new BadRequestException('Estimated Time is required and must be at least 1 hour');
-    }
-
-    // Find and validate assignee
-    const assignee = await this.teamMemberRepository.findOne({
-      where: { id: assigneeId },
-      relations: ['projects'],
-    });
-
-    if (!assignee) {
-      throw new NotFoundException(`Team member with ID ${assigneeId} not found`);
-    }
-
-    // Verify assignee is part of the project team
-    const isInProject = assignee.projects.some(p => p.id === projectId);
-    if (!isInProject) {
-      throw new BadRequestException('Assignee must be a member of the project team');
-    }
-
-    // Create the card
-    const card = this.cardRepository.create({
-      title,
-      description,
-      externalId,
-      priority: priority || CardPriority.MEDIUM,
-      estimatedTime,
-      status: CardStatus.NOT_STARTED,
-      ragStatus: null, // Will be calculated when snaps are added
-      project,
-      sprint,
-      assignee,
-    });
-
-    return this.cardRepository.save(card);
+  /** Map LaneType → CardStatus for status sync */
+  private laneTypeToStatus(laneType: LaneType): CardStatus {
+    if (laneType === LaneType.DONE) return CardStatus.COMPLETED;
+    if (laneType === LaneType.ACTIVE) return CardStatus.IN_PROGRESS;
+    return CardStatus.NOT_STARTED;
   }
 
-  /**
-   * M7-UC05: Find all cards with filtering and search
-   */
-  async findAll(
-    projectId?: string,
-    sprintId?: string,
-    assigneeId?: string,
-    ragStatus?: CardRAG,
-    status?: CardStatus,
-    priority?: CardPriority,
-    search?: string,
-  ): Promise<any[]> {
-    const queryBuilder = this.cardRepository
+  /** Get the first TODO lane for a project's default workflow */
+  private async getDefaultFirstLane(projectId: string): Promise<WorkflowLane | null> {
+    const template = await this.workflowRepo.findOne({
+      where: { projectId, isDefault: true, deletedAt: IsNull() },
+    });
+    if (!template) return null;
+
+    return this.laneRepo.findOne({
+      where: { workflowTemplateId: template.id, laneType: LaneType.TODO, deletedAt: IsNull() },
+      order: { order: 'ASC' },
+    });
+  }
+
+  /** Create a SYSTEM activity comment on a card */
+  private async addActivity(cardId: string, body: string, actorId?: string): Promise<void> {
+    const comment = this.commentRepo.create({
+      cardId,
+      authorId: actorId || null,
+      body,
+      commentType: CardCommentType.SYSTEM,
+    });
+    await this.commentRepo.save(comment);
+  }
+
+  // ─── Create ─────────────────────────────────────────────────────────────────
+
+  async create(dto: CreateCardDto, actorId?: string): Promise<Card> {
+    const project = await this.projectRepo.findOne({ where: { id: dto.projectId } });
+    if (!project) throw new NotFoundException(`Project ${dto.projectId} not found`);
+    if (project.isArchived) throw new BadRequestException('Cannot create cards in an archived project');
+
+    // Sprint validation (optional — null = Backlog)
+    let sprint: Sprint | null = null;
+    if (dto.sprintId) {
+      sprint = await this.sprintRepo.findOne({
+        where: { id: dto.sprintId },
+        relations: ['project'],
+      });
+      if (!sprint) throw new NotFoundException(`Sprint ${dto.sprintId} not found`);
+      if (sprint.project.id !== dto.projectId) throw new BadRequestException('Sprint does not belong to this project');
+      if (sprint.isClosed) throw new BadRequestException('Cannot add cards to a closed sprint');
+    }
+
+    // Assignee validation (optional)
+    let assignee: TeamMember | null = null;
+    if (dto.assigneeId) {
+      assignee = await this.teamMemberRepo.findOne({
+        where: { id: dto.assigneeId },
+        relations: ['projects'],
+      });
+      if (!assignee) throw new NotFoundException(`Team member ${dto.assigneeId} not found`);
+      if (!assignee.projects.some((p) => p.id === dto.projectId)) {
+        throw new BadRequestException('Assignee must be a member of the project team');
+      }
+    }
+
+    // Parent validation
+    if (dto.parentId) {
+      const parent = await this.cardRepo.findOne({ where: { id: dto.parentId } });
+      if (!parent) throw new NotFoundException('Parent card not found');
+      const cardType = dto.cardType || CardType.CARD;
+      if (cardType === CardType.CARD && parent.cardType !== CardType.EPIC) {
+        throw new BadRequestException('A CARD can only be a child of an EPIC');
+      }
+      if (cardType === CardType.SUB_CARD && parent.cardType !== CardType.CARD) {
+        throw new BadRequestException('A SUB_CARD can only be a child of a CARD');
+      }
+    }
+
+    // Lane resolution
+    let lane: WorkflowLane | null = null;
+    if (dto.laneId) {
+      lane = await this.laneRepo.findOne({ where: { id: dto.laneId, deletedAt: IsNull() } });
+      if (!lane) throw new NotFoundException('Lane not found');
+    } else {
+      lane = await this.getDefaultFirstLane(dto.projectId);
+    }
+
+    const card = this.cardRepo.create({
+      project,
+      organizationId: project.organizationId,
+      sprint: sprint || undefined,
+      sprintId: sprint?.id || null,
+      assignee: assignee || undefined,
+      cardType: dto.cardType || CardType.CARD,
+      parentId: dto.parentId || null,
+      laneId: lane?.id || null,
+      title: dto.title,
+      description: dto.description,
+      acceptanceCriteria: dto.acceptanceCriteria || null,
+      labels: dto.labels || null,
+      externalId: dto.externalId,
+      priority: dto.priority || CardPriority.MEDIUM,
+      storyPoints: dto.storyPoints || null,
+      estimatedTime: dto.estimatedTime || null,
+      dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
+      status: lane ? this.laneTypeToStatus(lane.laneType) : CardStatus.NOT_STARTED,
+      ragStatus: null,
+    });
+
+    const savedCard = await this.cardRepo.save(card) as Card;
+
+    // Seed assignment history if assignee provided
+    if (assignee) {
+      await this.historyRepo.save(
+        this.historyRepo.create({
+          cardId: savedCard.id,
+          userId: assignee.id as unknown as string,
+          laneId: lane?.id || null,
+          assignedById: actorId || null,
+        }),
+      );
+    }
+
+    await this.addActivity(
+      savedCard.id,
+      `Card created${sprint ? ` in sprint "${sprint.name}"` : ' in Backlog'}`,
+      actorId,
+    );
+
+    return this.findOne(savedCard.id);
+  }
+
+  // ─── Read ────────────────────────────────────────────────────────────────────
+
+  async findAll(filters: {
+    projectId?: string;
+    sprintId?: string;
+    assigneeId?: string;
+    ragStatus?: CardRAG;
+    status?: CardStatus;
+    priority?: CardPriority;
+    laneId?: string;
+    cardType?: CardType;
+    backlog?: boolean;
+    search?: string;
+    parentId?: string;
+    organizationId?: string;
+  }): Promise<Card[]> {
+    const qb = this.cardRepo
       .createQueryBuilder('card')
       .leftJoinAndSelect('card.project', 'project')
       .leftJoinAndSelect('card.sprint', 'sprint')
       .leftJoinAndSelect('card.assignee', 'assignee')
+      .leftJoinAndSelect('card.lane', 'lane')
+      .leftJoinAndSelect('card.parent', 'parent')
       .loadRelationCountAndMap('card.snapsCount', 'card.snaps')
-      .orderBy('sprint.startDate', 'ASC')
-      .addOrderBy('card.title', 'ASC');
+      .where('card.deletedAt IS NULL')
+      .orderBy('card.createdAt', 'DESC');
 
-    // Filter by project
-    if (projectId) {
-      queryBuilder.andWhere('card.project.id = :projectId', { projectId });
+    if (filters.organizationId) qb.andWhere('card.organizationId = :organizationId', { organizationId: filters.organizationId });
+    if (filters.projectId) qb.andWhere('project.id = :projectId', { projectId: filters.projectId });
+    if (filters.backlog) {
+      qb.andWhere('card.sprintId IS NULL');
+    } else if (filters.sprintId) {
+      qb.andWhere('sprint.id = :sprintId', { sprintId: filters.sprintId });
     }
-
-    // Filter by sprint
-    if (sprintId) {
-      queryBuilder.andWhere('card.sprint.id = :sprintId', { sprintId });
-    }
-
-    // Filter by assignee
-    if (assigneeId) {
-      queryBuilder.andWhere('card.assignee.id = :assigneeId', { assigneeId });
-    }
-
-    // Filter by RAG status
-    if (ragStatus) {
-      queryBuilder.andWhere('card.ragStatus = :ragStatus', { ragStatus });
-    }
-
-    // Filter by card status
-    if (status) {
-      queryBuilder.andWhere('card.status = :status', { status });
-    }
-
-    // Filter by priority
-    if (priority) {
-      queryBuilder.andWhere('card.priority = :priority', { priority });
-    }
-
-    // Search by title or external ID
-    if (search) {
-      queryBuilder.andWhere(
-        '(LOWER(card.title) LIKE LOWER(:search) OR LOWER(card.externalId) LIKE LOWER(:search))',
-        { search: `%${search}%` }
+    if (filters.assigneeId) qb.andWhere('assignee.id = :assigneeId', { assigneeId: filters.assigneeId });
+    if (filters.ragStatus) qb.andWhere('card.ragStatus = :ragStatus', { ragStatus: filters.ragStatus });
+    if (filters.status) qb.andWhere('card.status = :status', { status: filters.status });
+    if (filters.priority) qb.andWhere('card.priority = :priority', { priority: filters.priority });
+    if (filters.laneId) qb.andWhere('card.laneId = :laneId', { laneId: filters.laneId });
+    if (filters.cardType) qb.andWhere('card.cardType = :cardType', { cardType: filters.cardType });
+    if (filters.parentId) qb.andWhere('card.parentId = :parentId', { parentId: filters.parentId });
+    if (filters.search) {
+      qb.andWhere(
+        '(LOWER(card.title) LIKE LOWER(:s) OR LOWER(card.externalId) LIKE LOWER(:s))',
+        { s: `%${filters.search}%` },
       );
     }
 
-    return queryBuilder.getMany();
+    return qb.getMany();
   }
 
-  /**
-   * M7-UC04: Find one card with details
-   */
-  async findOne(id: string): Promise<Card> {
-    const card = await this.cardRepository.findOne({
-      where: { id },
-      relations: ['project', 'sprint', 'assignee'],
+  async findOne(id: string, organizationId?: string): Promise<Card> {
+    const where: any = { id, deletedAt: IsNull() };
+    if (organizationId) where.organizationId = organizationId;
+    const card = await this.cardRepo.findOne({
+      where,
+      relations: ['project', 'sprint', 'assignee', 'lane', 'parent', 'children', 'reporter'],
     });
-
-    if (!card) {
-      throw new NotFoundException(`Card with ID ${id} not found`);
-    }
-
+    if (!card) throw new NotFoundException(`Card ${id} not found`);
     return card;
   }
 
-  /**
-   * M7-UC02: Update Card
-   * Business Validations:
-   * - ET must be present if updating
-   * - Sprint must not be Closed
-   * - Assignee must belong to project team
-   * - Sprint change restrictions apply
-   */
-  async update(id: string, updateCardDto: UpdateCardDto): Promise<Card> {
-    const card = await this.findOne(id);
-
-    // Validate project is not archived
-    if (card.project.isArchived) {
-      throw new BadRequestException('Cannot update cards in archived project');
-    }
-
-    // Validate sprint is not closed
-    if (card.sprint.isClosed) {
-      throw new BadRequestException('Cannot edit card in a closed sprint');
-    }
-
-    const { title, description, externalId, priority, estimatedTime, assigneeId, sprintId } = updateCardDto;
-
-    // Update basic fields
-    if (title !== undefined) card.title = title;
-    if (description !== undefined) card.description = description;
-    if (externalId !== undefined) card.externalId = externalId;
-    if (priority !== undefined) card.priority = priority;
-
-    // Validate and update ET (must be present if provided)
-    if (estimatedTime !== undefined) {
-      if (estimatedTime < 1) {
-        throw new BadRequestException('Estimated Time must be at least 1 hour');
-      }
-      card.estimatedTime = estimatedTime;
-    }
-
-    // Update assignee if provided
-    if (assigneeId) {
-      const newAssignee = await this.teamMemberRepository.findOne({
-        where: { id: assigneeId },
-        relations: ['projects'],
-      });
-
-      if (!newAssignee) {
-        throw new NotFoundException(`Team member with ID ${assigneeId} not found`);
-      }
-
-      // Verify assignee is part of the project team
-      const isInProject = newAssignee.projects.some(p => p.id === card.project.id);
-      if (!isInProject) {
-        throw new BadRequestException('Assignee must be a member of the project team');
-      }
-
-      card.assignee = newAssignee;
-    }
-
-    // Handle sprint change with restrictions
-    if (sprintId && sprintId !== card.sprint.id) {
-      const newSprint = await this.sprintRepository.findOne({
-        where: { id: sprintId },
-        relations: ['project'],
-      });
-
-      if (!newSprint) {
-        throw new NotFoundException(`Sprint with ID ${sprintId} not found`);
-      }
-
-      if (newSprint.project.id !== card.project.id) {
-        throw new BadRequestException('Cannot move card to a sprint in a different project');
-      }
-
-      // Cannot move to a closed sprint
-      if (newSprint.isClosed) {
-        throw new BadRequestException('Cannot move card to a closed sprint');
-      }
-
-      // TODO: Add validation when Snap module is implemented
-      // - Cannot move card if it has snaps
-      // - Cannot move card to a completed sprint if it has snaps
-
-      card.sprint = newSprint;
-    }
-
-    // Save and return updated card
-    const updatedCard = await this.cardRepository.save(card);
-
-    // TODO: Recalculate RAG when Snap module is implemented
-    // this.recalculateRAG(updatedCard.id);
-
-    return this.findOne(updatedCard.id);
+  async getCardActivity(cardId: string): Promise<{
+    comments: CardComment[];
+    assignmentHistory: CardAssignmentHistory[];
+  }> {
+    const [comments, assignmentHistory] = await Promise.all([
+      this.commentRepo.find({
+        where: { cardId, deletedAt: IsNull() },
+        relations: ['author'],
+        order: { createdAt: 'ASC' },
+      }),
+      this.historyRepo.find({
+        where: { cardId },
+        relations: ['user', 'lane', 'assignedBy'],
+        order: { assignedAt: 'ASC' },
+      }),
+    ]);
+    return { comments, assignmentHistory };
   }
 
-  /**
-   * M7-UC03: Delete Card
-   * Business Validations:
-   * - Sprint is not Closed
-   * - User has permission (handled by controller)
-   * - Deletes card AND all associated snaps
-   */
+  // ─── Update ──────────────────────────────────────────────────────────────────
+
+  async update(id: string, dto: UpdateCardDto, actorId?: string): Promise<Card> {
+    const card = await this.findOne(id);
+
+    if (card.project.isArchived) throw new BadRequestException('Cannot update cards in an archived project');
+
+    // ── Lane change ──
+    if (dto.laneId && dto.laneId !== card.laneId) {
+      const newLane = await this.laneRepo.findOne({
+        where: { id: dto.laneId, deletedAt: IsNull() },
+      });
+      if (!newLane) throw new NotFoundException('Target lane not found');
+
+      const oldLaneName = card.lane?.name || 'Unknown';
+      card.laneId = newLane.id;
+      card.lane = newLane;
+      card.status = this.laneTypeToStatus(newLane.laneType);
+
+      if (newLane.laneType === LaneType.ACTIVE && !card.startedAt) {
+        card.startedAt = new Date();
+      }
+      if (newLane.isFinalLane && !card.completedAt) {
+        card.completedAt = new Date();
+        card.status = CardStatus.COMPLETED;
+      }
+
+      await this.addActivity(card.id, `Moved from "${oldLaneName}" to "${newLane.name}"`, actorId);
+    }
+
+    // ── Assignee change ──
+    if (dto.assigneeId !== undefined) {
+      const oldAssigneeId = card.assignee?.id;
+
+      if (dto.assigneeId === null || dto.assigneeId === '') {
+        // Close current history entry
+        if (oldAssigneeId) {
+          await this.historyRepo.update(
+            { cardId: card.id, unassignedAt: IsNull() },
+            { unassignedAt: new Date() },
+          );
+        }
+        card.assignee = null;
+        await this.addActivity(card.id, 'Assignee removed', actorId);
+      } else if (dto.assigneeId !== (oldAssigneeId as unknown as string)) {
+        const newAssignee = await this.teamMemberRepo.findOne({
+          where: { id: dto.assigneeId },
+          relations: ['projects'],
+        });
+        if (!newAssignee) throw new NotFoundException('Team member not found');
+        if (!newAssignee.projects.some((p) => p.id === card.project.id)) {
+          throw new BadRequestException('Assignee must be a member of the project team');
+        }
+
+        // Close previous history entry
+        await this.historyRepo.update(
+          { cardId: card.id, unassignedAt: IsNull() },
+          { unassignedAt: new Date() },
+        );
+
+        // Open new history entry
+        await this.historyRepo.save(
+          this.historyRepo.create({
+            cardId: card.id,
+            userId: newAssignee.id as unknown as string,
+            laneId: card.laneId,
+            assignedById: actorId || null,
+          }),
+        );
+
+        const oldName = card.assignee ? (card.assignee as any).name || 'previous assignee' : 'nobody';
+        card.assignee = newAssignee;
+        await this.addActivity(card.id, `Reassigned from ${oldName} to ${(newAssignee as any).name || 'new assignee'}`, actorId);
+      }
+    }
+
+    // ── Sprint change ──
+    if (dto.sprintId !== undefined && dto.sprintId !== card.sprintId) {
+      if (dto.sprintId === null) {
+        card.sprint = null;
+        card.sprintId = null;
+        await this.addActivity(card.id, 'Moved to Backlog', actorId);
+      } else {
+        const newSprint = await this.sprintRepo.findOne({
+          where: { id: dto.sprintId },
+          relations: ['project'],
+        });
+        if (!newSprint) throw new NotFoundException('Sprint not found');
+        if (newSprint.project.id !== card.project.id) throw new BadRequestException('Sprint belongs to a different project');
+        if (newSprint.isClosed) throw new BadRequestException('Cannot move card to a closed sprint');
+
+        const oldSprintName = card.sprint?.name || 'Backlog';
+        card.sprint = newSprint;
+        card.sprintId = newSprint.id;
+        await this.addActivity(card.id, `Moved from "${oldSprintName}" to sprint "${newSprint.name}"`, actorId);
+      }
+    }
+
+    // ── Simple field updates ──
+    const fields: Array<keyof UpdateCardDto> = [
+      'title', 'description', 'acceptanceCriteria', 'labels',
+      'externalId', 'priority', 'storyPoints', 'estimatedTime', 'parentId',
+    ];
+    for (const f of fields) {
+      if (dto[f] !== undefined) (card as any)[f] = dto[f];
+    }
+    if (dto.dueDate !== undefined) {
+      card.dueDate = dto.dueDate ? new Date(dto.dueDate) : null;
+    }
+
+    const updated = await this.cardRepo.save(card);
+    return this.findOne(updated.id);
+  }
+
+  // ─── Comments ────────────────────────────────────────────────────────────────
+
+  async addComment(cardId: string, body: string, authorId: string): Promise<CardComment> {
+    const card = await this.cardRepo.findOne({ where: { id: cardId, deletedAt: IsNull() } });
+    if (!card) throw new NotFoundException('Card not found');
+
+    return this.commentRepo.save(
+      this.commentRepo.create({
+        cardId,
+        authorId,
+        body,
+        commentType: CardCommentType.COMMENT,
+      }),
+    );
+  }
+
+  async editComment(commentId: string, body: string, authorId: string): Promise<CardComment> {
+    const comment = await this.commentRepo.findOne({
+      where: { id: commentId, deletedAt: IsNull() },
+    });
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.commentType === CardCommentType.SYSTEM) {
+      throw new BadRequestException('System activity entries cannot be edited');
+    }
+    if (comment.authorId !== authorId) {
+      throw new BadRequestException('You can only edit your own comments');
+    }
+    comment.body = body;
+    comment.isEdited = true;
+    return this.commentRepo.save(comment);
+  }
+
+  async deleteComment(commentId: string, authorId: string): Promise<void> {
+    const comment = await this.commentRepo.findOne({
+      where: { id: commentId, deletedAt: IsNull() },
+    });
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.commentType === CardCommentType.SYSTEM) {
+      throw new BadRequestException('System activity entries cannot be deleted');
+    }
+    if (comment.authorId !== authorId) {
+      throw new BadRequestException('You can only delete your own comments');
+    }
+    await this.commentRepo.softDelete(commentId);
+  }
+
+  // ─── Delete ──────────────────────────────────────────────────────────────────
+
   async remove(id: string): Promise<void> {
-    const card = await this.cardRepository.findOne({
+    const card = await this.cardRepo.findOne({
       where: { id },
       relations: ['project', 'sprint'],
     });
+    if (!card) throw new NotFoundException(`Card ${id} not found`);
+    if (card.project.isArchived) throw new BadRequestException('Cannot delete cards in an archived project');
+    if (card.sprint?.isClosed) throw new BadRequestException('Cards in a closed sprint cannot be deleted');
 
-    if (!card) {
-      throw new NotFoundException(`Card with ID ${id} not found`);
-    }
-
-    // Validate project is not archived
-    if (card.project.isArchived) {
-      throw new BadRequestException('Cannot delete cards in archived project');
-    }
-
-    // Validate sprint is not closed
-    if (card.sprint.isClosed) {
-      throw new BadRequestException('Cards in a closed sprint cannot be deleted');
-    }
-
-    // TODO: When Snap module is implemented, snaps will be cascade deleted via entity relation
-    // For now, just delete the card
-    await this.cardRepository.remove(card);
+    await this.cardRepo.softDelete(id);
   }
 
-  /**
-   * M7-UC06: Mark Card as Completed
-   * Only SM can manually change card state to Completed
-   */
-  async markAsCompleted(id: string): Promise<Card> {
-    const card = await this.findOne(id);
+  // ─── Backwards-compat helpers (used by SnapService & SprintService) ─────────
 
-    // Validate project is not archived
-    if (card.project.isArchived) {
-      throw new BadRequestException('Cannot update cards in archived project');
-    }
-
-    // Validate sprint is not closed
-    if (card.sprint.isClosed) {
-      throw new BadRequestException('Cannot update card in a closed sprint');
-    }
-
-    // Validate card is not already completed or closed
-    if (card.status === CardStatus.COMPLETED || card.status === CardStatus.CLOSED) {
-      throw new BadRequestException('Card is already completed or closed');
-    }
-
-    card.status = CardStatus.COMPLETED;
-    card.completedAt = new Date();
-
-    return this.cardRepository.save(card);
-  }
-
-  /**
-   * M7-UC06: Auto-transition from NOT_STARTED to IN_PROGRESS when first snap is created
-   * This will be called by Snap service when creating the first snap
-   */
   async markAsInProgress(id: string): Promise<Card> {
     const card = await this.findOne(id);
-
     if (card.status === CardStatus.NOT_STARTED) {
       card.status = CardStatus.IN_PROGRESS;
-      return this.cardRepository.save(card);
+      if (!card.startedAt) card.startedAt = new Date();
+      return this.cardRepo.save(card);
     }
-
     return card;
   }
 
-  /**
-   * Helper: Get cards by sprint for sprint closure validation
-   */
+  async markAsCompleted(id: string): Promise<Card> {
+    const card = await this.findOne(id);
+    if (card.project.isArchived) throw new BadRequestException('Cannot update cards in an archived project');
+    if (card.sprint?.isClosed) throw new BadRequestException('Cannot update card in a closed sprint');
+    if (card.status === CardStatus.COMPLETED || card.status === CardStatus.CLOSED) {
+      throw new BadRequestException('Card is already completed or closed');
+    }
+    card.status = CardStatus.COMPLETED;
+    card.completedAt = new Date();
+    return this.cardRepo.save(card);
+  }
+
   async getCardsBySprintId(sprintId: string): Promise<Card[]> {
-    return this.cardRepository.find({
+    return this.cardRepo.find({
       where: { sprint: { id: sprintId } },
       relations: ['sprint', 'assignee'],
     });
   }
 
-  /**
-   * Helper: Check if all cards in sprint are completed (for sprint closure)
-   */
   async areAllCardsCompleted(sprintId: string): Promise<boolean> {
     const cards = await this.getCardsBySprintId(sprintId);
-
-    if (cards.length === 0) {
-      return true; // Empty sprint can be closed
-    }
-
-    return cards.every(card => card.status === CardStatus.COMPLETED);
+    if (cards.length === 0) return true;
+    return cards.every((c) => c.status === CardStatus.COMPLETED);
   }
 
-  /**
-   * Helper: Mark all cards in a sprint as closed (when sprint is closed)
-   */
   async closeAllCardsInSprint(sprintId: string): Promise<void> {
     const cards = await this.getCardsBySprintId(sprintId);
-
     for (const card of cards) {
       if (card.status === CardStatus.COMPLETED) {
         card.status = CardStatus.CLOSED;
-        await this.cardRepository.save(card);
+        await this.cardRepo.save(card);
       }
     }
   }

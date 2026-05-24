@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Issue, IssueStatus, IssueSeverity } from '../entities/issue.entity';
@@ -19,7 +19,7 @@ export class IssueService {
     private readonly teamMemberRepository: Repository<TeamMember>,
   ) {}
 
-  async create(dto: CreateIssueDto, userId: string): Promise<Issue> {
+  async create(dto: CreateIssueDto, userId: string, orgId?: string): Promise<Issue> {
     // Validate project exists
     const project = await this.projectRepository.findOne({ where: { id: dto.projectId } });
     if (!project) {
@@ -59,6 +59,7 @@ export class IssueService {
       isArchived: false,
       createdBy: { id: userId } as User,
       updatedBy: { id: userId } as User,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
     const saved = await this.issueRepository.save(issue);

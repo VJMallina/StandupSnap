@@ -4,6 +4,8 @@ import AppLayout from '../components/AppLayout';
 import { Select } from '../components/ui/Select';
 import { DashboardSkeleton } from '../components/ui/SkeletonLoader';
 import { useAuth } from '../context/AuthContext';
+import { Can } from '../components/Can';
+import { PERMISSIONS } from '../constants/permissions';
 import {
   dashboardApi,
   DashboardData,
@@ -223,50 +225,58 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold text-gray-900">Snap Corner</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button
-              onClick={() => navigate('/snaps')}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-primary-50 to-secondary-50 border border-primary-100 hover:from-primary-100 hover:to-secondary-100 active:scale-95 transition-all duration-200"
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-gray-700">Add Snap</span>
-            </button>
-            <button
-              onClick={() => navigate('/reports')}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 hover:from-violet-100 hover:to-purple-100 active:scale-95 transition-all duration-200"
-            >
-              <div className="w-10 h-10 rounded-lg bg-violet-500 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-gray-700">View Reports</span>
-            </button>
-            <button
-              onClick={() => navigate('/cards')}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 hover:from-amber-100 hover:to-orange-100 active:scale-95 transition-all duration-200"
-            >
-              <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-gray-700">View Cards</span>
-            </button>
-            <button
-              onClick={() => navigate('/standups')}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-primary-50 to-secondary-50 border border-primary-100 hover:from-emerald-100 hover:to-primary-100 active:scale-95 transition-all duration-200"
-            >
-              <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-gray-700">Standups</span>
-            </button>
+            <Can permission={PERMISSIONS.SNAP_CREATE}>
+              <button
+                onClick={() => navigate('/snaps')}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-primary-50 to-secondary-50 border border-primary-100 hover:from-primary-100 hover:to-secondary-100 active:scale-95 transition-all duration-200"
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary-500 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-gray-700">Add Snap</span>
+              </button>
+            </Can>
+            <Can permission={PERMISSIONS.REPORT_VIEW}>
+              <button
+                onClick={() => navigate('/reports')}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 hover:from-violet-100 hover:to-purple-100 active:scale-95 transition-all duration-200"
+              >
+                <div className="w-10 h-10 rounded-lg bg-violet-500 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-gray-700">View Reports</span>
+              </button>
+            </Can>
+            <Can permission={PERMISSIONS.CARD_VIEW}>
+              <button
+                onClick={() => navigate('/cards')}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 hover:from-amber-100 hover:to-orange-100 active:scale-95 transition-all duration-200"
+              >
+                <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-gray-700">View Cards</span>
+              </button>
+            </Can>
+            <Can permission={PERMISSIONS.STANDUP_BOOK_VIEW}>
+              <button
+                onClick={() => navigate('/standup-book')}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-primary-50 to-secondary-50 border border-primary-100 hover:from-emerald-100 hover:to-primary-100 active:scale-95 transition-all duration-200"
+              >
+                <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-gray-700">Standups</span>
+              </button>
+            </Can>
           </div>
         </div>
 
@@ -522,6 +532,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Team Summary Widget */}
+              <Can permission={PERMISSIONS.TEAM_MEMBER_VIEW}>
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-fadeInUp" style={{animationDelay: '400ms'}}>
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex items-center justify-between">
@@ -598,6 +609,7 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
+              </Can>
 
               {/* Daily Snap Summary Widget */}
               {dashboardData.dailySnapSummary && (

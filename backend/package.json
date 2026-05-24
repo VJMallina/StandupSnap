@@ -28,7 +28,9 @@
     "fix:artifact-template-column": "ts-node -r tsconfig-paths/register src/scripts/fix-artifact-template-column.ts",
     "fix:all-artifact-columns": "ts-node -r tsconfig-paths/register src/scripts/fix-all-artifact-columns.ts",
     "fix:artifact-version-data": "ts-node -r tsconfig-paths/register src/scripts/fix-artifact-version-data-column.ts",
-    "seed:artifact-templates": "ts-node -r tsconfig-paths/register src/scripts/seed-artifact-templates.ts"
+    "seed:artifact-templates": "ts-node -r tsconfig-paths/register src/scripts/seed-artifact-templates.ts",
+    "seed:enterprise": "ts-node -r tsconfig-paths/register src/database/seed-runner.ts",
+    "migrate:users": "ts-node -r tsconfig-paths/register src/database/migrate-existing-users.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

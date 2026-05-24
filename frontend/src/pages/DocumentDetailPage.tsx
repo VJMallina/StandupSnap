@@ -5,7 +5,6 @@ import ArtifactsNavigation from '../components/artifacts/ArtifactsNavigation';
 import { artifactsApi } from '../services/api/artifacts';
 import {
   ArtifactInstance,
-  ArtifactVersion,
   ArtifactStatus,
   getStatusInfo,
 } from '../types/artifact';

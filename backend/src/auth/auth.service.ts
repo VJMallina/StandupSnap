@@ -4,9 +4,10 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -15,6 +16,10 @@ import { RefreshToken } from '../entities/refresh-token.entity';
 import { Role, RoleName } from '../entities/role.entity';
 import { Invitation, InvitationStatus } from '../entities/invitation.entity';
 import { Project } from '../entities/project.entity';
+// Enterprise entities
+import { OrgUser } from '../entities/org-user.entity';
+import { Organization } from '../entities/organization.entity';
+import { RolePermission } from '../entities/role-permission.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
@@ -26,6 +31,8 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -37,6 +44,13 @@ export class AuthService {
     private invitationRepository: Repository<Invitation>,
     @InjectRepository(Project)
     private projectRepository: Repository<Project>,
+    // Enterprise repositories
+    @InjectRepository(OrgUser)
+    private orgUserRepository: Repository<OrgUser>,
+    @InjectRepository(Organization)
+    private organizationRepository: Repository<Organization>,
+    @InjectRepository(RolePermission)
+    private rolePermissionRepository: Repository<RolePermission>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailService: MailService,
@@ -346,11 +360,25 @@ export class AuthService {
   }
 
   private async generateTokens(user: User): Promise<AuthResponse> {
+    // Build base payload with legacy fields for backwards compatibility
     const payload: JwtPayload = {
       sub: user.id,
       username: user.username,
       roles: user.roles.map((role) => role.name),
+      // Always include permissionsVersion so the stale-token check in JwtStrategy
+      // never fires false positives for users without an org context.
+      permissionsVersion: user.permissionsVersion || 1,
     };
+
+    // Fetch org context for enterprise features
+    const orgContext = await this.getOrgContext(user.id);
+
+    if (orgContext) {
+      payload.organizationId = orgContext.organizationId;
+      payload.orgSlug = orgContext.orgSlug;
+      payload.orgRole = orgContext.orgRole;
+      payload.orgPermissions = orgContext.orgPermissions;
+    }
 
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') || '24h',
@@ -384,7 +412,62 @@ export class AuthService {
           description: role.description,
           permissions: role.permissions,
         })),
+        // Include org context in response for frontend
+        organizationId: orgContext?.organizationId,
+        orgSlug: orgContext?.orgSlug,
+        orgRole: orgContext?.orgRole,
       },
     };
+  }
+
+  /**
+   * Get organization context for a user
+   * Returns the first active org membership (users can have multiple orgs)
+   */
+  private async getOrgContext(userId: string): Promise<{
+    organizationId: string;
+    orgSlug: string;
+    orgRole: string;
+    orgPermissions: string[];
+  } | null> {
+    try {
+      // Find user's org membership with role
+      this.logger.debug(`Looking up org context for user ${userId}`);
+
+      const orgUser = await this.orgUserRepository.findOne({
+        where: {
+          userId,
+          isActive: true,
+          deletedAt: IsNull(),
+        },
+        relations: ['orgRole', 'organization'],
+        order: { createdAt: 'DESC' },
+      });
+
+      this.logger.debug(`OrgUser lookup result: ${JSON.stringify(orgUser ? { id: orgUser.id, orgRoleId: orgUser.orgRoleId, organizationId: orgUser.organizationId, hasOrgRole: !!orgUser.orgRole, hasOrg: !!orgUser.organization } : null)}`);
+
+      if (!orgUser || !orgUser.orgRole || !orgUser.organization) {
+        this.logger.warn(`No org context found for user ${userId} - orgUser: ${!!orgUser}, orgRole: ${!!orgUser?.orgRole}, organization: ${!!orgUser?.organization}`);
+        return null;
+      }
+
+      // Fetch permissions for the org role
+      const rolePermissions = await this.rolePermissionRepository.find({
+        where: { orgRoleId: orgUser.orgRole.id },
+        select: ['permissionKey'],
+      });
+
+      const permissions = rolePermissions.map((rp) => rp.permissionKey);
+
+      return {
+        organizationId: orgUser.organization.id,
+        orgSlug: orgUser.organization.slug,
+        orgRole: orgUser.orgRole.name,
+        orgPermissions: permissions,
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching org context for user ${userId}:`, error);
+      return null;
+    }
   }
 }

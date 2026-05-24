@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -29,7 +29,7 @@ export class RaciMatrixController {
   @Post()
   async create(@Body() createRaciMatrixDto: CreateRaciMatrixDto, @Request() req) {
     const userId = req.user.id || req.user.userId;
-    return this.raciMatrixService.create(createRaciMatrixDto, userId);
+    return this.raciMatrixService.create(createRaciMatrixDto, userId, req.user?.organizationId);
   }
 
   /**

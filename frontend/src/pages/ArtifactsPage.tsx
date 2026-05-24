@@ -49,12 +49,6 @@ interface RaciMatrixData {
   raciGrid: Record<number, Record<string, string>>;
 }
 
-enum RaciRole {
-  RESPONSIBLE = 'R',
-  ACCOUNTABLE = 'A',
-  CONSULTED = 'C',
-  INFORMED = 'I',
-}
 
 const TASK_NAME_LIMIT = 50;
 const TASK_DESC_LIMIT = 100;

@@ -132,6 +132,7 @@ export const TemplateBuilderModal: React.FC<TemplateBuilderModalProps> = ({
 
   const getDefaultLabel = (fieldType: FieldType): string => {
     const labels: Record<FieldType, string> = {
+      [FieldType.RICH_TEXT]: 'Rich Text',
       [FieldType.TEXT]: 'Text Field',
       [FieldType.TEXTAREA]: 'Text Area',
       [FieldType.DROPDOWN]: 'Dropdown',

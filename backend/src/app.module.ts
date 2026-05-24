@@ -19,6 +19,8 @@ import { ArtifactsModule } from './artifacts/artifacts.module';
 import { StandaloneMomModule } from './standalone-mom/standalone-mom.module';
 import { ScrumRoomsModule } from './scrum-rooms/scrum-rooms.module';
 import { ResourceModule } from './resource/resource.module';
+import { OrganizationModule } from './organization/organization.module';
+import { WorkflowModule } from './workflow/workflow.module';
 
 // Team Management Module for non-login team members
 @Module({
@@ -90,6 +92,8 @@ import { ResourceModule } from './resource/resource.module';
     StandaloneMomModule,
     ScrumRoomsModule,
     ResourceModule,
+    OrganizationModule,
+    WorkflowModule,
   ],
   controllers: [AppController],
   providers: [AppService],

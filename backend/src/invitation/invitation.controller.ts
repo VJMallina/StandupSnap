@@ -14,7 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-import { Permission } from '../entities/role.entity';
+import { PERMISSIONS } from '../common/constants/permissions';
 
 @Controller('invitations')
 export class InvitationController {
@@ -25,7 +25,7 @@ export class InvitationController {
    */
   @Post()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions(Permission.SEND_INVITE)
+  @RequirePermissions(PERMISSIONS.USER_INVITE)
   async createInvitation(@Body() createInvitationDto: CreateInvitationDto) {
     const invitation = await this.invitationService.createInvitation(
       createInvitationDto,
@@ -72,7 +72,7 @@ export class InvitationController {
    */
   @Get()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions(Permission.SEND_INVITE)
+  @RequirePermissions(PERMISSIONS.USER_INVITE)
   async getAllInvitations(@Query('projectId') projectId?: string) {
     const invitations = await this.invitationService.getAllInvitations(
       projectId,
@@ -102,7 +102,7 @@ export class InvitationController {
    */
   @Get(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions(Permission.SEND_INVITE)
+  @RequirePermissions(PERMISSIONS.USER_INVITE)
   async getInvitationById(@Param('id') id: string) {
     const invitation = await this.invitationService.getInvitationById(id);
 
@@ -129,7 +129,7 @@ export class InvitationController {
    */
   @Delete(':id')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermissions(Permission.SEND_INVITE)
+  @RequirePermissions(PERMISSIONS.USER_INVITE)
   async revokeInvitation(@Param('id') id: string) {
     await this.invitationService.revokeInvitation(id);
 

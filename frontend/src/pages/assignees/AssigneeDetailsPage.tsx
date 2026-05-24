@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import AppLayout from '../../components/AppLayout';
 import { assigneesApi, AssigneeDetails, SnapsByDate } from '../../services/api/assignees';
-import { Card, CardStatus, CardRAG } from '../../types/card';
+import { Card, CardStatus } from '../../types/card';
 import SnapCard from '../../components/snaps/SnapCard';
 
 export default function AssigneeDetailsPage() {
@@ -318,7 +318,7 @@ export default function AssigneeDetailsPage() {
               <div className="grid grid-cols-1 gap-4">
                 {cards.map((card) => {
                   const statusBadge = getStatusBadge(card.status);
-                  const cardRAGBadge = getRAGBadge(card.ragStatus);
+                  const cardRAGBadge = getRAGBadge(card.ragStatus ?? null);
 
                   return (
                     <div

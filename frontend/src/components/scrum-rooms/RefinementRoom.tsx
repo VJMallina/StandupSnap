@@ -213,7 +213,7 @@ export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }
                         </svg>
                         {item.acceptanceCriteria.length} AC
                       </span>
-                      {item.estimate > 0 && (
+                      {(item.estimate ?? 0) > 0 && (
                         <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded font-medium">
                           {item.estimate} pts
                         </span>

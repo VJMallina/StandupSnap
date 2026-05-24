@@ -35,7 +35,7 @@ const carouselSlides = [
   }
 ];
 
-export default function AuthLayout({ children, showTagline = false }: AuthLayoutProps) {
+export default function AuthLayout({ children }: AuthLayoutProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {

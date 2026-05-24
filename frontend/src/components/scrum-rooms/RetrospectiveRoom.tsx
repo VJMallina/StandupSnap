@@ -62,7 +62,7 @@ const DraggableRetroItem: React.FC<DraggableRetroItemProps> = ({
       {...attributes}
       {...listeners}
       className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
-      onClick={(e) => {
+      onClick={() => {
         // Only trigger onClick if not dragging
         if (!isDragging) {
           onClick(item);

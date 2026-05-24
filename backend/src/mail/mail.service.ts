@@ -54,4 +54,28 @@ export class MailService {
 
     console.log(`Password reset email sent successfully to ${email}`, result);
   }
+
+  async sendOrganizationInvite(
+    email: string,
+    organizationName: string,
+    token: string,
+  ): Promise<void> {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const inviteUrl = `${frontendUrl}/register?token=${token}`;
+
+    console.log(`Attempting to send organization invite email to ${email}`);
+
+    const result = await this.mailerService.sendMail({
+      to: email,
+      subject: `You're invited to join ${organizationName} on StandupSnap`,
+      template: 'org-invitation',
+      context: {
+        inviteUrl,
+        organizationName,
+        email,
+      },
+    });
+
+    console.log(`Organization invite email sent successfully to ${email}`, result);
+  }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Decision, DecisionStatus, ImpactedArea } from '../entities/decision.entity';
@@ -19,7 +19,7 @@ export class DecisionService {
     private readonly teamMemberRepository: Repository<TeamMember>,
   ) {}
 
-  async create(dto: CreateDecisionDto, userId: string): Promise<Decision> {
+  async create(dto: CreateDecisionDto, userId: string, orgId?: string): Promise<Decision> {
     // Validate project exists
     const project = await this.projectRepository.findOne({ where: { id: dto.projectId } });
     if (!project) {
@@ -59,6 +59,7 @@ export class DecisionService {
       isArchived: false,
       createdBy: { id: userId } as User,
       updatedBy: { id: userId } as User,
+      ...(orgId ? { organizationId: orgId } : {}),
     });
 
     const saved = await this.decisionRepository.save(decision);

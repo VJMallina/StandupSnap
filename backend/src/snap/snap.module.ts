@@ -9,6 +9,7 @@ import { DailySnapLock } from '../entities/daily-snap-lock.entity';
 import { DailyLock } from '../entities/daily-lock.entity';
 import { DailySummary } from '../entities/daily-summary.entity';
 import { CardRAGHistory } from '../entities/card-rag-history.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CardRAGHistory } from '../entities/card-rag-history.entity';
       DailySummary,
       CardRAGHistory,
     ]),
+    AuthModule,
   ],
   controllers: [SnapController],
   providers: [SnapService],

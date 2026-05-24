@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -28,7 +28,7 @@ export class AssumptionController {
   @Post()
   async create(@Body() dto: CreateAssumptionDto, @Request() req) {
     const userId = req.user.id || req.user.userId;
-    return this.assumptionService.create(dto, userId);
+    return this.assumptionService.create(dto, userId, req.user?.organizationId);
   }
 
   @Get('project/:projectId')

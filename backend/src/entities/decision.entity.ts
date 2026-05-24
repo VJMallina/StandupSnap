@@ -6,6 +6,8 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
+  Index,
 } from 'typeorm';
 import { Project } from './project.entity';
 import { TeamMember } from './team-member.entity';
@@ -27,6 +29,11 @@ export enum ImpactedArea {
 export class Decision {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  /** Organization ID for tenant isolation */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
 
   @ManyToOne(() => Project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
@@ -81,4 +88,8 @@ export class Decision {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  /** Soft delete timestamp */
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

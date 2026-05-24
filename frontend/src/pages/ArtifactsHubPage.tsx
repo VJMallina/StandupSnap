@@ -204,8 +204,6 @@ export default function ArtifactsHubPage() {
     loadCounts();
   }, [selectedProjectId]);
 
-  const selectedProjectName = projects.find(p => p.id === selectedProjectId)?.name;
-
   const handleProjectChange = (projectId: string) => {
     setSelectedProjectId(projectId);
     setMessage('');

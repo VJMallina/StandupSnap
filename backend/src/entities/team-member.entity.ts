@@ -4,7 +4,9 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToMany,
+  Index,
 } from 'typeorm';
 import { Project } from './project.entity';
 
@@ -24,6 +26,11 @@ export enum DesignationRole {
 export class TeamMember {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  /** Organization ID for tenant isolation */
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
 
   @Column()
   fullName: string;
@@ -45,4 +52,8 @@ export class TeamMember {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  /** Soft delete timestamp */
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

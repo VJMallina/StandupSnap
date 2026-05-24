@@ -24,10 +24,15 @@ const getAuthHeaders = () => {
 
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Request failed');
+    let message = 'Request failed';
+    try {
+      const error = await response.json();
+      message = error.message || message;
+    } catch {}
+    throw new Error(message);
   }
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 };
 
 export const standupBookApi = {

@@ -131,7 +131,7 @@ export class RiskService {
     await this.riskHistoryRepository.save(history);
   }
 
-  async create(dto: CreateRiskDto, userId: string): Promise<Risk> {
+  async create(dto: CreateRiskDto, userId: string, orgId?: string): Promise<Risk> {
     // Validate project exists
     const project = await this.projectRepository.findOne({ where: { id: dto.projectId } });
     if (!project) {
@@ -180,6 +180,7 @@ export class RiskService {
     // Create risk entity
     const risk = this.riskRepository.create({
       project: { id: dto.projectId } as Project,
+      ...(orgId ? { organizationId: orgId } : {}),
 
       // A. Identification
       title: dto.title,
@@ -254,6 +255,7 @@ export class RiskService {
       riskType?: RiskType;
       includeArchived?: boolean;
       search?: string;
+      orgId?: string;
     },
   ): Promise<Risk[]> {
     const qb = this.riskRepository
@@ -262,6 +264,10 @@ export class RiskService {
       .leftJoinAndSelect('risk.createdBy', 'createdBy')
       .leftJoinAndSelect('risk.updatedBy', 'updatedBy')
       .where('risk.project_id = :projectId', { projectId });
+
+    if (filters?.orgId) {
+      qb.andWhere('risk.organizationId = :orgId', { orgId: filters.orgId });
+    }
 
     // By default, exclude archived risks unless explicitly requested
     if (!filters?.includeArchived) {

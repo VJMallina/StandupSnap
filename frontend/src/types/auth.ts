@@ -4,12 +4,23 @@ export interface User {
   email: string;
   name: string;
   roles: string[];
+  // Enterprise org context
+  organizationId?: string;
+  orgSlug?: string;
+  orgRole?: string;
+  orgPermissions?: string[];
+  isOrgAdmin?: boolean;
 }
 
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  user: User;
+  user: User & {
+    // Backend returns these from the auth response
+    organizationId?: string;
+    orgSlug?: string;
+    orgRole?: string;
+  };
 }
 
 export interface LoginCredentials {

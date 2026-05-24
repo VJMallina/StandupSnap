@@ -12,7 +12,7 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { getRoleLabels } = usePermissions();
+  const { userRoles } = usePermissions();
 
   // Initialize from localStorage or default to false
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -71,7 +71,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         {user?.name}
                       </span>
                       <span className="text-xs text-gray-600">
-                        {getRoleLabels().map(role => ROLE_LABELS[role as RoleName]).join(', ')}
+                        {userRoles.map(role => ROLE_LABELS[role as RoleName] || role).join(', ')}
                       </span>
                     </div>
                   </button>

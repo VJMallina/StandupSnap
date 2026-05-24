@@ -12,7 +12,7 @@ import {
   getStatusInfo,
 } from '../types/artifact';
 import { TemplateBuilderModal } from '../components/form-builder/TemplateBuilderModal';
-import { FormTemplate, FieldType } from '../types/formBuilder';
+import { FormTemplate } from '../types/formBuilder';
 
 export default function DocumentTemplatesPage() {
   const navigate = useNavigate();
@@ -267,7 +267,7 @@ export default function DocumentTemplatesPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No documents yet</h3>
                 <p className="text-gray-500 mb-4">Get started by creating a document from a template</p>
                 <button
-                  onClick={() => setActiveTab('templates')}
+                  onClick={() => setActiveTab('browse')}
                   className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
                 >
                   Browse Templates
@@ -614,7 +614,7 @@ export default function DocumentTemplatesPage() {
             version: 1,
             settings: {},
             isArchived: false,
-          } as FormTemplate}
+          } as unknown as FormTemplate}
           onClose={() => {
             setShowTemplateBuilder(false);
             setEditingTemplate(null);

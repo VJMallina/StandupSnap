@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { scrumRoomsApi } from '../../services/api/scrumRooms';
 import {
@@ -27,7 +27,7 @@ export const PlanningPokerRoom: React.FC<PlanningPokerRoomProps> = ({ room, onUp
   const data = room.data as PlanningPokerData;
 
   const [itemName, setItemName] = useState('');
-  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [, setSelectedCard] = useState<string | null>(null);
   const [customDeck, setCustomDeck] = useState<string[]>(data?.customDeck || []);
   const [customCardInput, setCustomCardInput] = useState('');
   const [deckType, setDeckType] = useState<DeckType>(data?.deckType || DeckType.FIBONACCI);

@@ -5,7 +5,7 @@ import ArtifactsNavigation from '../components/artifacts/ArtifactsNavigation';
 import { useProjectSelection } from '../context/ProjectSelectionContext';
 import { risksApi } from '../services/api/risks';
 import { assumptionsApi } from '../services/api/assumptions';
-import { Risk, RiskSeverity } from '../types/risk';
+import { Risk } from '../types/risk';
 import { Assumption, AssumptionStatus } from '../types/assumption';
 
 interface RAIDSummary {

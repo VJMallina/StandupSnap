@@ -6,10 +6,12 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { Project } from './project.entity';
 import { Sprint } from './sprint.entity';
 import { User } from './user.entity';
+import { Organization } from './organization.entity';
 
 export enum StandaloneMeetingType {
   PLANNING = 'Planning',
@@ -25,6 +27,14 @@ export enum StandaloneMeetingType {
 export class StandaloneMom {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
 
   @ManyToOne(() => Project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })

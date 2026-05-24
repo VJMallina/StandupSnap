@@ -4,31 +4,42 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   OneToMany,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Sprint } from './sprint.entity';
 import { TeamMember } from './team-member.entity';
 import { Project } from './project.entity';
 import { Snap } from './snap.entity';
+import { Organization } from './organization.entity';
+import { WorkflowLane } from './workflow-lane.entity';
+import { User } from './user.entity';
+
+export enum CardType {
+  EPIC    = 'epic',
+  CARD    = 'card',
+  SUB_CARD = 'sub_card',
+}
 
 export enum CardStatus {
   NOT_STARTED = 'not_started',
   IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  CLOSED = 'closed',
+  COMPLETED   = 'completed',
+  CLOSED      = 'closed',
 }
 
 export enum CardPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
+  LOW      = 'low',
+  MEDIUM   = 'medium',
+  HIGH     = 'high',
   CRITICAL = 'critical',
 }
 
 export enum CardRAG {
-  RED = 'red',
+  RED   = 'red',
   AMBER = 'amber',
   GREEN = 'green',
 }
@@ -38,18 +49,67 @@ export class Card {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index()
+  @Column({ type: 'uuid', nullable: true })
+  organizationId: string;
+
+  @ManyToOne(() => Organization, { nullable: true, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'organization_id' })
+  organization: Organization;
+
   @ManyToOne(() => Project, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
   project: Project;
 
-  @ManyToOne(() => Sprint, { onDelete: 'CASCADE' })
+  // Sprint is nullable — null means the card is in the Backlog
+  @Column({ type: 'uuid', nullable: true, name: 'sprint_id' })
+  sprintId: string | null;
+
+  @ManyToOne(() => Sprint, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'sprint_id' })
-  sprint: Sprint;
+  sprint: Sprint | null;
 
-  @ManyToOne(() => TeamMember, { onDelete: 'CASCADE' })
+  // ── Card hierarchy ──────────────────────────────────────────
+  @Column({
+    type: 'enum',
+    enum: CardType,
+    default: CardType.CARD,
+  })
+  cardType: CardType;
+
+  // For CARD → parent is an EPIC; for SUB_CARD → parent is a CARD
+  @Column({ type: 'uuid', nullable: true, name: 'parent_id' })
+  parentId: string | null;
+
+  @ManyToOne(() => Card, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'parent_id' })
+  parent: Card | null;
+
+  @OneToMany(() => Card, (card) => card.parent)
+  children: Card[];
+
+  // ── Workflow lane ────────────────────────────────────────────
+  @Column({ type: 'uuid', nullable: true, name: 'lane_id' })
+  laneId: string | null;
+
+  @ManyToOne(() => WorkflowLane, { nullable: true, onDelete: 'SET NULL', eager: true })
+  @JoinColumn({ name: 'lane_id' })
+  lane: WorkflowLane | null;
+
+  // ── Assignee ─────────────────────────────────────────────────
+  @ManyToOne(() => TeamMember, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'assignee_id' })
-  assignee: TeamMember;
+  assignee: TeamMember | null;
 
+  // Reporter — who raised the card
+  @Column({ type: 'uuid', nullable: true })
+  reporterId: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'reporter_id' })
+  reporter: User | null;
+
+  // ── Core fields ───────────────────────────────────────────────
   @Column()
   title: string;
 
@@ -57,7 +117,7 @@ export class Card {
   description: string;
 
   @Column({ nullable: true })
-  externalId: string; // Jira Ticket ID, etc.
+  externalId: string;
 
   @Column({
     type: 'enum',
@@ -66,9 +126,27 @@ export class Card {
   })
   priority: CardPriority;
 
-  @Column({ type: 'int' })
-  estimatedTime: number; // ET in hours (MANDATORY)
+  // Effort estimate in story points (Fibonacci scale — mapping to hours defined at project level later)
+  @Column({ type: 'int', nullable: true })
+  storyPoints: number | null;
 
+  // Estimated time in hours (kept alongside story points)
+  @Column({ type: 'int', nullable: true })
+  estimatedTime: number | null;
+
+  // Definition of done — what must be true before this card is accepted
+  @Column({ type: 'text', nullable: true })
+  acceptanceCriteria: string | null;
+
+  // Free-form labels e.g. ["frontend", "bug", "tech-debt"]
+  @Column({ type: 'simple-array', nullable: true })
+  labels: string[] | null;
+
+  // Optional deadline within the sprint
+  @Column({ type: 'date', nullable: true })
+  dueDate: Date | null;
+
+  // ── Status (synced from lane type, source of truth is laneId) ─
   @Column({
     type: 'enum',
     enum: CardStatus,
@@ -83,8 +161,12 @@ export class Card {
   })
   ragStatus: CardRAG;
 
+  // When the card first moved out of a TODO-type lane
   @Column({ type: 'timestamp', nullable: true })
-  completedAt: Date;
+  startedAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  completedAt: Date | null;
 
   @OneToMany(() => Snap, (snap) => snap.card)
   snaps: Snap[];
@@ -94,4 +176,7 @@ export class Card {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 }

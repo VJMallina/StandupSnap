@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -28,7 +28,7 @@ export class DecisionController {
   @Post()
   async create(@Body() dto: CreateDecisionDto, @Request() req) {
     const userId = req.user.id || req.user.userId;
-    return this.decisionService.create(dto, userId);
+    return this.decisionService.create(dto, userId, req.user?.organizationId);
   }
 
   @Get('project/:projectId')

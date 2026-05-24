@@ -11,14 +11,18 @@ export interface Project {
     email: string;
     firstName: string;
     lastName: string;
+    name?: string;
   };
   pmo?: {
     id: string;
     email: string;
     firstName: string;
     lastName: string;
+    name?: string;
   };
   members?: ProjectMember[];
+  teamMembers?: any[];
+  cards?: any[];
   sprints?: any[];
   createdAt: string;
   updatedAt: string;

@@ -9,6 +9,7 @@ import { TeamMember } from '../entities/team-member.entity';
 import { Snap } from '../entities/snap.entity';
 import { User } from '../entities/user.entity';
 import { ProjectMember } from '../entities/project-member.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ProjectMember } from '../entities/project-member.entity';
       User,
       ProjectMember,
     ]),
+    AuthModule,
   ],
   controllers: [DashboardController],
   providers: [DashboardService],

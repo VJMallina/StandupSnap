@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
-import { Permission } from '../constants/roles';
+import { PERMISSIONS } from '../constants/permissions';
 import { standupBookApi } from '../services/api/standupbook';
 import { sprintsApi } from '../services/api/sprints';
 import { Sprint } from '../types/sprint';
@@ -297,7 +297,7 @@ export default function StandupBookDayDetailsPage() {
                   </div>
 
                   {/* Right: Lock button */}
-                  {hasPermission(Permission.EDIT_SPRINT) && !dayMetadata.isLocked && (
+                  {hasPermission(PERMISSIONS.SNAP_LOCK_DAILY) && !dayMetadata.isLocked && (
                     <button
                       onClick={handleLockDay}
                       className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg font-medium text-sm border border-white/30"
@@ -456,7 +456,7 @@ export default function StandupBookDayDetailsPage() {
                     <h3 className="text-2xl font-bold text-gray-900">Minutes of Meeting</h3>
                   </div>
                   <div className="flex gap-2">
-                    {hasPermission(Permission.EDIT_SPRINT) && !dayMetadata?.isLocked && !dayMom && (
+                    {hasPermission(PERMISSIONS.MOM_CREATE) && !dayMetadata?.isLocked && !dayMom && (
                       <button
                         onClick={() => setShowMomModal(true)}
                         className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm shadow-sm"
@@ -466,7 +466,7 @@ export default function StandupBookDayDetailsPage() {
                     )}
                     {dayMom && (
                       <>
-                        {hasPermission(Permission.EDIT_SPRINT) && !dayMetadata?.isLocked && (
+                        {hasPermission(PERMISSIONS.MOM_EDIT) && !dayMetadata?.isLocked && (
                           <button
                             onClick={handleEditMom}
                             className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm shadow-sm"

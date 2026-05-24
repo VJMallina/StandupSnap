@@ -42,7 +42,7 @@ export class ScrumRoomsService {
 
   // ========== ROOM MANAGEMENT ==========
 
-  async createRoom(dto: CreateRoomDto, userId: string): Promise<ScrumRoom> {
+  async createRoom(dto: CreateRoomDto, userId: string, organizationId?: string): Promise<ScrumRoom> {
     // Validate project if provided
     if (dto.projectId) {
       const project = await this.projectRepository.findOne({
@@ -112,6 +112,7 @@ export class ScrumRoomsService {
       data: dto.data || initialData,
       project: dto.projectId ? ({ id: dto.projectId } as Project) : null,
       status: RoomStatus.ACTIVE,
+      organizationId: organizationId || null,
       createdBy: { id: userId } as User,
       updatedBy: { id: userId } as User,
     });
@@ -120,9 +121,13 @@ export class ScrumRoomsService {
     return this.findById(saved.id);
   }
 
-  async findById(id: string): Promise<ScrumRoom> {
+  async findById(id: string, organizationId?: string): Promise<ScrumRoom> {
+    const where: any = { id };
+    if (organizationId) {
+      where.organizationId = organizationId;
+    }
     const room = await this.roomRepository.findOne({
-      where: { id },
+      where,
       relations: ['project', 'createdBy', 'updatedBy'],
     });
     if (!room) {
@@ -136,12 +141,17 @@ export class ScrumRoomsService {
     type?: RoomType;
     status?: RoomStatus;
     includeArchived?: boolean;
+    organizationId?: string;
   }): Promise<ScrumRoom[]> {
     const qb = this.roomRepository
       .createQueryBuilder('room')
       .leftJoinAndSelect('room.project', 'project')
       .leftJoinAndSelect('room.createdBy', 'createdBy')
       .leftJoinAndSelect('room.updatedBy', 'updatedBy');
+
+    if (filters?.organizationId) {
+      qb.andWhere('room.organizationId = :organizationId', { organizationId: filters.organizationId });
+    }
 
     if (filters?.projectId) {
       qb.andWhere('room.project_id = :projectId', { projectId: filters.projectId });

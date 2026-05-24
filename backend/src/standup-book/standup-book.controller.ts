@@ -15,7 +15,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-import { Permission } from '../entities/role.entity';
+import { PERMISSIONS } from '../common/constants/permissions';
 import { StandupBookService } from './standup-book.service';
 import { MomService } from './mom.service';
 import { DailyLockService } from './daily-lock.service';
@@ -38,7 +38,7 @@ export class StandupBookController {
    * SB-UC01: Get active sprint for project
    */
   @Get('active-sprint/:projectId')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.STANDUP_BOOK_VIEW)
   getActiveSprint(@Param('projectId') projectId: string) {
     return this.standupBookService.getActiveSprint(projectId);
   }
@@ -47,7 +47,7 @@ export class StandupBookController {
    * SB-UC02: Get all sprint days
    */
   @Get('sprint-days/:sprintId')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.STANDUP_BOOK_VIEW)
   getSprintDays(@Param('sprintId') sprintId: string) {
     return this.standupBookService.getSprintDays(sprintId);
   }
@@ -56,7 +56,7 @@ export class StandupBookController {
    * SB-UC03: Get day metadata
    */
   @Get('day-metadata/:sprintId')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.STANDUP_BOOK_VIEW)
   getDayMetadata(
     @Param('sprintId') sprintId: string,
     @Query('date') date: string,
@@ -68,7 +68,7 @@ export class StandupBookController {
    * SB-UC04 & SB-UC05: Get snaps for a day
    */
   @Get('snaps/:sprintId')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.STANDUP_BOOK_VIEW)
   getSnapsForDay(
     @Param('sprintId') sprintId: string,
     @Query('date') date: string,
@@ -80,7 +80,7 @@ export class StandupBookController {
    * SB-UC08 & SB-UC09: Get snaps grouped by slots
    */
   @Get('snaps-by-slots/:sprintId')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.STANDUP_BOOK_VIEW)
   getSnapsGroupedBySlots(
     @Param('sprintId') sprintId: string,
     @Query('date') date: string,
@@ -92,7 +92,7 @@ export class StandupBookController {
    * Lock a day and generate summary
    */
   @Post('lock-day')
-  @RequirePermissions(Permission.EDIT_SPRINT)
+  @RequirePermissions(PERMISSIONS.SNAP_LOCK_DAILY)
   lockDay(@Body() lockDayDto: LockDayDto, @Req() req: any) {
     return this.dailyLockService.lockDay(lockDayDto, req.user.userId);
   }
@@ -101,7 +101,7 @@ export class StandupBookController {
    * Get daily lock status
    */
   @Get('daily-lock/:sprintId')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.STANDUP_BOOK_VIEW)
   getDailyLock(
     @Param('sprintId') sprintId: string,
     @Query('date') date: string,
@@ -113,7 +113,7 @@ export class StandupBookController {
    * SB-UC10: Create MOM
    */
   @Post('mom')
-  @RequirePermissions(Permission.EDIT_SPRINT)
+  @RequirePermissions(PERMISSIONS.MOM_CREATE)
   createMom(@Body() createMomDto: CreateMomDto, @Req() req: any) {
     return this.momService.create(createMomDto, req.user.userId);
   }
@@ -122,7 +122,7 @@ export class StandupBookController {
    * SB-UC11: Update MOM
    */
   @Put('mom/:id')
-  @RequirePermissions(Permission.EDIT_SPRINT)
+  @RequirePermissions(PERMISSIONS.MOM_EDIT)
   updateMom(
     @Param('id') id: string,
     @Body() updateMomDto: UpdateMomDto,
@@ -135,7 +135,7 @@ export class StandupBookController {
    * Get MOM for a specific day
    */
   @Get('mom/:sprintId')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.MOM_VIEW)
   getMomByDate(
     @Param('sprintId') sprintId: string,
     @Query('date') date: string,
@@ -147,7 +147,7 @@ export class StandupBookController {
    * Get all MOMs for a sprint
    */
   @Get('moms/:sprintId')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.MOM_VIEW)
   getAllMoms(@Param('sprintId') sprintId: string) {
     return this.momService.findAllBySprint(sprintId);
   }
@@ -156,7 +156,7 @@ export class StandupBookController {
    * Delete MOM
    */
   @Delete('mom/:id')
-  @RequirePermissions(Permission.EDIT_SPRINT)
+  @RequirePermissions(PERMISSIONS.MOM_DELETE)
   deleteMom(@Param('id') id: string) {
     return this.momService.remove(id);
   }
@@ -165,7 +165,7 @@ export class StandupBookController {
    * Generate MOM using AI
    */
   @Post('mom/generate')
-  @RequirePermissions(Permission.EDIT_SPRINT)
+  @RequirePermissions(PERMISSIONS.MOM_CREATE)
   generateMom(@Body() generateMomDto: GenerateMomDto) {
     return this.momService.generateMomWithAI(generateMomDto);
   }
@@ -174,7 +174,7 @@ export class StandupBookController {
    * SB-UC12: Download MOM
    */
   @Get('mom/:id/download')
-  @RequirePermissions(Permission.VIEW_SPRINT)
+  @RequirePermissions(PERMISSIONS.MOM_EXPORT)
   async downloadMom(
     @Param('id') id: string,
     @Query('format') format: string,
