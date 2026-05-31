@@ -2,7 +2,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
-import { ROLE_LABELS, RoleName } from '../constants/roles';
+import { ROLE_LABELS, RoleName, formatOrgRole } from '../constants/roles';
 import Sidebar from './Sidebar';
 
 interface AppLayoutProps {
@@ -71,7 +71,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
                         {user?.name}
                       </span>
                       <span className="text-xs text-gray-600">
-                        {userRoles.map(role => ROLE_LABELS[role as RoleName] || role).join(', ')}
+                        {user?.orgRole
+                          ? formatOrgRole(user.orgRole)
+                          : userRoles.map(role => ROLE_LABELS[role as RoleName] || role).join(', ')}
                       </span>
                     </div>
                   </button>

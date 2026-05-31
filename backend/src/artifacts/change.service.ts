@@ -1,53 +1,41 @@
-﻿import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Change, ChangeStatus } from '../entities/change.entity';
 import { Project } from '../entities/project.entity';
 import { TeamMember } from '../entities/team-member.entity';
 import { User } from '../entities/user.entity';
 import { CreateChangeDto } from './dto/create-change.dto';
 import { UpdateChangeDto } from './dto/update-change.dto';
+import { TenantService } from '../tenant/tenant.service';
 
 @Injectable()
 export class ChangeService {
-  constructor(
-    @InjectRepository(Change)
-    private changeRepo: Repository<Change>,
-    @InjectRepository(Project)
-    private projectRepo: Repository<Project>,
-    @InjectRepository(TeamMember)
-    private teamMemberRepo: Repository<TeamMember>,
-  ) {}
+  constructor(private tenantService: TenantService) {}
 
   async create(dto: CreateChangeDto, userId: string, orgId?: string): Promise<Change> {
-    const project = await this.projectRepo.findOne({ where: { id: dto.projectId } });
-    if (!project) {
-      throw new NotFoundException(`Project with ID ${dto.projectId} not found`);
-    }
+    const [changeRepo, projectRepo, teamMemberRepo] = await Promise.all([
+      this.tenantService.getRepository(Change),
+      this.tenantService.getRepository(Project),
+      this.tenantService.getRepository(TeamMember),
+    ]);
+
+    const project = await projectRepo.findOne({ where: { id: dto.projectId } });
+    if (!project) throw new NotFoundException(`Project with ID ${dto.projectId} not found`);
 
     let requestor: TeamMember | null = null;
     if (dto.requestorId) {
-      requestor = await this.teamMemberRepo.findOne({ where: { id: dto.requestorId } });
-      if (!requestor) {
-        throw new NotFoundException(`Requestor with ID ${dto.requestorId} not found`);
-      }
-      if (requestor.id.startsWith('user-')) {
-        throw new BadRequestException('Requestor must be a team member, not a user role');
-      }
+      requestor = await teamMemberRepo.findOne({ where: { id: dto.requestorId } });
+      if (!requestor) throw new NotFoundException(`Requestor with ID ${dto.requestorId} not found`);
+      if (requestor.id.startsWith('user-')) throw new BadRequestException('Requestor must be a team member, not a user role');
     }
 
     let approver: TeamMember | null = null;
     if (dto.approverId) {
-      approver = await this.teamMemberRepo.findOne({ where: { id: dto.approverId } });
-      if (!approver) {
-        throw new NotFoundException(`Approver with ID ${dto.approverId} not found`);
-      }
-      if (approver.id.startsWith('user-')) {
-        throw new BadRequestException('Approver must be a team member, not a user role');
-      }
+      approver = await teamMemberRepo.findOne({ where: { id: dto.approverId } });
+      if (!approver) throw new NotFoundException(`Approver with ID ${dto.approverId} not found`);
+      if (approver.id.startsWith('user-')) throw new BadRequestException('Approver must be a team member, not a user role');
     }
 
-    const change = this.changeRepo.create({
+    const change = changeRepo.create({
       project,
       title: dto.title,
       description: dto.description,
@@ -67,28 +55,26 @@ export class ChangeService {
       ...(orgId ? { organizationId: orgId } : {}),
     });
 
-    return this.changeRepo.save(change);
+    return changeRepo.save(change);
   }
 
   async update(id: string, dto: UpdateChangeDto, userId: string): Promise<Change> {
-    const change = await this.changeRepo.findOne({
+    const [changeRepo, teamMemberRepo] = await Promise.all([
+      this.tenantService.getRepository(Change),
+      this.tenantService.getRepository(TeamMember),
+    ]);
+
+    const change = await changeRepo.findOne({
       where: { id, isArchived: false },
       relations: ['project', 'requestor', 'approver', 'createdBy', 'updatedBy'],
     });
-
-    if (!change) {
-      throw new NotFoundException(`Change with ID ${id} not found`);
-    }
+    if (!change) throw new NotFoundException(`Change with ID ${id} not found`);
 
     if (dto.requestorId !== undefined) {
       if (dto.requestorId) {
-        const requestor = await this.teamMemberRepo.findOne({ where: { id: dto.requestorId } });
-        if (!requestor) {
-          throw new NotFoundException(`Requestor with ID ${dto.requestorId} not found`);
-        }
-        if (requestor.id.startsWith('user-')) {
-          throw new BadRequestException('Requestor must be a team member, not a user role');
-        }
+        const requestor = await teamMemberRepo.findOne({ where: { id: dto.requestorId } });
+        if (!requestor) throw new NotFoundException(`Requestor with ID ${dto.requestorId} not found`);
+        if (requestor.id.startsWith('user-')) throw new BadRequestException('Requestor must be a team member, not a user role');
         change.requestor = requestor;
       } else {
         change.requestor = null;
@@ -97,13 +83,9 @@ export class ChangeService {
 
     if (dto.approverId !== undefined) {
       if (dto.approverId) {
-        const approver = await this.teamMemberRepo.findOne({ where: { id: dto.approverId } });
-        if (!approver) {
-          throw new NotFoundException(`Approver with ID ${dto.approverId} not found`);
-        }
-        if (approver.id.startsWith('user-')) {
-          throw new BadRequestException('Approver must be a team member, not a user role');
-        }
+        const approver = await teamMemberRepo.findOne({ where: { id: dto.approverId } });
+        if (!approver) throw new NotFoundException(`Approver with ID ${dto.approverId} not found`);
+        if (approver.id.startsWith('user-')) throw new BadRequestException('Approver must be a team member, not a user role');
         change.approver = approver;
       } else {
         change.approver = null;
@@ -124,39 +106,30 @@ export class ChangeService {
     if (dto.implementationWindow !== undefined) change.implementationWindow = dto.implementationWindow || null;
     if (dto.rejectionReason !== undefined) change.rejectionReason = dto.rejectionReason || null;
 
-    // Auto-set dates based on status changes
     const oldStatus = change.status;
     if (dto.status !== undefined && dto.status !== oldStatus) {
       change.status = dto.status;
-
-      if (dto.status === ChangeStatus.APPROVED && oldStatus !== ChangeStatus.APPROVED) {
-        change.approvedDate = new Date();
-      }
-
-      if (dto.status === ChangeStatus.IMPLEMENTED && oldStatus !== ChangeStatus.IMPLEMENTED) {
-        change.implementedDate = new Date();
-      }
+      if (dto.status === ChangeStatus.APPROVED && oldStatus !== ChangeStatus.APPROVED) change.approvedDate = new Date();
+      if (dto.status === ChangeStatus.IMPLEMENTED && oldStatus !== ChangeStatus.IMPLEMENTED) change.implementedDate = new Date();
     }
 
     change.updatedBy = { id: userId } as User;
-    return this.changeRepo.save(change);
+    return changeRepo.save(change);
   }
 
   async findOne(id: string): Promise<Change> {
-    const change = await this.changeRepo.findOne({
+    const changeRepo = await this.tenantService.getRepository(Change);
+    const change = await changeRepo.findOne({
       where: { id, isArchived: false },
       relations: ['project', 'requestor', 'approver', 'createdBy', 'updatedBy'],
     });
-
-    if (!change) {
-      throw new NotFoundException(`Change with ID ${id} not found`);
-    }
-
+    if (!change) throw new NotFoundException(`Change with ID ${id} not found`);
     return change;
   }
 
   async findByProject(projectId: string, includeArchived = false): Promise<Change[]> {
-    const query = this.changeRepo
+    const changeRepo = await this.tenantService.getRepository(Change);
+    const query = changeRepo
       .createQueryBuilder('change')
       .leftJoinAndSelect('change.project', 'project')
       .leftJoinAndSelect('change.requestor', 'requestor')
@@ -165,16 +138,14 @@ export class ChangeService {
       .leftJoinAndSelect('change.updatedBy', 'updatedBy')
       .where('change.projectId = :projectId', { projectId });
 
-    if (!includeArchived) {
-      query.andWhere('change.isArchived = :isArchived', { isArchived: false });
-    }
+    if (!includeArchived) query.andWhere('change.isArchived = :isArchived', { isArchived: false });
 
     query.orderBy('change.createdAt', 'DESC');
-
     return query.getMany();
   }
 
   async archive(id: string, userId: string): Promise<Change> {
+    const changeRepo = await this.tenantService.getRepository(Change);
     const change = await this.findOne(id);
 
     if (change.status !== ChangeStatus.CLOSED && change.status !== ChangeStatus.IMPLEMENTED) {
@@ -185,24 +156,13 @@ export class ChangeService {
     change.archivedDate = new Date();
     change.updatedBy = { id: userId } as User;
 
-    return this.changeRepo.save(change);
+    return changeRepo.save(change);
   }
 
   async exportCsv(projectId: string): Promise<string> {
     const changes = await this.findByProject(projectId, false);
 
-    const headers = [
-      'ID',
-      'Title',
-      'Type',
-      'Priority',
-      'Status',
-      'Requestor',
-      'Approver',
-      'Implementation Date',
-      'Created At',
-      'Updated At',
-    ];
+    const headers = ['ID', 'Title', 'Type', 'Priority', 'Status', 'Requestor', 'Approver', 'Implementation Date', 'Created At', 'Updated At'];
 
     const rows = changes.map((change) => [
       change.id,

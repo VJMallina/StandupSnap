@@ -4,8 +4,7 @@ import {
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, LessThanOrEqual, MoreThanOrEqual, In, IsNull } from 'typeorm';
+import { IsNull } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { Snap, SnapRAG } from '../entities/snap.entity';
@@ -19,6 +18,7 @@ import { CreateSnapDto } from './dto/create-snap.dto';
 import { UpdateSnapDto } from './dto/update-snap.dto';
 import { LockDailySnapsDto } from './dto/lock-daily-snaps.dto';
 import { OverrideRAGDto } from './dto/override-rag.dto';
+import { TenantService } from '../tenant/tenant.service';
 
 export interface ParsedSnapData {
   done: string;
@@ -33,20 +33,7 @@ export class SnapService {
   private groqModel: string;
 
   constructor(
-    @InjectRepository(Snap)
-    private snapRepository: Repository<Snap>,
-    @InjectRepository(Card)
-    private cardRepository: Repository<Card>,
-    @InjectRepository(Sprint)
-    private sprintRepository: Repository<Sprint>,
-    @InjectRepository(DailySnapLock)
-    private lockRepository: Repository<DailySnapLock>,
-    @InjectRepository(DailyLock)
-    private dailyLockRepository: Repository<DailyLock>,
-    @InjectRepository(DailySummary)
-    private summaryRepository: Repository<DailySummary>,
-    @InjectRepository(CardRAGHistory)
-    private ragHistoryRepository: Repository<CardRAGHistory>,
+    private tenantService: TenantService,
     private configService: ConfigService,
   ) {
     // Use Groq API (fast, free tier available)
@@ -66,8 +53,13 @@ export class SnapService {
       console.log('[SnapService.create] Starting snap creation:', { cardId: createSnapDto.cardId, userId });
       const { cardId, rawInput, done, toDo, blockers, suggestedRAG, finalRAG, slotNumber } = createSnapDto;
 
+      const [cardRepo, snapRepo] = await Promise.all([
+        this.tenantService.getRepository(Card),
+        this.tenantService.getRepository(Snap),
+      ]);
+
       // 1. Validate card exists and load with relations
-      const card = await this.cardRepository.findOne({
+      const card = await cardRepo.findOne({
         where: { id: cardId },
         relations: ['sprint', 'snaps'],
       });
@@ -123,7 +115,7 @@ export class SnapService {
     }
 
     // 9. Create snap entity with slot assignment
-    const snap = this.snapRepository.create({
+    const snap = snapRepo.create({
       cardId,
       createdById: userId,
       rawInput,
@@ -140,13 +132,13 @@ export class SnapService {
 
       // 9. Save snap
       console.log('[SnapService.create] Saving snap...');
-      const savedSnap = await this.snapRepository.save(snap);
+      const savedSnap = await snapRepo.save(snap);
       console.log('[SnapService.create] Snap saved:', savedSnap.id);
 
       // 10. Auto-transition card to IN_PROGRESS on first snap (if NOT_STARTED)
       if (card.status === CardStatus.NOT_STARTED) {
         console.log('[SnapService.create] Transitioning card to IN_PROGRESS');
-        await this.cardRepository.update(card.id, { status: CardStatus.IN_PROGRESS });
+        await cardRepo.update(card.id, { status: CardStatus.IN_PROGRESS });
       }
 
       // 11. Update card RAG status based on snap
@@ -155,7 +147,7 @@ export class SnapService {
 
       // 12. Return snap with relations
       console.log('[SnapService.create] Fetching snap with relations...');
-      const result = await this.snapRepository.findOne({
+      const result = await snapRepo.findOne({
         where: { id: savedSnap.id },
         relations: ['card', 'createdBy'],
       });
@@ -178,8 +170,10 @@ export class SnapService {
    * Returns the parsed data for user review
    */
   async parseOnly(cardId: string, rawInput: string): Promise<ParsedSnapData> {
+    const cardRepo = await this.tenantService.getRepository(Card);
+
     // 1. Find card
-    const card = await this.cardRepository.findOne({
+    const card = await cardRepo.findOne({
       where: { id: cardId },
       relations: ['sprint'],
     });
@@ -203,8 +197,10 @@ export class SnapService {
   async update(id: string, updateSnapDto: UpdateSnapDto, userId: string): Promise<Snap> {
     const { regenerate, ...updateData } = updateSnapDto;
 
+    const snapRepo = await this.tenantService.getRepository(Snap);
+
     // 1. Find snap with relations
-    const snap = await this.snapRepository.findOne({
+    const snap = await snapRepo.findOne({
       where: { id },
       relations: ['card', 'card.sprint'],
     });
@@ -259,13 +255,13 @@ export class SnapService {
 
     // 8. Update snap
     Object.assign(snap, updateData);
-    const updatedSnap = await this.snapRepository.save(snap);
+    const updatedSnap = await snapRepo.save(snap);
 
     // 9. Recalculate card RAG
     await this.updateCardRAG(snap.cardId);
 
     // 10. Return updated snap with relations
-    return this.snapRepository.findOne({
+    return snapRepo.findOne({
       where: { id: updatedSnap.id },
       relations: ['card', 'createdBy'],
     });
@@ -277,8 +273,10 @@ export class SnapService {
    * - Only before daily lock
    */
   async remove(id: string, userId: string): Promise<void> {
+    const snapRepo = await this.tenantService.getRepository(Snap);
+
     // 1. Find snap
-    const snap = await this.snapRepository.findOne({
+    const snap = await snapRepo.findOne({
       where: { id },
       relations: ['card', 'card.sprint'],
     });
@@ -319,7 +317,7 @@ export class SnapService {
     const cardId = snap.cardId;
 
     // 7. Delete snap
-    await this.snapRepository.remove(snap);
+    await snapRepo.remove(snap);
 
     // 8. Recalculate card RAG after deletion
     await this.updateCardRAG(cardId);
@@ -329,7 +327,8 @@ export class SnapService {
    * Get snap by ID
    */
   async findOne(id: string): Promise<Snap> {
-    const snap = await this.snapRepository.findOne({
+    const snapRepo = await this.tenantService.getRepository(Snap);
+    const snap = await snapRepo.findOne({
       where: { id },
       relations: ['card', 'createdBy'],
     });
@@ -346,12 +345,17 @@ export class SnapService {
    * Used in M8-UC01 and M8-UC02 to show prior context
    */
   async findByCard(cardId: string): Promise<Snap[]> {
-    const card = await this.cardRepository.findOne({ where: { id: cardId } });
+    const [cardRepo, snapRepo] = await Promise.all([
+      this.tenantService.getRepository(Card),
+      this.tenantService.getRepository(Snap),
+    ]);
+
+    const card = await cardRepo.findOne({ where: { id: cardId } });
     if (!card) {
       throw new NotFoundException('Card not found');
     }
 
-    return this.snapRepository.find({
+    return snapRepo.find({
       where: { cardId },
       relations: ['createdBy'],
       order: { snapDate: 'DESC', createdAt: 'DESC' }, // Most recent first
@@ -363,7 +367,13 @@ export class SnapService {
    * Used for daily snap view and summary generation
    */
   async findBySprintAndDate(sprintId: string, date: string): Promise<Snap[]> {
-    const sprint = await this.sprintRepository.findOne({
+    const [sprintRepo, cardRepo, snapRepo] = await Promise.all([
+      this.tenantService.getRepository(Sprint),
+      this.tenantService.getRepository(Card),
+      this.tenantService.getRepository(Snap),
+    ]);
+
+    const sprint = await sprintRepo.findOne({
       where: { id: sprintId },
       relations: ['project'],
     });
@@ -373,7 +383,7 @@ export class SnapService {
     }
 
     // Get all cards for this sprint
-    const cards = await this.cardRepository.find({
+    const cards = await cardRepo.find({
       where: { sprint: { id: sprintId } },
     });
 
@@ -384,7 +394,7 @@ export class SnapService {
     }
 
     // Use query builder to avoid date comparison issues
-    return this.snapRepository
+    return snapRepo
       .createQueryBuilder('snap')
       .leftJoinAndSelect('snap.card', 'card')
       .leftJoinAndSelect('snap.createdBy', 'createdBy')
@@ -404,8 +414,14 @@ export class SnapService {
   async lockDailySnaps(dto: LockDailySnapsDto, userId: string): Promise<DailySnapLock> {
     const { sprintId, lockDate } = dto;
 
+    const [sprintRepo, lockRepo, snapRepo] = await Promise.all([
+      this.tenantService.getRepository(Sprint),
+      this.tenantService.getRepository(DailySnapLock),
+      this.tenantService.getRepository(Snap),
+    ]);
+
     // 1. Validate sprint
-    const sprint = await this.sprintRepository.findOne({ where: { id: sprintId } });
+    const sprint = await sprintRepo.findOne({ where: { id: sprintId } });
     if (!sprint) {
       throw new NotFoundException('Sprint not found');
     }
@@ -416,7 +432,7 @@ export class SnapService {
     }
 
     // 3. Check if already locked
-    const existingLock = await this.lockRepository
+    const existingLock = await lockRepo
       .createQueryBuilder('lock')
       .where('lock.sprintId = :sprintId', { sprintId })
       .andWhere('lock.lockDate = :lockDate', { lockDate })
@@ -433,17 +449,17 @@ export class SnapService {
     for (const snap of snaps) {
       snap.isLocked = true;
     }
-    await this.snapRepository.save(snaps);
+    await snapRepo.save(snaps);
 
     // 6. Create lock record
-    const lock = this.lockRepository.create({
+    const lock = lockRepo.create({
       sprintId,
       lockDate: new Date(lockDate),
       lockedById: userId,
       isAutoLocked: false,
     });
 
-    const savedLock = await this.lockRepository.save(lock);
+    const savedLock = await lockRepo.save(lock);
 
     // 7. Generate daily summary
     await this.generateDailySummary(sprintId, lockDate);
@@ -455,14 +471,20 @@ export class SnapService {
    * Auto-lock daily snaps (called by scheduler)
    */
   async autoLockDailySnaps(sprintId: string, lockDate: string): Promise<void> {
+    const [sprintRepo, lockRepo, snapRepo] = await Promise.all([
+      this.tenantService.getRepository(Sprint),
+      this.tenantService.getRepository(DailySnapLock),
+      this.tenantService.getRepository(Snap),
+    ]);
+
     // 1. Validate sprint
-    const sprint = await this.sprintRepository.findOne({ where: { id: sprintId } });
+    const sprint = await sprintRepo.findOne({ where: { id: sprintId } });
     if (!sprint || sprint.isClosed) {
       return; // Skip if sprint not found or closed
     }
 
     // 2. Check if already locked
-    const existingLock = await this.lockRepository
+    const existingLock = await lockRepo
       .createQueryBuilder('lock')
       .where('lock.sprintId = :sprintId', { sprintId })
       .andWhere('lock.lockDate = :lockDate', { lockDate })
@@ -479,17 +501,17 @@ export class SnapService {
     for (const snap of snaps) {
       snap.isLocked = true;
     }
-    await this.snapRepository.save(snaps);
+    await snapRepo.save(snaps);
 
     // 5. Create lock record (no user)
-    const lock = this.lockRepository.create({
+    const lock = lockRepo.create({
       sprintId,
       lockDate: new Date(lockDate),
       lockedById: null,
       isAutoLocked: true,
     });
 
-    await this.lockRepository.save(lock);
+    await lockRepo.save(lock);
 
     // 6. Generate daily summary
     await this.generateDailySummary(sprintId, lockDate);
@@ -502,8 +524,10 @@ export class SnapService {
    * - Calculates RAG overview
    */
   async generateDailySummary(sprintId: string, date: string): Promise<DailySummary> {
+    const summaryRepo = await this.tenantService.getRepository(DailySummary);
+
     // 1. Check if already generated
-    const existing = await this.summaryRepository
+    const existing = await summaryRepo
       .createQueryBuilder('summary')
       .where('summary.sprintId = :sprintId', { sprintId })
       .andWhere('summary.summaryDate = :date', { date })
@@ -590,7 +614,7 @@ export class SnapService {
     }
 
     // 6. Create summary
-    const summary = this.summaryRepository.create({
+    const summary = summaryRepo.create({
       sprintId,
       summaryDate: new Date(date),
       done: doneItems.join('\n'),
@@ -615,14 +639,15 @@ export class SnapService {
       },
     });
 
-    return this.summaryRepository.save(summary);
+    return summaryRepo.save(summary);
   }
 
   /**
    * Get daily summary for a sprint and date
    */
   async getDailySummary(sprintId: string, date: string): Promise<DailySummary> {
-    const summary = await this.summaryRepository
+    const summaryRepo = await this.tenantService.getRepository(DailySummary);
+    const summary = await summaryRepo
       .createQueryBuilder('summary')
       .leftJoinAndSelect('summary.sprint', 'sprint')
       .where('summary.sprintId = :sprintId', { sprintId })
@@ -644,20 +669,12 @@ export class SnapService {
     sprintId?: string,
     startDate?: string,
     endDate?: string,
-    organizationId?: string,
   ): Promise<DailySummary[]> {
-    const query = this.summaryRepository
+    const summaryRepo = await this.tenantService.getRepository(DailySummary);
+    const query = summaryRepo
       .createQueryBuilder('summary')
       .leftJoinAndSelect('summary.sprint', 'sprint')
       .where('sprint.project_id = :projectId', { projectId });
-
-    // Enforce org isolation: only return summaries for projects in the user's org
-    if (organizationId) {
-      query.andWhere(
-        'sprint.project_id IN (SELECT id FROM projects WHERE organization_id = :organizationId AND deleted_at IS NULL)',
-        { organizationId },
-      );
-    }
 
     if (sprintId) {
       query.andWhere('summary.sprintId = :sprintId', { sprintId });
@@ -680,7 +697,12 @@ export class SnapService {
    * Determine which slot a snap belongs to based on time and existing snaps
    */
   private async determineSlotNumber(sprintId: string, date: string, createdAt: Date = new Date()): Promise<number> {
-    const sprint = await this.sprintRepository.findOne({ where: { id: sprintId } });
+    const [sprintRepo, snapRepo] = await Promise.all([
+      this.tenantService.getRepository(Sprint),
+      this.tenantService.getRepository(Snap),
+    ]);
+
+    const sprint = await sprintRepo.findOne({ where: { id: sprintId } });
     if (!sprint) {
       return 1; // Default to slot 1
     }
@@ -691,7 +713,7 @@ export class SnapService {
     }
 
     // Get all snaps for this day, ordered by creation time
-    const existingSnaps = await this.snapRepository.find({
+    const existingSnaps = await snapRepo.find({
       where: { card: { sprint: { id: sprintId } }, snapDate: new Date(date) },
       order: { createdAt: 'ASC' },
     });
@@ -734,10 +756,11 @@ export class SnapService {
    * Checks both day-level lock and slot-specific locks
    */
   async isDayLocked(sprintId: string, date: string, slotNumber?: number): Promise<boolean> {
+    const dailyLockRepo = await this.tenantService.getRepository(DailyLock);
     const targetDate = new Date(date);
 
     // Check if entire day is locked (slotNumber = null)
-    const dayLock = await this.dailyLockRepository.findOne({
+    const dayLock = await dailyLockRepo.findOne({
       where: { sprint: { id: sprintId }, date: targetDate, slotNumber: IsNull() },
     });
 
@@ -747,7 +770,7 @@ export class SnapService {
 
     // If checking specific slot, also check slot-level lock
     if (slotNumber !== undefined) {
-      const slotLock = await this.dailyLockRepository.findOne({
+      const slotLock = await dailyLockRepo.findOne({
         where: { sprint: { id: sprintId }, date: targetDate, slotNumber },
       });
 
@@ -923,8 +946,13 @@ Return ONLY valid JSON:
    * Logic: Analyze snap frequency, content, and RAG trend
    */
   private async updateCardRAG(cardId: string): Promise<void> {
+    const [snapRepo, cardRepo] = await Promise.all([
+      this.tenantService.getRepository(Snap),
+      this.tenantService.getRepository(Card),
+    ]);
+
     // Get snaps separately to avoid cascade issues
-    const snaps = await this.snapRepository.find({
+    const snaps = await snapRepo.find({
       where: { cardId },
       order: { snapDate: 'DESC', createdAt: 'DESC' },
     });
@@ -962,7 +990,7 @@ Return ONLY valid JSON:
     }
 
     // Update only the RAG status field to avoid cascade issues
-    await this.cardRepository.update(cardId, { ragStatus: newRAG });
+    await cardRepo.update(cardId, { ragStatus: newRAG });
   }
 
   /**
@@ -1016,8 +1044,10 @@ Return ONLY valid JSON:
       return 0;
     }
 
+    const snapRepo = await this.tenantService.getRepository(Snap);
+
     // Get card start date (first snap date or created date)
-    const snaps = await this.snapRepository.find({
+    const snaps = await snapRepo.find({
       where: { cardId: card.id },
       order: { snapDate: 'ASC' },
     });
@@ -1045,7 +1075,8 @@ Return ONLY valid JSON:
    * Get number of consecutive days without Done
    */
   private async getConsecutiveDaysWithoutDone(cardId: string): Promise<number> {
-    const recentSnaps = await this.snapRepository.find({
+    const snapRepo = await this.tenantService.getRepository(Snap);
+    const recentSnaps = await snapRepo.find({
       where: { cardId },
       order: { snapDate: 'DESC' },
       take: 7, // Check last 7 days
@@ -1089,8 +1120,10 @@ Return ONLY valid JSON:
    * M9-UC02: SM Overrides RAG
    */
   async overrideRAG(snapId: string, dto: OverrideRAGDto, userId: string): Promise<Snap> {
+    const snapRepo = await this.tenantService.getRepository(Snap);
+
     // 1. Find snap
-    const snap = await this.snapRepository.findOne({
+    const snap = await snapRepo.findOne({
       where: { id: snapId },
       relations: ['card', 'card.sprint'],
     });
@@ -1116,7 +1149,7 @@ Return ONLY valid JSON:
     // 4. Update snap with override
     snap.finalRAG = dto.ragStatus;
 
-    const updatedSnap = await this.snapRepository.save(snap);
+    const updatedSnap = await snapRepo.save(snap);
 
     // 5. Update card RAG
     await this.updateCardRAG(snap.cardId);
@@ -1132,8 +1165,14 @@ Return ONLY valid JSON:
    * Save RAG to history when daily lock occurs
    */
   async saveRAGHistory(cardId: string, date: string, overriddenById?: string): Promise<void> {
+    const [cardRepo, snapRepo, ragHistoryRepo] = await Promise.all([
+      this.tenantService.getRepository(Card),
+      this.tenantService.getRepository(Snap),
+      this.tenantService.getRepository(CardRAGHistory),
+    ]);
+
     // Get card with latest snap for this date
-    const card = await this.cardRepository.findOne({
+    const card = await cardRepo.findOne({
       where: { id: cardId },
       relations: ['snaps'],
     });
@@ -1143,7 +1182,7 @@ Return ONLY valid JSON:
     }
 
     // Check if snap exists for this date
-    const snap = await this.snapRepository.findOne({
+    const snap = await snapRepo.findOne({
       where: {
         cardId,
         snapDate: new Date(date),
@@ -1153,7 +1192,7 @@ Return ONLY valid JSON:
     const isOverridden = snap?.suggestedRAG !== snap?.finalRAG;
 
     // Check if history already exists
-    const existing = await this.ragHistoryRepository.findOne({
+    const existing = await ragHistoryRepo.findOne({
       where: {
         cardId,
         date: new Date(date),
@@ -1167,17 +1206,17 @@ Return ONLY valid JSON:
       if (overriddenById) {
         existing.overriddenById = overriddenById;
       }
-      await this.ragHistoryRepository.save(existing);
+      await ragHistoryRepo.save(existing);
     } else {
       // Create new
-      const history = this.ragHistoryRepository.create({
+      const history = ragHistoryRepo.create({
         cardId,
         date: new Date(date),
         ragStatus: card.ragStatus,
         isOverridden,
         overriddenById,
       });
-      await this.ragHistoryRepository.save(history);
+      await ragHistoryRepo.save(history);
     }
   }
 
@@ -1185,7 +1224,8 @@ Return ONLY valid JSON:
    * Get RAG history for a card
    */
   async getRAGHistory(cardId: string): Promise<CardRAGHistory[]> {
-    return this.ragHistoryRepository.find({
+    const ragHistoryRepo = await this.tenantService.getRepository(CardRAGHistory);
+    return ragHistoryRepo.find({
       where: { cardId },
       order: { date: 'DESC' },
       relations: ['overriddenBy'],
@@ -1200,8 +1240,10 @@ Return ONLY valid JSON:
     ragStatus: CardRAG;
     breakdown: { green: number; amber: number; red: number };
   }> {
+    const cardRepo = await this.tenantService.getRepository(Card);
+
     // Get all cards in sprint
-    const cards = await this.cardRepository.find({
+    const cards = await cardRepo.find({
       where: { sprint: { id: sprintId } },
     });
 
@@ -1239,8 +1281,10 @@ Return ONLY valid JSON:
       ragStatus: CardRAG;
     }>;
   }> {
+    const sprintRepo = await this.tenantService.getRepository(Sprint);
+
     // Get all sprints in project
-    const sprints = await this.sprintRepository.find({
+    const sprints = await sprintRepo.find({
       where: { project: { id: projectId } },
     });
 

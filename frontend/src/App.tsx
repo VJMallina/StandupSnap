@@ -23,6 +23,7 @@ import SnapsPage from './pages/SnapsPage';
 import AssigneeListPage from './pages/assignees/AssigneeListPage';
 import AssigneeDetailsPage from './pages/assignees/AssigneeDetailsPage';
 import ReportsPage from './pages/ReportsPage';
+import ReportEditorPage from './pages/ReportEditorPage';
 import StandupBookPage from './pages/StandupBookPage';
 import StandupBookDayDetailsPage from './pages/StandupBookDayDetailsPage';
 import ArtifactsPage from './pages/ArtifactsPage';
@@ -268,6 +269,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ReportsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports/editor/:id"
+              element={
+                <ProtectedRoute>
+                  <ReportEditorPage />
                 </ProtectedRoute>
               }
             />

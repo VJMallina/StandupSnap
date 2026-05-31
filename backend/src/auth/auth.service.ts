@@ -15,7 +15,6 @@ import { User } from '../entities/user.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { Role, RoleName } from '../entities/role.entity';
 import { Invitation, InvitationStatus } from '../entities/invitation.entity';
-import { Project } from '../entities/project.entity';
 // Enterprise entities
 import { OrgUser } from '../entities/org-user.entity';
 import { Organization } from '../entities/organization.entity';
@@ -42,8 +41,6 @@ export class AuthService {
     private roleRepository: Repository<Role>,
     @InjectRepository(Invitation)
     private invitationRepository: Repository<Invitation>,
-    @InjectRepository(Project)
-    private projectRepository: Repository<Project>,
     // Enterprise repositories
     @InjectRepository(OrgUser)
     private orgUserRepository: Repository<OrgUser>,
@@ -177,27 +174,10 @@ export class AuthService {
 
     const savedUser = await this.userRepository.save(user);
 
-    // Mark invitation as accepted and update project if it exists
+    // Mark invitation as accepted
     if (invitation) {
       invitation.status = InvitationStatus.ACCEPTED;
       await this.invitationRepository.save(invitation);
-
-      // Update project with the new user based on their role
-      if (invitation.project) {
-        const project = await this.projectRepository.findOne({
-          where: { id: invitation.project.id },
-        });
-
-        if (project) {
-          if (invitation.assignedRole === 'product_owner') {
-            project.productOwner = savedUser;
-            await this.projectRepository.save(project);
-          } else if (invitation.assignedRole === 'pmo') {
-            project.pmo = savedUser;
-            await this.projectRepository.save(project);
-          }
-        }
-      }
     }
 
     // Ensure roles are loaded for token generation

@@ -1,22 +1,14 @@
-query: ALTER TABLE "org_invitations" ALTER COLUMN "organization_id" SET NOT NULL
-query failed: ALTER TABLE "org_invitations" ALTER COLUMN "organization_id" SET NOT NULL
-error: error: column "organization_id" of relation "org_invitations" contains null values
-query: ROLLBACK
-[Nest] 18980  - 25/05/2026, 2:16:29 am   ERROR [TypeOrmModule] Unable to connect to the database. Retrying (1)...
-QueryFailedError: column "organization_id" of relation "org_invitations" contains null values
+query failed: SELECT "s"."id" AS "s_id", "s"."organizationId" AS "s_organizationId", "s"."name" AS "s_name", "s"."goal" AS "s_goal", "s"."startDate" AS "s_startDate", "s"."endDate" AS "s_endDate", "s"."status" AS "s_status", "s"."creationType" AS "s_creationType", "s"."isClosed" AS "s_isClosed", "s"."dailyStandupCount" AS "s_dailyStandupCount", "s"."slotTimes" AS "s_slotTimes", "s"."createdAt" AS "s_createdAt", "s"."updatedAt" AS "s_updatedAt", "s"."deletedAt" AS "s_deletedAt", "s"."organization_id" AS "s_organization_id", "s"."project_id" AS "s_project_id" FROM "sprints" "s" WHERE ( s.projectId = $1 AND "s"."organizationId" = $2 AND "s"."startDate" <= $3 AND "s"."endDate" >= $4 AND "s"."deletedAt" IS NULL ) AND ( "s"."deletedAt" IS NULL ) ORDER BY "s"."startDate" DESC -- PARAMETERS: ["1353bdec-3eea-4358-a362-3b33b4b79e42","f6792f83-c4c1-4285-8566-8a7109c93ec7","2026-05-30","2026-05-26"]
+error: error: column s.projectid does not exist
+[Nest] 16792  - 31/05/2026, 6:46:22 pm   ERROR [ExceptionsHandler] column s.projectid does not exist
+QueryFailedError: column s.projectid does not exist
     at PostgresQueryRunner.query (F:\StandupSnap\backend\node_modules\typeorm\driver\src\driver\postgres\PostgresQueryRunner.ts:325:19)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at PostgresQueryRunner.executeQueries (F:\StandupSnap\backend\node_modules\typeorm\query-runner\src\query-runner\BaseQueryRunner.ts:681:13)
-    at PostgresQueryRunner.changeColumn (F:\StandupSnap\backend\node_modules\typeorm\driver\src\driver\postgres\PostgresQueryRunner.ts:2307:9)
-    at PostgresQueryRunner.changeColumns (F:\StandupSnap\backend\node_modules\typeorm\driver\src\driver\postgres\PostgresQueryRunner.ts:2319:13)
-    at RdbmsSchemaBuilder.updateExistColumns (F:\StandupSnap\backend\node_modules\typeorm\schema-builder\src\schema-builder\RdbmsSchemaBuilder.ts:969:13)
-    at RdbmsSchemaBuilder.executeSchemaSyncOperationsInProperOrder (F:\StandupSnap\backend\node_modules\typeorm\schema-builder\src\schema-builder\RdbmsSchemaBuilder.ts:229:9)
-    at RdbmsSchemaBuilder.build (F:\StandupSnap\backend\node_modules\typeorm\schema-builder\src\schema-builder\RdbmsSchemaBuilder.ts:95:13)
-    at DataSource.synchronize (F:\StandupSnap\backend\node_modules\typeorm\data-source\src\data-source\DataSource.ts:340:9)
-    at DataSource.initialize (F:\StandupSnap\backend\node_modules\typeorm\data-source\src\data-source\DataSource.ts:278:43)
-query: SELECT version()
-query: SELECT * FROM current_schema()
-query: CREATE EXTENSION IF NOT EXISTS "uuid-ossp"
-query: START TRANSACTION
-query: SELECT * FROM current_schema()
-query: SELECT * FROM current_database()
+    at SelectQueryBuilder.loadRawResults (F:\StandupSnap\backend\node_modules\typeorm\query-builder\src\query-builder\SelectQueryBuilder.ts:3868:25)
+    at SelectQueryBuilder.executeEntitiesAndRawResults (F:\StandupSnap\backend\node_modules\typeorm\query-builder\src\query-builder\SelectQueryBuilder.ts:3614:26)
+    at SelectQueryBuilder.getRawAndEntities (F:\StandupSnap\backend\node_modules\typeorm\query-builder\src\query-builder\SelectQueryBuilder.ts:1671:29)
+    at SelectQueryBuilder.getMany (F:\StandupSnap\backend\node_modules\typeorm\query-builder\src\query-builder\SelectQueryBuilder.ts:1761:25)
+    at TemplateGeneratorService.generate (F:\StandupSnap\backend\src\canvas-report\template-generator.service.ts:732:21)
+    at CanvasReportService.generateFromTemplate (F:\StandupSnap\backend\src\canvas-report\canvas-report.service.ts:101:20)
+    at async F:\StandupSnap\backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async F:\StandupSnap\backend\node_modules\@nestjs\core\router\router-proxy.js:9:17

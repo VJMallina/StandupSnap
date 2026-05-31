@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
 import { Snap } from '../entities/snap.entity';
 import { Card } from '../entities/card.entity';
 import { DailyLock } from '../entities/daily-lock.entity';
+import { TenantService } from '../tenant/tenant.service';
 
 export interface DayMetadata {
   dayNumber: number;
@@ -24,26 +23,14 @@ export interface SlotGroup {
 
 @Injectable()
 export class StandupBookService {
-  constructor(
-    @InjectRepository(Sprint)
-    private sprintRepository: Repository<Sprint>,
-    @InjectRepository(Snap)
-    private snapRepository: Repository<Snap>,
-    @InjectRepository(Card)
-    private cardRepository: Repository<Card>,
-    @InjectRepository(DailyLock)
-    private dailyLockRepository: Repository<DailyLock>,
-  ) {}
+  constructor(private tenantService: TenantService) {}
 
-  /**
-   * SB-UC01: Get active sprint for a project
-   * Queries by date range instead of stored status so stale status values don't hide active sprints.
-   */
   async getActiveSprint(projectId: string): Promise<Sprint | null> {
+    const sprintRepo = await this.tenantService.getRepository(Sprint);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const sprint = await this.sprintRepository
+    const sprint = await sprintRepo
       .createQueryBuilder('sprint')
       .leftJoinAndSelect('sprint.project', 'project')
       .where('sprint.project.id = :projectId', { projectId })
@@ -54,62 +41,43 @@ export class StandupBookService {
 
     if (sprint && sprint.status !== SprintStatus.ACTIVE) {
       sprint.status = SprintStatus.ACTIVE;
-      await this.sprintRepository.save(sprint);
+      await sprintRepo.save(sprint);
     }
 
     return sprint;
   }
 
-  /**
-   * SB-UC02 & SB-UC03: Get day metadata for a sprint day
-   */
   async getDayMetadata(sprintId: string, date: string): Promise<DayMetadata> {
-    const sprint = await this.sprintRepository.findOne({
-      where: { id: sprintId },
-    });
+    const [sprintRepo, snapRepo, dailyLockRepo] = await Promise.all([
+      this.tenantService.getRepository(Sprint),
+      this.tenantService.getRepository(Snap),
+      this.tenantService.getRepository(DailyLock),
+    ]);
 
-    if (!sprint) {
-      throw new NotFoundException('Sprint not found');
-    }
+    const sprint = await sprintRepo.findOne({ where: { id: sprintId } });
+    if (!sprint) throw new NotFoundException('Sprint not found');
 
     const targetDate = new Date(date);
     const sprintStart = new Date(sprint.startDate);
-    const sprintEnd = new Date(sprint.endDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     targetDate.setHours(0, 0, 0, 0);
 
-    // Calculate day number
-    const dayNumber = Math.floor(
-      (targetDate.getTime() - sprintStart.getTime()) / (1000 * 60 * 60 * 24)
-    ) + 1;
+    const dayNumber = Math.floor((targetDate.getTime() - sprintStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
-    // Check if day is locked
-    const dayLock = await this.dailyLockRepository.findOne({
-      where: { sprint: { id: sprintId }, date: targetDate },
-    });
+    const dayLock = await dailyLockRepo.findOne({ where: { sprint: { id: sprintId }, date: targetDate } });
 
-    // Get snaps for this day
-    const snaps = await this.snapRepository.find({
-      where: {
-        card: { sprint: { id: sprintId } },
-        snapDate: targetDate,
-      },
+    const snaps = await snapRepo.find({
+      where: { card: { sprint: { id: sprintId } }, snapDate: targetDate },
       relations: ['card'],
     });
 
-    // Get unique cards with snaps
     const uniqueCardIds = [...new Set(snaps.map((snap) => snap.card.id))];
 
-    // Determine day status
     let dayStatus: 'not_started' | 'in_progress' | 'completed';
-    if (dayLock?.isLocked) {
-      dayStatus = 'completed';
-    } else if (targetDate.getTime() === today.getTime()) {
-      dayStatus = 'in_progress';
-    } else {
-      dayStatus = 'not_started';
-    }
+    if (dayLock?.isLocked) dayStatus = 'completed';
+    else if (targetDate.getTime() === today.getTime()) dayStatus = 'in_progress';
+    else dayStatus = 'not_started';
 
     return {
       dayNumber,
@@ -122,79 +90,45 @@ export class StandupBookService {
     };
   }
 
-  /**
-   * SB-UC04 & SB-UC05: Get all snaps for a specific day
-   */
   async getSnapsForDay(sprintId: string, date: string): Promise<Snap[]> {
+    const snapRepo = await this.tenantService.getRepository(Snap);
     const targetDate = new Date(date);
-
-    return this.snapRepository.find({
-      where: {
-        card: { sprint: { id: sprintId } },
-        snapDate: targetDate,
-      },
+    return snapRepo.find({
+      where: { card: { sprint: { id: sprintId } }, snapDate: targetDate },
       relations: ['card', 'card.assignee'],
       order: { createdAt: 'DESC' },
     });
   }
 
-  /**
-   * MS-UC02 & MS-UC03: Group snaps into slots based on stored slotNumber
-   * Always returns all configured slots (even if empty)
-   */
   async getSnapsGroupedBySlots(sprintId: string, date: string): Promise<SlotGroup[]> {
-    const sprint = await this.sprintRepository.findOne({
-      where: { id: sprintId },
-    });
-
-    if (!sprint) {
-      throw new NotFoundException('Sprint not found');
-    }
+    const sprintRepo = await this.tenantService.getRepository(Sprint);
+    const sprint = await sprintRepo.findOne({ where: { id: sprintId } });
+    if (!sprint) throw new NotFoundException('Sprint not found');
 
     const snaps = await this.getSnapsForDay(sprintId, date);
     const totalSlots = sprint.dailyStandupCount || 1;
 
-    // Group snaps by their stored slotNumber
     const slotMap = new Map<number, Snap[]>();
+    for (let i = 1; i <= totalSlots; i++) slotMap.set(i, []);
 
-    // Initialize all slots
-    for (let i = 1; i <= totalSlots; i++) {
-      slotMap.set(i, []);
-    }
-
-    // Group snaps by their assigned slot number
     snaps.forEach((snap) => {
-      const slotNum = snap.slotNumber || 1; // Default to slot 1 if not set
-      if (slotMap.has(slotNum)) {
-        slotMap.get(slotNum)!.push(snap);
-      }
+      const slotNum = snap.slotNumber || 1;
+      if (slotMap.has(slotNum)) slotMap.get(slotNum)!.push(snap);
     });
 
-    // Convert to SlotGroup array
     const allSlots: SlotGroup[] = [];
     for (let i = 1; i <= totalSlots; i++) {
       const slotSnaps = slotMap.get(i) || [];
-      allSlots.push({
-        slotNumber: i,
-        snaps: slotSnaps,
-        cardIds: [...new Set(slotSnaps.map((s) => s.card.id))],
-      });
+      allSlots.push({ slotNumber: i, snaps: slotSnaps, cardIds: [...new Set(slotSnaps.map((s) => s.card.id))] });
     }
 
     return allSlots;
   }
 
-  /**
-   * SB-UC02: Get all valid sprint days
-   */
   async getSprintDays(sprintId: string): Promise<{ date: string; dayNumber: number; isAccessible: boolean }[]> {
-    const sprint = await this.sprintRepository.findOne({
-      where: { id: sprintId },
-    });
-
-    if (!sprint) {
-      throw new NotFoundException('Sprint not found');
-    }
+    const sprintRepo = await this.tenantService.getRepository(Sprint);
+    const sprint = await sprintRepo.findOne({ where: { id: sprintId } });
+    if (!sprint) throw new NotFoundException('Sprint not found');
 
     const sprintStart = new Date(sprint.startDate);
     const sprintEnd = new Date(sprint.endDate);
@@ -207,18 +141,9 @@ export class StandupBookService {
 
     while (currentDate <= sprintEnd) {
       const dateStr = currentDate.toISOString().split('T')[0];
-
-      // Create a normalized date for comparison (set time to midnight)
       const normalizedCurrentDate = new Date(currentDate);
       normalizedCurrentDate.setHours(0, 0, 0, 0);
-      const isAccessible = normalizedCurrentDate <= today;
-
-      days.push({
-        date: dateStr,
-        dayNumber,
-        isAccessible,
-      });
-
+      days.push({ date: dateStr, dayNumber, isAccessible: normalizedCurrentDate <= today });
       currentDate.setDate(currentDate.getDate() + 1);
       dayNumber++;
     }

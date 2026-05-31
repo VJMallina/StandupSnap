@@ -3,8 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import {
@@ -23,6 +21,7 @@ import { User } from '../entities/user.entity';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { UpdateRoomDataDto } from './dto/update-room-data.dto';
+import { TenantService } from '../tenant/tenant.service';
 
 @Injectable()
 export class ScrumRoomsService {
@@ -30,10 +29,7 @@ export class ScrumRoomsService {
   private groqModel: string;
 
   constructor(
-    @InjectRepository(ScrumRoom)
-    private readonly roomRepository: Repository<ScrumRoom>,
-    @InjectRepository(Project)
-    private readonly projectRepository: Repository<Project>,
+    private readonly tenantService: TenantService,
     private readonly configService: ConfigService,
   ) {
     this.groqApiKey = this.configService.get<string>('GROQ_API_KEY') || '';
@@ -43,28 +39,19 @@ export class ScrumRoomsService {
   // ========== ROOM MANAGEMENT ==========
 
   async createRoom(dto: CreateRoomDto, userId: string, organizationId?: string): Promise<ScrumRoom> {
-    // Validate project if provided
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
+
     if (dto.projectId) {
-      const project = await this.projectRepository.findOne({
-        where: { id: dto.projectId },
-      });
-      if (!project) {
-        throw new NotFoundException('Project not found');
-      }
+      const projectRepo = await this.tenantService.getRepository(Project);
+      const project = await projectRepo.findOne({ where: { id: dto.projectId } });
+      if (!project) throw new NotFoundException('Project not found');
     }
 
-    // Initialize default data based on room type
     let initialData: any = null;
-
     switch (dto.type) {
       case RoomType.PLANNING_POKER:
-        initialData = {
-          deckType: DeckType.FIBONACCI,
-          rounds: [],
-          participants: [userId],
-        } as PlanningPokerData;
+        initialData = { deckType: DeckType.FIBONACCI, rounds: [], participants: [userId] } as PlanningPokerData;
         break;
-
       case RoomType.RETROSPECTIVE:
         initialData = {
           columns: [
@@ -77,35 +64,18 @@ export class ScrumRoomsService {
           maxVotesPerPerson: 3,
         } as RetrospectiveData;
         break;
-
       case RoomType.MOM:
-        initialData = {
-          rawInput: '',
-          summary: '',
-          decisions: [],
-          actionItems: [],
-          attendees: [],
-          aiGenerated: false,
-        } as MOMData;
+        initialData = { rawInput: '', summary: '', decisions: [], actionItems: [], attendees: [], aiGenerated: false } as MOMData;
         break;
-
       case RoomType.SPRINT_PLANNING:
-        initialData = {
-          capacity: 0,
-          items: [],
-          sprintGoals: [],
-          actualWorkload: 0,
-        } as SprintPlanningData;
+        initialData = { capacity: 0, items: [], sprintGoals: [], actualWorkload: 0 } as SprintPlanningData;
         break;
-
       case RoomType.REFINEMENT:
-        initialData = {
-          items: [],
-        } as RefinementData;
+        initialData = { items: [] } as RefinementData;
         break;
     }
 
-    const room = this.roomRepository.create({
+    const room = roomRepo.create({
       name: dto.name,
       type: dto.type,
       description: dto.description,
@@ -117,22 +87,16 @@ export class ScrumRoomsService {
       updatedBy: { id: userId } as User,
     });
 
-    const saved = await this.roomRepository.save(room);
+    const saved = await roomRepo.save(room);
     return this.findById(saved.id);
   }
 
   async findById(id: string, organizationId?: string): Promise<ScrumRoom> {
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
     const where: any = { id };
-    if (organizationId) {
-      where.organizationId = organizationId;
-    }
-    const room = await this.roomRepository.findOne({
-      where,
-      relations: ['project', 'createdBy', 'updatedBy'],
-    });
-    if (!room) {
-      throw new NotFoundException('Room not found');
-    }
+    if (organizationId) where.organizationId = organizationId;
+    const room = await roomRepo.findOne({ where, relations: ['project', 'createdBy', 'updatedBy'] });
+    if (!room) throw new NotFoundException('Room not found');
     return room;
   }
 
@@ -143,37 +107,24 @@ export class ScrumRoomsService {
     includeArchived?: boolean;
     organizationId?: string;
   }): Promise<ScrumRoom[]> {
-    const qb = this.roomRepository
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
+    const qb = roomRepo
       .createQueryBuilder('room')
       .leftJoinAndSelect('room.project', 'project')
       .leftJoinAndSelect('room.createdBy', 'createdBy')
       .leftJoinAndSelect('room.updatedBy', 'updatedBy');
 
-    if (filters?.organizationId) {
-      qb.andWhere('room.organizationId = :organizationId', { organizationId: filters.organizationId });
-    }
-
-    if (filters?.projectId) {
-      qb.andWhere('room.project_id = :projectId', { projectId: filters.projectId });
-    }
-
-    if (filters?.type) {
-      qb.andWhere('room.type = :type', { type: filters.type });
-    }
-
-    if (filters?.status) {
-      qb.andWhere('room.status = :status', { status: filters.status });
-    }
-
-    if (!filters?.includeArchived) {
-      qb.andWhere('room.isArchived = :isArchived', { isArchived: false });
-    }
+    if (filters?.projectId) qb.andWhere('room.project_id = :projectId', { projectId: filters.projectId });
+    if (filters?.type) qb.andWhere('room.type = :type', { type: filters.type });
+    if (filters?.status) qb.andWhere('room.status = :status', { status: filters.status });
+    if (!filters?.includeArchived) qb.andWhere('room.isArchived = :isArchived', { isArchived: false });
 
     qb.orderBy('room.updatedAt', 'DESC');
     return qb.getMany();
   }
 
   async updateRoom(id: string, dto: UpdateRoomDto, userId: string): Promise<ScrumRoom> {
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
     const room = await this.findById(id);
 
     if (dto.name !== undefined) room.name = dto.name;
@@ -185,68 +136,57 @@ export class ScrumRoomsService {
       }
     }
     if (dto.data !== undefined) room.data = dto.data;
-
     room.updatedBy = { id: userId } as User;
 
-    await this.roomRepository.save(room);
+    await roomRepo.save(room);
     return this.findById(id);
   }
 
-  async updateRoomData(
-    id: string,
-    dto: UpdateRoomDataDto,
-    userId: string,
-  ): Promise<ScrumRoom> {
+  async updateRoomData(id: string, dto: UpdateRoomDataDto, userId: string): Promise<ScrumRoom> {
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
     const room = await this.findById(id);
-
     room.data = dto.data;
     room.updatedBy = { id: userId } as User;
-
-    await this.roomRepository.save(room);
+    await roomRepo.save(room);
     return this.findById(id);
   }
 
   async archiveRoom(id: string, userId: string): Promise<ScrumRoom> {
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
     const room = await this.findById(id);
-
     room.isArchived = true;
     room.archivedAt = new Date();
     room.status = RoomStatus.ARCHIVED;
     room.updatedBy = { id: userId } as User;
-
-    await this.roomRepository.save(room);
+    await roomRepo.save(room);
     return this.findById(id);
   }
 
   async restoreRoom(id: string, userId: string): Promise<ScrumRoom> {
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
     const room = await this.findById(id);
-
-    if (!room.isArchived) {
-      throw new BadRequestException('Room is not archived');
-    }
-
+    if (!room.isArchived) throw new BadRequestException('Room is not archived');
     room.isArchived = false;
     room.archivedAt = null;
     room.status = RoomStatus.ACTIVE;
     room.updatedBy = { id: userId } as User;
-
-    await this.roomRepository.save(room);
+    await roomRepo.save(room);
     return this.findById(id);
   }
 
   async deleteRoom(id: string): Promise<void> {
-    const room = await this.findById(id);
-    await this.roomRepository.delete(id);
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
+    await this.findById(id);
+    await roomRepo.delete(id);
   }
 
   async completeRoom(id: string, userId: string): Promise<ScrumRoom> {
+    const roomRepo = await this.tenantService.getRepository(ScrumRoom);
     const room = await this.findById(id);
-
     room.status = RoomStatus.COMPLETED;
     room.completedAt = new Date();
     room.updatedBy = { id: userId } as User;
-
-    await this.roomRepository.save(room);
+    await roomRepo.save(room);
     return this.findById(id);
   }
 
@@ -261,27 +201,19 @@ export class ScrumRoomsService {
       .map((v) => (typeof v === 'string' ? parseFloat(v) : v))
       .filter((v) => !isNaN(v));
 
-    if (numericVotes.length === 0) {
-      return { mean: 0, median: 0, mode: 0 };
-    }
+    if (numericVotes.length === 0) return { mean: 0, median: 0, mode: 0 };
 
-    // Mean
     const mean = numericVotes.reduce((a, b) => a + b, 0) / numericVotes.length;
-
-    // Median
     const sorted = [...numericVotes].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
     const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 
-    // Mode
     const frequency: Record<string, number> = {};
     Object.values(votes).forEach((vote) => {
       const key = String(vote);
       frequency[key] = (frequency[key] || 0) + 1;
     });
-    const mode = Object.keys(frequency).reduce((a, b) =>
-      frequency[a] > frequency[b] ? a : b,
-    );
+    const mode = Object.keys(frequency).reduce((a, b) => (frequency[a] > frequency[b] ? a : b));
 
     return { mean: Math.round(mean * 10) / 10, median, mode };
   }
@@ -293,9 +225,7 @@ export class ScrumRoomsService {
     decisions: string[];
     actionItems: Array<{ id: string; description: string; assignee?: string; dueDate?: string }>;
   }> {
-    if (!this.groqApiKey) {
-      throw new BadRequestException('AI service not configured');
-    }
+    if (!this.groqApiKey) throw new BadRequestException('AI service not configured');
 
     const systemPrompt = `You are an expert meeting minutes assistant. Parse meeting notes and extract:
 1. Summary: A concise overview of the main discussions and topics
@@ -325,17 +255,13 @@ If a field is not found, use empty strings or arrays. Extract as much detail as 
           response_format: { type: 'json_object' },
         },
         {
-          headers: {
-            Authorization: `Bearer ${this.groqApiKey}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { Authorization: `Bearer ${this.groqApiKey}`, 'Content-Type': 'application/json' },
           timeout: 30000,
         },
       );
 
       const content = response.data?.choices?.[0]?.message?.content || '';
       let parsed: any;
-
       try {
         parsed = JSON.parse(content);
       } catch {
@@ -344,12 +270,14 @@ If a field is not found, use empty strings or arrays. Extract as much detail as 
         parsed = JSON.parse(jsonMatch[0]);
       }
 
-      const actionItems = (parsed.actionItems || parsed.action_items || []).map((item: any, idx: number) => ({
-        id: `action-${Date.now()}-${idx}`,
-        description: item.description || item.task || String(item),
-        assignee: item.assignee || item.owner,
-        dueDate: item.dueDate || item.due_date || item.deadline,
-      }));
+      const actionItems = (parsed.actionItems || parsed.action_items || []).map(
+        (item: any, idx: number) => ({
+          id: `action-${Date.now()}-${idx}`,
+          description: item.description || item.task || String(item),
+          assignee: item.assignee || item.owner,
+          dueDate: item.dueDate || item.due_date || item.deadline,
+        }),
+      );
 
       return {
         summary: parsed.summary || 'Meeting discussion',
@@ -367,10 +295,6 @@ If a field is not found, use empty strings or arrays. Extract as much detail as 
   }
 
   private fallbackMOMParse(text: string) {
-    return {
-      summary: text.substring(0, 500),
-      decisions: [],
-      actionItems: [],
-    };
+    return { summary: text.substring(0, 500), decisions: [], actionItems: [] };
   }
 }

@@ -1,6 +1,4 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import axios from 'axios';
 import { Express } from 'express';
 import { StandaloneMom, StandaloneMeetingType } from '../entities/standalone-mom.entity';
@@ -15,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import * as pdfParse from 'pdf-parse';
 import * as mammoth from 'mammoth';
 import { Document, Packer, Paragraph, HeadingLevel } from 'docx';
+import { TenantService } from '../tenant/tenant.service';
 
 @Injectable()
 export class StandaloneMomService {
@@ -22,12 +21,7 @@ export class StandaloneMomService {
   private groqModel: string;
 
   constructor(
-    @InjectRepository(StandaloneMom)
-    private standaloneMomRepo: Repository<StandaloneMom>,
-    @InjectRepository(Project)
-    private projectRepo: Repository<Project>,
-    @InjectRepository(Sprint)
-    private sprintRepo: Repository<Sprint>,
+    private tenantService: TenantService,
     private configService: ConfigService,
   ) {
     this.groqApiKey = this.configService.get<string>('GROQ_API_KEY') || '';
@@ -38,27 +32,27 @@ export class StandaloneMomService {
     const date = new Date(meetingDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    if (date > today) {
-      throw new BadRequestException('Meeting date cannot be in the future');
-    }
+    if (date > today) throw new BadRequestException('Meeting date cannot be in the future');
     return date;
   }
 
-  private async resolveProjectAndSprint(projectId: string, sprintId?: string): Promise<{ project: Project; sprint: Sprint | null }> {
-    const project = await this.projectRepo.findOne({ where: { id: projectId } });
-    if (!project) {
-      throw new NotFoundException(`Project with ID ${projectId} not found`);
-    }
+  private async resolveProjectAndSprint(
+    projectId: string,
+    sprintId?: string,
+  ): Promise<{ project: Project; sprint: Sprint | null }> {
+    const [projectRepo, sprintRepo] = await Promise.all([
+      this.tenantService.getRepository(Project),
+      this.tenantService.getRepository(Sprint),
+    ]);
+
+    const project = await projectRepo.findOne({ where: { id: projectId } });
+    if (!project) throw new NotFoundException(`Project with ID ${projectId} not found`);
 
     let sprint: Sprint | null = null;
     if (sprintId) {
-      sprint = await this.sprintRepo.findOne({ where: { id: sprintId }, relations: ['project'] });
-      if (!sprint) {
-        throw new NotFoundException(`Sprint with ID ${sprintId} not found`);
-      }
-      if (sprint.project.id !== project.id) {
-        throw new BadRequestException('Sprint must belong to the selected project');
-      }
+      sprint = await sprintRepo.findOne({ where: { id: sprintId }, relations: ['project'] });
+      if (!sprint) throw new NotFoundException(`Sprint with ID ${sprintId} not found`);
+      if (sprint.project.id !== project.id) throw new BadRequestException('Sprint must belong to the selected project');
     }
 
     return { project, sprint };
@@ -72,11 +66,12 @@ export class StandaloneMomService {
   }
 
   async create(dto: CreateStandaloneMomDto, userId: string, orgId?: string): Promise<StandaloneMom> {
+    const repo = await this.tenantService.getRepository(StandaloneMom);
     const meetingDate = this.validateMeetingDate(dto.meetingDate);
     const { project, sprint } = await this.resolveProjectAndSprint(dto.projectId, dto.sprintId);
     const { meetingType, customMeetingType } = this.computeMeetingType(dto.meetingType, dto.customMeetingType);
 
-    const mom = this.standaloneMomRepo.create({
+    const mom = repo.create({
       project,
       sprint: sprint || null,
       title: dto.title,
@@ -93,19 +88,15 @@ export class StandaloneMomService {
       ...(orgId ? { organizationId: orgId } : {}),
     });
 
-    return this.standaloneMomRepo.save(mom);
+    return repo.save(mom);
   }
 
   async update(id: string, dto: UpdateStandaloneMomDto, userId: string): Promise<StandaloneMom> {
-    const mom = await this.standaloneMomRepo.findOne({
-      where: { id, archived: false },
-      relations: ['project', 'sprint'],
-    });
+    const repo = await this.tenantService.getRepository(StandaloneMom);
+    const mom = await repo.findOne({ where: { id, archived: false }, relations: ['project', 'sprint'] });
     if (!mom) throw new NotFoundException('MOM not found');
 
-    if (dto.meetingDate) {
-      mom.meetingDate = this.validateMeetingDate(dto.meetingDate);
-    }
+    if (dto.meetingDate) mom.meetingDate = this.validateMeetingDate(dto.meetingDate);
 
     if (dto.sprintId || dto.projectId) {
       const projectId = dto.projectId || mom.project.id;
@@ -128,14 +119,13 @@ export class StandaloneMomService {
     }
 
     mom.updatedBy = { id: userId } as User;
-    return this.standaloneMomRepo.save(mom);
+    return repo.save(mom);
   }
 
   async findOne(id: string, organizationId?: string): Promise<StandaloneMom> {
-    const where: any = { id, archived: false };
-    if (organizationId) where.organizationId = organizationId;
-    const mom = await this.standaloneMomRepo.findOne({
-      where,
+    const repo = await this.tenantService.getRepository(StandaloneMom);
+    const mom = await repo.findOne({
+      where: { id, archived: false },
       relations: ['project', 'sprint', 'createdBy', 'updatedBy'],
     });
     if (!mom) throw new NotFoundException('MOM not found');
@@ -147,7 +137,8 @@ export class StandaloneMomService {
       throw new BadRequestException('Invalid date range');
     }
 
-    const qb = this.standaloneMomRepo
+    const repo = await this.tenantService.getRepository(StandaloneMom);
+    const qb = repo
       .createQueryBuilder('mom')
       .leftJoinAndSelect('mom.project', 'project')
       .leftJoinAndSelect('mom.sprint', 'sprint')
@@ -156,16 +147,8 @@ export class StandaloneMomService {
       .where('mom.project = :projectId', { projectId: filter.projectId })
       .andWhere('mom.archived = false');
 
-    if (organizationId) {
-      qb.andWhere('mom.organizationId = :organizationId', { organizationId });
-    }
-
-    if (filter.sprintId) {
-      qb.andWhere('mom.sprint = :sprintId', { sprintId: filter.sprintId });
-    }
-    if (filter.meetingType) {
-      qb.andWhere('mom.meetingType = :meetingType', { meetingType: filter.meetingType });
-    }
+    if (filter.sprintId) qb.andWhere('mom.sprint = :sprintId', { sprintId: filter.sprintId });
+    if (filter.meetingType) qb.andWhere('mom.meetingType = :meetingType', { meetingType: filter.meetingType });
     if (filter.search) {
       const search = `%${filter.search}%`;
       qb.andWhere(
@@ -179,21 +162,22 @@ export class StandaloneMomService {
     if (filter.updatedBy) qb.andWhere('mom.updatedBy = :updatedBy', { updatedBy: filter.updatedBy });
 
     qb.orderBy('mom.updatedAt', 'DESC');
-
     return qb.getMany();
   }
 
   async archive(id: string, userId: string): Promise<StandaloneMom> {
+    const repo = await this.tenantService.getRepository(StandaloneMom);
     const mom = await this.findOne(id);
     mom.archived = true;
     mom.updatedBy = { id: userId } as User;
-    return this.standaloneMomRepo.save(mom);
+    return repo.save(mom);
   }
 
   async remove(id: string): Promise<void> {
-    const mom = await this.standaloneMomRepo.findOne({ where: { id } });
+    const repo = await this.tenantService.getRepository(StandaloneMom);
+    const mom = await repo.findOne({ where: { id } });
     if (!mom) throw new NotFoundException('MOM not found');
-    await this.standaloneMomRepo.remove(mom);
+    await repo.remove(mom);
   }
 
   async generateWithAI(dto: GenerateStandaloneMomDto) {
@@ -214,17 +198,6 @@ INSTRUCTIONS:
 6. Use clear, concise language and bullet points where appropriate
 7. For action items, always try to identify who is responsible and when it's due
 
-EXAMPLE INPUT:
-"Team discussed the new feature release. John presented the progress. We decided to launch on March 15th. Sarah will review documentation by March 10th. Mike raised concerns about testing."
-
-EXAMPLE OUTPUT:
-{
-  "agenda": "New feature release discussion and launch planning",
-  "discussionSummary": "John presented current progress on the new feature. Mike raised concerns about testing coverage and timeline. Team discussed launch readiness and documentation requirements.",
-  "decisions": "Launch date confirmed for March 15th. Additional testing will be conducted before launch.",
-  "actionItems": "Review and finalize documentation - Owner: Sarah, Due: March 10th"
-}
-
 Now parse the following meeting notes:`;
 
     try {
@@ -241,22 +214,16 @@ Now parse the following meeting notes:`;
           response_format: { type: 'json_object' },
         },
         {
-          headers: {
-            Authorization: `Bearer ${this.groqApiKey}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { Authorization: `Bearer ${this.groqApiKey}`, 'Content-Type': 'application/json' },
           timeout: 30000,
         },
       );
 
       const content = response.data?.choices?.[0]?.message?.content || '';
-
-      // Try to parse JSON directly first (since we're using json_object format)
       let parsed: any;
       try {
         parsed = JSON.parse(content);
       } catch {
-        // Fallback: extract JSON from markdown code blocks or text
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return this.fallbackParse(dto.text);
         parsed = JSON.parse(jsonMatch[0]);
@@ -275,111 +242,70 @@ Now parse the following meeting notes:`;
   }
 
   private fallbackParse(text: string) {
-    return {
-      agenda: 'Meeting discussion',
-      discussionSummary: text,
-      decisions: 'To be reviewed',
-      actionItems: 'To be determined',
-    };
+    return { agenda: 'Meeting discussion', discussionSummary: text, decisions: 'To be reviewed', actionItems: 'To be determined' };
   }
 
   async extractTranscript(file: any): Promise<string> {
-    if (!file) {
-      throw new BadRequestException('Enter notes or upload a transcript.');
-    }
-
+    if (!file) throw new BadRequestException('Enter notes or upload a transcript.');
     const mime = file.mimetype;
-    if (mime === 'text/plain') {
-      return file.buffer.toString('utf-8');
-    }
-
+    if (mime === 'text/plain') return file.buffer.toString('utf-8');
     if (mime === 'application/pdf') {
       try {
         const result = await (pdfParse as any)(file.buffer);
         if (!result.text || !result.text.trim()) throw new Error('empty');
         return result.text;
-      } catch (err) {
+      } catch {
         throw new BadRequestException('Could not extract content from file. Try uploading a different file.');
       }
     }
-
-    if (
-      mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      mime === 'application/msword'
-    ) {
+    if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || mime === 'application/msword') {
       try {
         const result = await mammoth.extractRawText({ buffer: file.buffer });
         if (!result.value || !result.value.trim()) throw new Error('empty');
         return result.value;
-      } catch (err) {
+      } catch {
         throw new BadRequestException('Could not extract content from file. Try uploading a different file.');
       }
     }
-
     throw new BadRequestException('Unsupported file format. Upload TXT, PDF, or DOCX.');
   }
 
   async download(id: string, format: 'txt' | 'docx') {
     const mom = await this.findOne(id);
     const titleLine = `Title: ${mom.title}`;
-    const meetingDateString =
-      mom.meetingDate instanceof Date ? mom.meetingDate.toISOString().slice(0, 10) : String(mom.meetingDate);
+    const meetingDateString = mom.meetingDate instanceof Date ? mom.meetingDate.toISOString().slice(0, 10) : String(mom.meetingDate);
     const dateLine = `Date: ${meetingDateString}`;
     const typeLine = `Meeting Type: ${mom.customMeetingType || mom.meetingType}`;
     const projectLine = `Project: ${mom.project?.name || mom.project?.id}`;
     const sprintLine = mom.sprint ? `Sprint: ${mom.sprint.name}` : 'Sprint: N/A';
 
-    const textBody = [
-      titleLine,
-      dateLine,
-      typeLine,
-      projectLine,
-      sprintLine,
-      '',
-      'Agenda:',
-      mom.agenda || '',
-      '',
-      'Discussion Summary:',
-      mom.discussionSummary || '',
-      '',
-      'Decisions:',
-      mom.decisions || '',
-      '',
-      'Action Items:',
-      mom.actionItems || '',
-    ].join('\n');
+    const textBody = [titleLine, dateLine, typeLine, projectLine, sprintLine, '', 'Agenda:', mom.agenda || '', '', 'Discussion Summary:', mom.discussionSummary || '', '', 'Decisions:', mom.decisions || '', '', 'Action Items:', mom.actionItems || ''].join('\n');
 
     if (format === 'txt') {
       return { buffer: Buffer.from(textBody, 'utf-8'), fileName: `MOM_${mom.id}.txt`, contentType: 'text/plain' };
     }
 
     const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({ text: mom.title, heading: HeadingLevel.HEADING_1 }),
-            new Paragraph({ text: `${dateLine}` }),
-            new Paragraph({ text: `${typeLine}` }),
-            new Paragraph({ text: `${projectLine}` }),
-            new Paragraph({ text: `${sprintLine}` }),
-            new Paragraph({ text: '' }),
-            new Paragraph({ text: 'Agenda', heading: HeadingLevel.HEADING_2 }),
-            new Paragraph({ text: mom.agenda || '' }),
-            new Paragraph({ text: 'Discussion Summary', heading: HeadingLevel.HEADING_2 }),
-            new Paragraph({ text: mom.discussionSummary || '' }),
-            new Paragraph({ text: 'Decisions', heading: HeadingLevel.HEADING_2 }),
-            new Paragraph({ text: mom.decisions || '' }),
-            new Paragraph({ text: 'Action Items', heading: HeadingLevel.HEADING_2 }),
-            new Paragraph({ text: mom.actionItems || '' }),
-          ],
-        },
-      ],
+      sections: [{
+        children: [
+          new Paragraph({ text: mom.title, heading: HeadingLevel.HEADING_1 }),
+          new Paragraph({ text: dateLine }),
+          new Paragraph({ text: typeLine }),
+          new Paragraph({ text: projectLine }),
+          new Paragraph({ text: sprintLine }),
+          new Paragraph({ text: '' }),
+          new Paragraph({ text: 'Agenda', heading: HeadingLevel.HEADING_2 }),
+          new Paragraph({ text: mom.agenda || '' }),
+          new Paragraph({ text: 'Discussion Summary', heading: HeadingLevel.HEADING_2 }),
+          new Paragraph({ text: mom.discussionSummary || '' }),
+          new Paragraph({ text: 'Decisions', heading: HeadingLevel.HEADING_2 }),
+          new Paragraph({ text: mom.decisions || '' }),
+          new Paragraph({ text: 'Action Items', heading: HeadingLevel.HEADING_2 }),
+          new Paragraph({ text: mom.actionItems || '' }),
+        ],
+      }],
     });
     const buffer = await Packer.toBuffer(doc);
-    return {
-      buffer,
-      fileName: `MOM_${mom.id}.docx`,
-      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    };
+    return { buffer, fileName: `MOM_${mom.id}.docx`, contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
   }
 }

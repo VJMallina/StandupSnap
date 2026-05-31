@@ -107,7 +107,17 @@
       "Bash(node_modules/.bin/tsc --noEmit)",
       "Bash(Get-ChildItem -Path \"F:\\\\StandupSnap\\\\frontend\\\\src\\\\pages\" -Recurse -File)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Get-ChildItem -Path \"F:\\\\StandupSnap\\\\backend\\\\src\" -Recurse -Filter \"*.controller.ts\")"
+      "Bash(Get-ChildItem -Path \"F:\\\\StandupSnap\\\\backend\\\\src\" -Recurse -Filter \"*.controller.ts\")",
+      "Bash(Get-ChildItem -Path \"F:\\\\StandupSnap\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Read(//mnt/**)",
+      "Read(//f//**)",
+      "Bash(node_modules\\\\typescript\\\\bin\\\\tsc --noEmit)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(PGPASSWORD=npg_Y7B4NlcMiuDm psql \"postgresql://neondb_owner@ep-silent-credit-afkini0o-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require\" -c \"SELECT id, name, slug FROM public.organizations LIMIT 10;\")",
+      "Bash(where psql *)",
+      "Bash(where pg_dump)",
+      "Bash(echo \"EXIT:$?\"0)"
     ],
     "deny": [],
     "ask": []

@@ -62,7 +62,7 @@ export enum Permission {
   GENERATE_SUMMARY = 'generate_summary',
 }
 
-@Entity('roles')
+@Entity({ schema: 'public', name: 'roles' })
 export class Role {
   @PrimaryGeneratedColumn('uuid')
   id: string;

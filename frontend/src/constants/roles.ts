@@ -116,6 +116,24 @@ export const ROLE_LABELS: Record<RoleName, string> = {
   [RoleName.PMO]: 'PMO',
 };
 
+export const ORG_ROLE_LABELS: Record<string, string> = {
+  ORG_ADMIN: 'Organization Admin',
+  SCRUM_MASTER: 'Scrum Master',
+  PRODUCT_OWNER: 'Product Owner',
+  PMO: 'PMO',
+  MEMBER: 'Member',
+  VIEWER: 'Viewer',
+};
+
+export function formatOrgRole(orgRole: string): string {
+  if (ORG_ROLE_LABELS[orgRole]) return ORG_ROLE_LABELS[orgRole];
+  // For custom roles: "DELIVERY_LEAD" → "Delivery Lead"
+  return orgRole
+    .toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export const ROLE_DESCRIPTIONS: Record<RoleName, string> = {
   [RoleName.SCRUM_MASTER]:
     'Full access to the application. Can create projects, manage sprints, add/remove team members, and send invites.',

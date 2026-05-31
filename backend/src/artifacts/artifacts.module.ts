@@ -1,27 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../entities/user.entity';
 import { RaciMatrixController } from './raci-matrix.controller';
 import { RaciMatrixService } from './raci-matrix.service';
-import { RaciMatrix } from '../entities/raci-matrix.entity';
-import { RaciEntry } from '../entities/raci-entry.entity';
-import { Project } from '../entities/project.entity';
-import { TeamMember } from '../entities/team-member.entity';
-import { Risk } from '../entities/risk.entity';
-import { RiskHistory } from '../entities/risk-history.entity';
-import { Assumption } from '../entities/assumption.entity';
-import { Issue } from '../entities/issue.entity';
-import { Decision } from '../entities/decision.entity';
-import { Stakeholder } from '../entities/stakeholder.entity';
-import { Change } from '../entities/change.entity';
-import { User } from '../entities/user.entity';
-import { Schedule } from '../entities/schedule.entity';
-import { ScheduleTask } from '../entities/schedule-task.entity';
-import { TaskDependency } from '../entities/task-dependency.entity';
-import { WorkingCalendar } from '../entities/working-calendar.entity';
-import { CalendarException } from '../entities/calendar-exception.entity';
-import { ArtifactTemplate } from '../entities/artifact-template.entity';
-import { ArtifactInstance } from '../entities/artifact-instance.entity';
-import { ArtifactVersion } from '../entities/artifact-version.entity';
 import { RiskService } from './risk.service';
 import { RiskController } from './risk.controller';
 import { AssumptionService } from './assumption.service';
@@ -46,28 +27,7 @@ import { ArtifactInstancesController } from './artifact-instances.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      RaciMatrix,
-      RaciEntry,
-      Project,
-      TeamMember,
-      Risk,
-      RiskHistory,
-      Assumption,
-      Issue,
-      Decision,
-      Stakeholder,
-      Change,
-      User,
-      Schedule,
-      ScheduleTask,
-      TaskDependency,
-      WorkingCalendar,
-      CalendarException,
-      ArtifactTemplate,
-      ArtifactInstance,
-      ArtifactVersion,
-    ]),
+    TypeOrmModule.forFeature([User]),
   ],
   controllers: [
     RaciMatrixController,

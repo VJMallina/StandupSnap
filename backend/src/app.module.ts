@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -21,10 +21,13 @@ import { ScrumRoomsModule } from './scrum-rooms/scrum-rooms.module';
 import { ResourceModule } from './resource/resource.module';
 import { OrganizationModule } from './organization/organization.module';
 import { WorkflowModule } from './workflow/workflow.module';
+import { TenantModule } from './tenant/tenant.module';
+import { TenantMiddleware } from './tenant/tenant.middleware';
+import { CanvasReportModule } from './canvas-report/canvas-report.module';
 
-// Team Management Module for non-login team members
 @Module({
   imports: [
+    TenantModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -94,8 +97,13 @@ import { WorkflowModule } from './workflow/workflow.module';
     ResourceModule,
     OrganizationModule,
     WorkflowModule,
+    CanvasReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(TenantMiddleware).forRoutes('*');
+  }
+}

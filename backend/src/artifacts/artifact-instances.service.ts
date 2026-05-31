@@ -1,36 +1,25 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { ArtifactInstance } from '../entities/artifact-instance.entity';
 import { ArtifactVersion } from '../entities/artifact-version.entity';
 import { CreateArtifactInstanceDto } from './dto/create-artifact-instance.dto';
 import { UpdateArtifactInstanceDto } from './dto/update-artifact-instance.dto';
 import { CreateArtifactVersionDto } from './dto/create-artifact-version.dto';
+import { TenantService } from '../tenant/tenant.service';
 
 @Injectable()
 export class ArtifactInstancesService {
-  constructor(
-    @InjectRepository(ArtifactInstance)
-    private artifactInstancesRepository: Repository<ArtifactInstance>,
-    @InjectRepository(ArtifactVersion)
-    private artifactVersionsRepository: Repository<ArtifactVersion>,
-  ) {}
+  constructor(private tenantService: TenantService) {}
 
-  async create(
-    createDto: CreateArtifactInstanceDto,
-    projectId: string,
-    userId: string,
-  ): Promise<ArtifactInstance> {
-    const instance = this.artifactInstancesRepository.create({
-      ...createDto,
-      projectId,
-      createdById: userId,
-    });
+  async create(createDto: CreateArtifactInstanceDto, projectId: string, userId: string): Promise<ArtifactInstance> {
+    const [instanceRepo, versionRepo] = await Promise.all([
+      this.tenantService.getRepository(ArtifactInstance),
+      this.tenantService.getRepository(ArtifactVersion),
+    ]);
 
-    const savedInstance = await this.artifactInstancesRepository.save(instance);
+    const instance = instanceRepo.create({ ...createDto, projectId, createdById: userId });
+    const savedInstance = await instanceRepo.save(instance);
 
-    // Create initial version (v1.0) with empty data
-    const initialVersion = this.artifactVersionsRepository.create({
+    const initialVersion = versionRepo.create({
       instanceId: savedInstance.id,
       versionNumber: '1.0',
       data: {},
@@ -39,15 +28,14 @@ export class ArtifactInstancesService {
       createdById: userId,
     });
 
-    const savedVersion = await this.artifactVersionsRepository.save(initialVersion);
-
-    // Update instance with current version
+    const savedVersion = await versionRepo.save(initialVersion);
     savedInstance.currentVersionId = savedVersion.id;
-    return this.artifactInstancesRepository.save(savedInstance);
+    return instanceRepo.save(savedInstance);
   }
 
   async findByProject(projectId: string): Promise<ArtifactInstance[]> {
-    return this.artifactInstancesRepository.find({
+    const instanceRepo = await this.tenantService.getRepository(ArtifactInstance);
+    return instanceRepo.find({
       where: { projectId },
       relations: ['template', 'currentVersion', 'createdBy'],
       order: { createdAt: 'DESC' },
@@ -55,85 +43,62 @@ export class ArtifactInstancesService {
   }
 
   async findOne(id: string): Promise<ArtifactInstance> {
-    const instance = await this.artifactInstancesRepository.findOne({
+    const instanceRepo = await this.tenantService.getRepository(ArtifactInstance);
+    const instance = await instanceRepo.findOne({
       where: { id },
       relations: ['template', 'currentVersion', 'createdBy', 'project'],
     });
-
-    if (!instance) {
-      throw new NotFoundException(`Artifact instance with ID ${id} not found`);
-    }
-
+    if (!instance) throw new NotFoundException(`Artifact instance with ID ${id} not found`);
     return instance;
   }
 
-  async update(
-    id: string,
-    updateDto: UpdateArtifactInstanceDto,
-  ): Promise<ArtifactInstance> {
+  async update(id: string, updateDto: UpdateArtifactInstanceDto): Promise<ArtifactInstance> {
+    const instanceRepo = await this.tenantService.getRepository(ArtifactInstance);
     const instance = await this.findOne(id);
     Object.assign(instance, updateDto);
-    return this.artifactInstancesRepository.save(instance);
+    return instanceRepo.save(instance);
   }
 
   async remove(id: string): Promise<void> {
+    const instanceRepo = await this.tenantService.getRepository(ArtifactInstance);
     const instance = await this.findOne(id);
-    await this.artifactInstancesRepository.remove(instance);
+    await instanceRepo.remove(instance);
   }
 
-  // Update current version data without creating new version
-  async updateCurrentVersionData(
-    instanceId: string,
-    data: any,
-  ): Promise<ArtifactVersion> {
+  async updateCurrentVersionData(instanceId: string, data: any): Promise<ArtifactVersion> {
+    const versionRepo = await this.tenantService.getRepository(ArtifactVersion);
     const instance = await this.findOne(instanceId);
 
-    if (!instance.currentVersionId) {
-      throw new NotFoundException('No current version found for this instance');
-    }
+    if (!instance.currentVersionId) throw new NotFoundException('No current version found for this instance');
 
-    // Update the current version's data directly
-    await this.artifactVersionsRepository.update(instance.currentVersionId, {
-      data,
-    });
-
+    await versionRepo.update(instance.currentVersionId, { data });
     return this.getVersion(instance.currentVersionId);
   }
 
-  // Version management
-  async createVersion(
-    instanceId: string,
-    createVersionDto: CreateArtifactVersionDto,
-    userId: string,
-  ): Promise<ArtifactVersion> {
-    const instance = await this.findOne(instanceId);
+  async createVersion(instanceId: string, createVersionDto: CreateArtifactVersionDto, userId: string): Promise<ArtifactVersion> {
+    const versionRepo = await this.tenantService.getRepository(ArtifactVersion);
+    const instanceRepo = await this.tenantService.getRepository(ArtifactInstance);
 
-    // Calculate next version number
+    await this.findOne(instanceId);
+
     const versions = await this.getVersions(instanceId);
-    const nextVersion = this.calculateNextVersion(
-      versions,
-      createVersionDto.isMajorVersion || false,
-    );
+    const nextVersion = this.calculateNextVersion(versions, createVersionDto.isMajorVersion || false);
 
-    const version = this.artifactVersionsRepository.create({
+    const version = versionRepo.create({
       instanceId,
       versionNumber: nextVersion,
       ...createVersionDto,
       createdById: userId,
     });
 
-    const savedVersion = await this.artifactVersionsRepository.save(version);
-
-    // Update instance current version using direct update query
-    await this.artifactInstancesRepository.update(instanceId, {
-      currentVersionId: savedVersion.id,
-    });
-
+    const savedVersion = await versionRepo.save(version);
+    await instanceRepo.update(instanceId, { currentVersionId: savedVersion.id });
     return savedVersion;
   }
 
   async getVersions(instanceId: string): Promise<ArtifactVersion[]> {
-    return this.artifactVersionsRepository.find({
+    const versionRepo = await this.tenantService.getRepository(ArtifactVersion);
+    return versionRepo.find({
       where: { instanceId },
       relations: ['createdBy'],
       order: { createdAt: 'DESC' },
@@ -141,38 +106,33 @@ export class ArtifactInstancesService {
   }
 
   async getVersion(versionId: string): Promise<ArtifactVersion> {
-    const version = await this.artifactVersionsRepository.findOne({
+    const versionRepo = await this.tenantService.getRepository(ArtifactVersion);
+    const version = await versionRepo.findOne({
       where: { id: versionId },
       relations: ['createdBy', 'instance'],
     });
-
-    if (!version) {
-      throw new NotFoundException(`Version with ID ${versionId} not found`);
-    }
-
+    if (!version) throw new NotFoundException(`Version with ID ${versionId} not found`);
     return version;
   }
 
-  async restoreVersion(
-    instanceId: string,
-    versionId: string,
-    userId: string,
-  ): Promise<ArtifactVersion> {
+  async restoreVersion(instanceId: string, versionId: string, userId: string): Promise<ArtifactVersion> {
+    const [instanceRepo, versionRepo] = await Promise.all([
+      this.tenantService.getRepository(ArtifactInstance),
+      this.tenantService.getRepository(ArtifactVersion),
+    ]);
+
     const instance = await this.findOne(instanceId);
     const versionToRestore = await this.getVersion(versionId);
 
-    if (versionToRestore.instanceId !== instanceId) {
-      throw new ForbiddenException('Version does not belong to this instance');
-    }
+    if (versionToRestore.instanceId !== instanceId) throw new ForbiddenException('Version does not belong to this instance');
 
     console.log('Restoring version:', versionToRestore.versionNumber);
     console.log('Data to restore:', versionToRestore.data);
 
-    // Create new version with restored data
     const versions = await this.getVersions(instanceId);
     const nextVersion = this.calculateNextVersion(versions, false);
 
-    const restoredVersion = this.artifactVersionsRepository.create({
+    const restoredVersion = versionRepo.create({
       instanceId,
       versionNumber: nextVersion,
       data: versionToRestore.data,
@@ -181,34 +141,23 @@ export class ArtifactInstancesService {
       createdById: userId,
     });
 
-    const savedVersion = await this.artifactVersionsRepository.save(restoredVersion);
+    const savedVersion = await versionRepo.save(restoredVersion);
     console.log('Saved restored version:', savedVersion.versionNumber);
     console.log('Saved version ID:', savedVersion.id);
     console.log('Saved version data:', savedVersion.data);
 
-    // Update instance current version
     instance.currentVersionId = savedVersion.id;
-    await this.artifactInstancesRepository.save(instance);
+    await instanceRepo.save(instance);
     console.log('Updated instance currentVersionId to:', instance.currentVersionId);
 
     return savedVersion;
   }
 
-  private calculateNextVersion(
-    versions: ArtifactVersion[],
-    isMajor: boolean,
-  ): string {
-    if (versions.length === 0) {
-      return '1.0';
-    }
+  private calculateNextVersion(versions: ArtifactVersion[], isMajor: boolean): string {
+    if (versions.length === 0) return '1.0';
 
     const latestVersion = versions[0].versionNumber;
     const [major, minor] = latestVersion.split('.').map(Number);
-
-    if (isMajor) {
-      return `${major + 1}.0`;
-    } else {
-      return `${major}.${minor + 1}`;
-    }
+    return isMajor ? `${major + 1}.0` : `${major}.${minor + 1}`;
   }
 }

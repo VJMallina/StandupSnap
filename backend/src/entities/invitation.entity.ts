@@ -16,7 +16,7 @@ export enum InvitationStatus {
   EXPIRED = 'expired',
 }
 
-@Entity('invitations')
+@Entity({ schema: 'public', name: 'invitations' })
 export class Invitation {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -1,17 +1,10 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResourceService } from './resource.service';
 import { ResourceController } from './resource.controller';
-import { Resource } from '../entities/resource.entity';
-import { ResourceWorkload } from '../entities/resource-workload.entity';
-import { Project } from '../entities/project.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Resource, ResourceWorkload, Project]),
-    AuthModule,
-  ],
+  imports: [AuthModule],
   controllers: [ResourceController],
   providers: [ResourceService],
   exports: [ResourceService],

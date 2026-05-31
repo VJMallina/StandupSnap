@@ -182,12 +182,10 @@ export class SnapController {
   @RequirePermissions(PERMISSIONS.SNAP_VIEW_OWN, PERMISSIONS.SNAP_VIEW_ALL)
   getSummariesByProject(
     @Param('projectId') projectId: string,
-    @CurrentUser() user: User,
     @Query('sprintId') sprintId?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    const organizationId = (user as any).organizationId;
-    return this.snapService.getSummariesByProject(projectId, sprintId, startDate, endDate, organizationId);
+    return this.snapService.getSummariesByProject(projectId, sprintId, startDate, endDate);
   }
 }

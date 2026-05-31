@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
+import { formatOrgRole } from '../constants/roles';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -70,14 +71,6 @@ interface InvitePreview {
   inviterName: string | null;
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  ORG_ADMIN: 'Organization Admin',
-  PMO: 'PMO',
-  SCRUM_MASTER: 'Scrum Master',
-  PRODUCT_OWNER: 'Product Owner',
-  MEMBER: 'Member',
-  VIEWER: 'Viewer',
-};
 
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -224,7 +217,7 @@ export default function RegisterPage() {
             {step === 1 && hasInviteToken && invitePreview ? (
               <>
                 Join <span className="font-semibold">{invitePreview.orgName}</span> as{' '}
-                <span className="font-semibold">{ROLE_LABELS[invitePreview.roleName] || invitePreview.roleName}</span>
+                <span className="font-semibold">{formatOrgRole(invitePreview.roleName)}</span>
                 {invitePreview.inviterName && (
                   <> · Invited by <span className="font-semibold">{invitePreview.inviterName}</span></>
                 )}

@@ -30,7 +30,8 @@
     "fix:artifact-version-data": "ts-node -r tsconfig-paths/register src/scripts/fix-artifact-version-data-column.ts",
     "seed:artifact-templates": "ts-node -r tsconfig-paths/register src/scripts/seed-artifact-templates.ts",
     "seed:enterprise": "ts-node -r tsconfig-paths/register src/database/seed-runner.ts",
-    "migrate:users": "ts-node -r tsconfig-paths/register src/database/migrate-existing-users.ts"
+    "migrate:users": "ts-node -r tsconfig-paths/register src/database/migrate-existing-users.ts",
+    "provision:schemas": "ts-node -r tsconfig-paths/register src/database/provision-tenant-schemas.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",

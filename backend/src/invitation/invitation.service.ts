@@ -11,6 +11,7 @@ import { User } from '../entities/user.entity';
 import { Project } from '../entities/project.entity';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { MailService } from '../mail/mail.service';
+import { TenantService } from '../tenant/tenant.service';
 
 @Injectable()
 export class InvitationService {
@@ -19,9 +20,8 @@ export class InvitationService {
     private invitationRepository: Repository<Invitation>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Project)
-    private projectRepository: Repository<Project>,
     private mailService: MailService,
+    private tenantService: TenantService,
   ) {}
 
   /**
@@ -56,7 +56,8 @@ export class InvitationService {
     // Verify project exists if projectId is provided
     let project = null;
     if (projectId) {
-      project = await this.projectRepository.findOne({
+      const projectRepository = await this.tenantService.getRepository(Project);
+      project = await projectRepository.findOne({
         where: { id: projectId },
       });
 

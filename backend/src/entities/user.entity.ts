@@ -13,7 +13,7 @@ import { ProjectMember } from './project-member.entity';
 import { StandupUpdate } from './standup-update.entity';
 import { RefreshToken } from './refresh-token.entity';
 
-@Entity('users')
+@Entity({ schema: 'public', name: 'users' })
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;

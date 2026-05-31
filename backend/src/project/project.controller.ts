@@ -50,6 +50,18 @@ export class ProjectController {
     return this.projectService.findAll(req.user.organizationId, isActiveBool, isArchivedBool);
   }
 
+  @Get('admin/orphaned')
+  @RequirePermissions(PERMISSIONS.PROJECT_EDIT)
+  findOrphaned() {
+    return this.projectService.findOrphanedProjects();
+  }
+
+  @Post('admin/reassign-owner')
+  @RequirePermissions(PERMISSIONS.PROJECT_EDIT)
+  reassignOwner(@Body() body: { fromUserId?: string; toUserId: string }) {
+    return this.projectService.reassignOwner(body);
+  }
+
   @Get('check-name')
   @RequirePermissions(PERMISSIONS.PROJECT_VIEW)
   async checkNameUniqueness(

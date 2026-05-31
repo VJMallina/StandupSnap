@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/AppLayout';
-import { ROLE_LABELS } from '../constants/roles';
+import { ROLE_LABELS, formatOrgRole } from '../constants/roles';
 import { profileApi } from '../services/api/profile';
 
 export default function ProfilePage() {
@@ -174,14 +174,20 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-sm font-medium text-gray-500 mb-1">Role</label>
                 <div className="flex flex-wrap gap-2">
-                  {user?.roles.map((role) => (
-                    <span
-                      key={role}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800"
-                    >
-                      {ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role}
+                  {user?.orgRole ? (
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
+                      {formatOrgRole(user.orgRole)}
                     </span>
-                  ))}
+                  ) : (
+                    user?.roles.map((role) => (
+                      <span
+                        key={role}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800"
+                      >
+                        {ROLE_LABELS[role as keyof typeof ROLE_LABELS] || role}
+                      </span>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

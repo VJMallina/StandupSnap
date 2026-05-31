@@ -1,17 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Document, Packer, Paragraph, TextRun, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import AppLayout from '../components/AppLayout';
 import { Select } from '../components/ui/Select';
 import { reportsApi } from '../services/api/reports';
+import { canvasReportsApi } from '../services/api/canvasReports';
+import { importPptx } from '../components/canvas/importUtils';
 import { dashboardApi, ProjectSummary } from '../services/api/dashboard';
 import { sprintsApi } from '../services/api/sprints';
 import { DailySummary } from '../types/snap';
 import { Sprint } from '../types/sprint';
+import { CanvasReportSummary, ReportType } from '../types/canvasReport';
 import { useProjectSelection } from '../context/ProjectSelectionContext';
 
 export default function ReportsPage() {
+  const navigate = useNavigate();
   const { selectedProjectId, setSelectedProjectId } = useProjectSelection();
+  const [activeTab, setActiveTab] = useState<'daily' | 'canvas'>('daily');
+  const [canvasReports, setCanvasReports] = useState<CanvasReportSummary[]>([]);
+  const [canvasLoading, setCanvasLoading] = useState(false);
+  const [showNewReportModal, setShowNewReportModal] = useState(false);
+  const [newReportName, setNewReportName] = useState('');
+  const [newReportType, setNewReportType] = useState<ReportType>('custom');
+  const [useTemplate, setUseTemplate] = useState(true);
+  const [templateStartDate, setTemplateStartDate] = useState('');
+  const [templateEndDate, setTemplateEndDate] = useState('');
+  const [creatingReport, setCreatingReport] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [summaries, setSummaries] = useState<DailySummary[]>([]);
@@ -81,6 +98,88 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadCanvasReports = async (projectId: string) => {
+    if (!projectId) return;
+    setCanvasLoading(true);
+    try {
+      const data = await canvasReportsApi.list(projectId);
+      setCanvasReports(data);
+    } catch {
+      // non-blocking
+    } finally {
+      setCanvasLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedProjectId && activeTab === 'canvas') loadCanvasReports(selectedProjectId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId, activeTab]);
+
+  const handleCreateCanvasReport = async () => {
+    if (!newReportName.trim() || !selectedProjectId) return;
+    setCreatingReport(true);
+    try {
+      if (useTemplate) {
+        const report = await canvasReportsApi.generateFromTemplate({
+          projectId: selectedProjectId,
+          name: newReportName,
+          reportType: newReportType,
+          startDate: templateStartDate || undefined,
+          endDate: templateEndDate || undefined,
+        });
+        setShowNewReportModal(false);
+        navigate(`/reports/editor/${report.id}`);
+      } else {
+        navigate(
+          `/reports/editor/new?projectId=${selectedProjectId}&name=${encodeURIComponent(newReportName)}&type=${newReportType}`,
+        );
+      }
+    } catch (e: any) {
+      alert(e.message ?? 'Failed to create report');
+    } finally {
+      setCreatingReport(false);
+    }
+  };
+
+  const handleImportPptx = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedProjectId) return;
+    e.target.value = '';
+    setImporting(true);
+    try {
+      const slides = await importPptx(file);
+      const reportName = file.name.replace(/\.pptx$/i, '');
+      const created = await canvasReportsApi.create({
+        name: reportName,
+        projectId: selectedProjectId,
+        reportType: 'custom',
+        slides,
+      });
+      navigate(`/reports/editor/${created.id}`);
+    } catch (err: any) {
+      alert(err.message ?? 'Failed to import PPTX');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleOpenCanvasReport = (reportId: string) => {
+    navigate(`/reports/editor/${reportId}`);
+  };
+
+  const handleDuplicateCanvasReport = async (reportId: string) => {
+    if (!selectedProjectId) return;
+    await canvasReportsApi.duplicate(reportId);
+    loadCanvasReports(selectedProjectId);
+  };
+
+  const handleDeleteCanvasReport = async (reportId: string) => {
+    if (!window.confirm('Delete this report?')) return;
+    await canvasReportsApi.remove(reportId);
+    setCanvasReports((prev) => prev.filter((r) => r.id !== reportId));
   };
 
   const handleProjectChange = (projectId: string) => {
@@ -472,7 +571,289 @@ Assignee-Level Status:
         {/* Header */}
         <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl p-4 md:p-5 shadow-lg">
           <h1 className="text-2xl font-bold text-white">Reports</h1>
+          <p className="text-primary-100 text-sm mt-1">Daily standup summaries and canvas status decks</p>
         </div>
+
+        {/* Tabs */}
+        <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 w-fit">
+          {[
+            { id: 'daily', label: 'Daily Summaries', icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            )},
+            { id: 'canvas', label: 'Status Decks', icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+            )},
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as 'daily' | 'canvas')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-primary-50 text-primary-700 border border-primary-200'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Canvas Reports Tab ── */}
+        {activeTab === 'canvas' && (
+          <div className="space-y-4">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-[180px] max-w-xs">
+                <Select
+                  label="Project"
+                  value={selectedProjectId}
+                  onChange={handleProjectChange}
+                  placeholder="Select Project"
+                  options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Hidden file input for PPTX import */}
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".pptx"
+                  className="hidden"
+                  onChange={handleImportPptx}
+                />
+                <button
+                  onClick={() => importInputRef.current?.click()}
+                  disabled={!selectedProjectId || importing}
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 disabled:opacity-50 transition-all"
+                  title="Import a .pptx file as a new canvas report"
+                >
+                  {importing ? (
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                  )}
+                  {importing ? 'Importing…' : 'Import PPTX'}
+                </button>
+                <button
+                  onClick={() => { setNewReportName(''); setShowNewReportModal(true); }}
+                  disabled={!selectedProjectId}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-xl font-medium text-sm hover:from-primary-700 hover:to-secondary-700 disabled:opacity-50 transition-all shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  New Report
+                </button>
+              </div>
+            </div>
+
+            {/* Report list */}
+            {canvasLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+              </div>
+            ) : canvasReports.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">No status decks yet</h3>
+                <p className="text-gray-500 text-sm mb-4">Create your first canvas report to build visual status presentations</p>
+                <button
+                  onClick={() => setShowNewReportModal(true)}
+                  disabled={!selectedProjectId}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Report
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {canvasReports.map((report) => (
+                  <div key={report.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group">
+                    {/* Preview area */}
+                    <div
+                      className="h-36 rounded-t-xl bg-gradient-to-br from-gray-50 to-gray-100 border-b border-gray-100 flex items-center justify-center cursor-pointer"
+                      onClick={() => handleOpenCanvasReport(report.id)}
+                    >
+                      <svg className="w-10 h-10 text-gray-300 group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                      </svg>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-800 text-sm truncate">{report.name}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary-50 text-primary-700 capitalize font-medium">{report.reportType}</span>
+                            <span className="text-xs text-gray-400">
+                              {new Date(report.updatedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleOpenCanvasReport(report.id)}
+                            title="Open"
+                            className="p-1.5 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDuplicateCanvasReport(report.id)}
+                            title="Duplicate"
+                            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCanvasReport(report.id)}
+                            title="Delete"
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── New Report Modal ── */}
+        {showNewReportModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg mx-4 animate-scaleIn">
+              <h2 className="text-lg font-bold text-gray-800 mb-1">New Status Deck</h2>
+              <p className="text-sm text-gray-500 mb-5">Choose how to start your report</p>
+
+              {/* Start mode toggle */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <button
+                  onClick={() => setUseTemplate(true)}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${useTemplate ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg className={`w-4 h-4 ${useTemplate ? 'text-primary-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span className={`text-sm font-semibold ${useTemplate ? 'text-primary-700' : 'text-gray-700'}`}>Use Template</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Auto-populated with live project data — sprints, RAG, team & risks</p>
+                </button>
+                <button
+                  onClick={() => setUseTemplate(false)}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${!useTemplate ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg className={`w-4 h-4 ${!useTemplate ? 'text-primary-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span className={`text-sm font-semibold ${!useTemplate ? 'text-primary-700' : 'text-gray-700'}`}>Blank Canvas</span>
+                  </div>
+                  <p className="text-xs text-gray-500">Start from scratch and build your own layout</p>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Report Name</label>
+                  <input
+                    autoFocus
+                    value={newReportName}
+                    onChange={(e) => setNewReportName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleCreateCanvasReport(); }}
+                    placeholder="e.g. Weekly Status – Sprint 12"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                  <select
+                    value={newReportType}
+                    onChange={(e) => setNewReportType(e.target.value as ReportType)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                  >
+                    <option value="weekly">Weekly</option>
+                    <option value="biweekly">Bi-Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+
+                {/* Date range — only shown for template mode */}
+                {useTemplate && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date Range <span className="text-gray-400 font-normal">(optional — defaults to current period)</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="date"
+                        value={templateStartDate}
+                        onChange={(e) => setTemplateStartDate(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                      />
+                      <span className="text-gray-400 text-sm">to</span>
+                      <input
+                        type="date"
+                        value={templateEndDate}
+                        onChange={(e) => setTemplateEndDate(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowNewReportModal(false)}
+                  disabled={creatingReport}
+                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+                >Cancel</button>
+                <button
+                  onClick={handleCreateCanvasReport}
+                  disabled={!newReportName.trim() || creatingReport}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-xl text-sm font-medium hover:from-primary-700 hover:to-secondary-700 disabled:opacity-50 transition-all"
+                >
+                  {creatingReport ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {useTemplate ? 'Generating…' : 'Creating…'}
+                    </>
+                  ) : (
+                    useTemplate ? 'Generate & Open Editor' : 'Create & Open Editor'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Daily Summaries Tab (existing content) ── */}
+        {activeTab === 'daily' && <>
 
         {/* Filters */}
         <div className="flex flex-wrap items-end gap-3 mb-6">
@@ -785,6 +1166,7 @@ Assignee-Level Status:
             })}
           </div>
         )}
+        </> }
       </div>
     </AppLayout>
   );
