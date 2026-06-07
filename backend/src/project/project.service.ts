@@ -72,6 +72,7 @@ export class ProjectService {
   async findAll(orgId?: string, isActive?: boolean, isArchived?: boolean): Promise<Project[]> {
     const projectRepo = await this.tenantService.getRepository(Project);
     const where: any = {};
+    if (orgId) where.organizationId = orgId;
     if (isActive !== undefined) where.isActive = isActive;
     if (isArchived !== undefined) where.isArchived = isArchived;
 
@@ -89,7 +90,7 @@ export class ProjectService {
     ]);
 
     const project = await projectRepo.findOne({
-      where: { id },
+      where: { id, ...(orgId ? { organizationId: orgId } : {}) },
       relations: ['members', 'members.user', 'sprints', 'productOwner', 'pmo', 'teamMembers'],
     });
 

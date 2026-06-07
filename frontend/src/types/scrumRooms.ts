@@ -5,7 +5,6 @@ export enum RoomType {
   RETROSPECTIVE = 'retrospective',
   SPRINT_PLANNING = 'sprint_planning',
   REFINEMENT = 'refinement',
-  MOM = 'mom',
 }
 
 export enum RoomStatus {
@@ -32,9 +31,11 @@ export interface PlanningPokerVote {
 export interface PlanningPokerRound {
   roundId: string;
   itemName?: string;
+  cardId?: string;
   votes: Record<string, string | number>;
   revealed: boolean;
   finalValue: string | number | null;
+  estimateSaved?: boolean;
   mean?: number;
   median?: number;
   mode?: string | number;
@@ -58,6 +59,7 @@ export interface RetroItem {
   votes: string[];
   discussion?: string;
   actionItem?: boolean;
+  convertedCardId?: string;
   timestamp: string;
 }
 
@@ -74,24 +76,6 @@ export interface RetrospectiveData {
   maxVotesPerPerson?: number;
 }
 
-// ========== MOM ==========
-
-export interface MOMActionItem {
-  id: string;
-  description: string;
-  assignee?: string;
-  dueDate?: string;
-}
-
-export interface MOMData {
-  rawInput: string;
-  summary: string;
-  decisions: string[];
-  actionItems: MOMActionItem[];
-  attendees: string[];
-  aiGenerated: boolean;
-}
-
 // ========== SPRINT PLANNING ==========
 
 export interface SprintPlanningItem {
@@ -100,6 +84,9 @@ export interface SprintPlanningItem {
   estimate: number;
   status: 'ready' | 'in_scope' | 'out_of_scope';
   order: number;
+  cardId?: string;
+  priority?: string;
+  cardType?: string;
 }
 
 export interface SprintPlanningData {
@@ -118,6 +105,8 @@ export interface RefinementItem {
   acceptanceCriteria: string[];
   aiSuggestions?: string[];
   estimate?: number;
+  cardId?: string;
+  criteriaPushed?: boolean;
 }
 
 export interface RefinementData {
@@ -135,7 +124,6 @@ export interface ScrumRoom {
   data:
     | PlanningPokerData
     | RetrospectiveData
-    | MOMData
     | SprintPlanningData
     | RefinementData
     | null;

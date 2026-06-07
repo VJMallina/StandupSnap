@@ -75,7 +75,7 @@ export class DashboardService {
     organizationId?: string,
     orgRole?: string,
   ): Promise<DashboardData> {
-    const userProjects = await this.getUserProjects(userId, orgRole);
+    const userProjects = await this.getUserProjects(userId, orgRole, organizationId);
 
     if (userProjects.length === 0) {
       return {
@@ -138,12 +138,14 @@ export class DashboardService {
     };
   }
 
-  async getUserProjects(userId: string, orgRole?: string): Promise<Project[]> {
+  async getUserProjects(userId: string, orgRole?: string, organizationId?: string): Promise<Project[]> {
     const ORG_WIDE_ROLES = ['ORG_ADMIN', 'PMO'];
     if (orgRole && ORG_WIDE_ROLES.includes(orgRole)) {
       const projectRepo = await this.tenantService.getRepository(Project);
+      const where: any = { isArchived: false };
+      if (organizationId) where.organizationId = organizationId;
       return projectRepo.find({
-        where: { isArchived: false },
+        where,
         order: { createdAt: 'DESC' },
       });
     }

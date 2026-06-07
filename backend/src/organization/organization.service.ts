@@ -647,6 +647,22 @@ export class OrganizationService {
   }
 
   /**
+   * Update branding fields (colors, logo URL, favicon URL) for an org.
+   * Only ORG_ADMIN can call this.
+   */
+  async updateBranding(
+    orgId: string,
+    dto: Partial<{ logoUrl: string | null; brandPrimaryColor: string | null; brandSecondaryColor: string | null; brandAccentColor: string | null; brandFaviconUrl: string | null }>,
+    userId: string,
+  ): Promise<Organization> {
+    await this.assertOrgAdmin(userId, orgId);
+    const org = await this.findById(orgId);
+    Object.assign(org, dto);
+    org.updatedById = userId;
+    return this.orgRepo.save(org);
+  }
+
+  /**
    * Check if user is a member of the organization
    */
   async isMember(userId: string, orgId: string): Promise<boolean> {

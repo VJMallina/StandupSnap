@@ -1,468 +1,310 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { scrumRoomsApi } from '../../services/api/scrumRooms';
+import { cardsApi } from '../../services/api/cards';
 import { ScrumRoom, RefinementData, RefinementItem } from '../../types/scrumRooms';
+import { Card } from '../../types/card';
 import { useToast } from '../../hooks/useToast';
-import { AddNoteModal } from './modals/AddNoteModal';
-import { AddCriteriaModal } from './modals/AddCriteriaModal';
-import DeleteConfirmationModal from '../DeleteConfirmationModal';
+import { useProjectSelection } from '../../context/ProjectSelectionContext';
 
-interface RefinementRoomProps {
-  room: ScrumRoom;
-  onUpdate: () => void;
-}
+interface Props { room: ScrumRoom; onUpdate: () => void; }
 
-export const RefinementRoom: React.FC<RefinementRoomProps> = ({ room, onUpdate }) => {
+export const RefinementRoom = ({ room, onUpdate }: Props) => {
   const navigate = useNavigate();
   const toast = useToast();
+  const { selectedProjectId } = useProjectSelection();
   const data = room.data as RefinementData;
 
   const [items, setItems] = useState<RefinementItem[]>(data?.items || []);
-  const [selectedItem, setSelectedItem] = useState<RefinementItem | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
-  const [showAddCriteriaModal, setShowAddCriteriaModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [selectedItemForModal, setSelectedItemForModal] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pushingId, setPushingId] = useState<string | null>(null);
+  const [backlogCards, setBacklogCards] = useState<Card[]>([]);
+  const [loadingBacklog, setLoadingBacklog] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [newCriteria, setNewCriteria] = useState('');
+  const [editingNoteIdx, setEditingNoteIdx] = useState<{ itemId: string; idx: number } | null>(null);
+  const [editingNoteText, setEditingNoteText] = useState('');
+  const [newItemTitle, setNewItemTitle] = useState('');
 
-  const handleSave = async () => {
+  useEffect(() => {
+    if (selectedProjectId) loadBacklog();
+  }, [selectedProjectId]);
+
+  const loadBacklog = async () => {
+    if (!selectedProjectId) return;
+    setLoadingBacklog(true);
     try {
-      setLoading(true);
-
-      const updatedData: RefinementData = {
-        items,
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      onUpdate();
-      toast.success('Refinement saved successfully');
-    } catch (err: any) {
-      console.error('Error saving:', err);
-      toast.error(err.message || 'Failed to save');
-    } finally {
-      setLoading(false);
-    }
+      const cards = await cardsApi.getAll({ projectId: selectedProjectId, backlog: true });
+      setBacklogCards(cards.filter(c => c.cardType !== 'epic'));
+    } catch { /* non-fatal */ }
+    finally { setLoadingBacklog(false); }
   };
 
-  const handleAddItem = () => {
+  const save = async (updated: RefinementItem[]) => {
+    try {
+      await scrumRoomsApi.updateData(room.id, { data: { items: updated } });
+      onUpdate();
+    } catch (e: any) { toast.error(e.message || 'Failed to save'); }
+  };
+
+  const importFromBacklog = () => {
+    const existingCardIds = new Set(items.filter(i => i.cardId).map(i => i.cardId!));
+    const newItems: RefinementItem[] = backlogCards
+      .filter(c => !existingCardIds.has(c.id))
+      .map(c => ({
+        itemId: `card-${c.id}`,
+        cardId: c.id,
+        title: c.title,
+        notes: [],
+        acceptanceCriteria: c.acceptanceCriteria ? c.acceptanceCriteria.split('\n').filter(Boolean) : [],
+        estimate: c.storyPoints,
+        criteriaPushed: false,
+      }));
+    if (newItems.length === 0) { toast.info('All backlog cards already loaded'); return; }
+    const updated = [...items, ...newItems];
+    setItems(updated);
+    save(updated);
+    toast.success(`${newItems.length} card(s) loaded`);
+  };
+
+  const addManualItem = () => {
+    if (!newItemTitle.trim()) return;
     const newItem: RefinementItem = {
       itemId: `item-${Date.now()}`,
-      title: '',
+      title: newItemTitle.trim(),
       notes: [],
       acceptanceCriteria: [],
-      aiSuggestions: [],
-      estimate: 0,
     };
-    setItems([...items, newItem]);
-    setSelectedItem(newItem);
+    const updated = [...items, newItem];
+    setItems(updated);
+    save(updated);
+    setNewItemTitle('');
+    setExpandedId(newItem.itemId);
   };
 
-  const handleDeleteItem = (itemId: string) => {
-    setItemToDelete(itemId);
-    setShowDeleteModal(true);
+  const deleteItem = (itemId: string) => {
+    const updated = items.filter(i => i.itemId !== itemId);
+    setItems(updated);
+    save(updated);
   };
 
-  const confirmDelete = () => {
-    if (itemToDelete) {
-      setItems(items.filter((item) => item.itemId !== itemToDelete));
-      if (selectedItem?.itemId === itemToDelete) setSelectedItem(null);
-      toast.success('Story deleted successfully');
-    }
-    setShowDeleteModal(false);
-    setItemToDelete(null);
+  const addNote = (itemId: string) => {
+    if (!newNote.trim()) return;
+    const updated = items.map(i => i.itemId === itemId ? { ...i, notes: [...i.notes, newNote.trim()] } : i);
+    setItems(updated);
+    save(updated);
+    setNewNote('');
   };
 
-  const handleUpdateItem = (itemId: string, updates: Partial<RefinementItem>) => {
-    setItems(items.map((item) => (item.itemId === itemId ? { ...item, ...updates } : item)));
-    if (selectedItem?.itemId === itemId) {
-      setSelectedItem({ ...selectedItem, ...updates });
-    }
+  const removeNote = (itemId: string, idx: number) => {
+    const updated = items.map(i => i.itemId === itemId ? { ...i, notes: i.notes.filter((_, j) => j !== idx) } : i);
+    setItems(updated);
+    save(updated);
   };
 
-  const handleAddNote = (itemId: string) => {
-    setSelectedItemForModal(itemId);
-    setShowAddNoteModal(true);
+  const saveEditedNote = (itemId: string, idx: number) => {
+    if (!editingNoteText.trim()) return;
+    const updated = items.map(i => i.itemId === itemId ? { ...i, notes: i.notes.map((n, j) => j === idx ? editingNoteText.trim() : n) } : i);
+    setItems(updated);
+    save(updated);
+    setEditingNoteIdx(null);
+    setEditingNoteText('');
   };
 
-  const addNote = (note: string) => {
-    if (!selectedItemForModal) return;
-
-    const item = items.find((i) => i.itemId === selectedItemForModal);
-    if (!item) return;
-
-    handleUpdateItem(selectedItemForModal, {
-      notes: [...item.notes, note],
-    });
-    toast.success('Note added successfully');
+  const addCriteria = (itemId: string) => {
+    if (!newCriteria.trim()) return;
+    const updated = items.map(i => i.itemId === itemId ? { ...i, acceptanceCriteria: [...i.acceptanceCriteria, newCriteria.trim()], criteriaPushed: false } : i);
+    setItems(updated);
+    save(updated);
+    setNewCriteria('');
   };
 
-  const handleRemoveNote = (itemId: string, noteIndex: number) => {
-    const item = items.find((i) => i.itemId === itemId);
-    if (!item) return;
-
-    handleUpdateItem(itemId, {
-      notes: item.notes.filter((_, idx) => idx !== noteIndex),
-    });
+  const removeCriteria = (itemId: string, idx: number) => {
+    const updated = items.map(i => i.itemId === itemId ? { ...i, acceptanceCriteria: i.acceptanceCriteria.filter((_, j) => j !== idx), criteriaPushed: false } : i);
+    setItems(updated);
+    save(updated);
   };
 
-  const handleAddAcceptanceCriteria = (itemId: string) => {
-    setSelectedItemForModal(itemId);
-    setShowAddCriteriaModal(true);
+  const updateEstimate = (itemId: string, estimate: number) => {
+    setItems(prev => prev.map(i => i.itemId === itemId ? { ...i, estimate } : i));
   };
 
-  const addCriteria = (criteria: string) => {
-    if (!selectedItemForModal) return;
-
-    const item = items.find((i) => i.itemId === selectedItemForModal);
-    if (!item) return;
-
-    handleUpdateItem(selectedItemForModal, {
-      acceptanceCriteria: [...item.acceptanceCriteria, criteria],
-    });
-    toast.success('Acceptance criteria added successfully');
-  };
-
-  const handleRemoveAcceptanceCriteria = (itemId: string, criteriaIndex: number) => {
-    const item = items.find((i) => i.itemId === itemId);
-    if (!item) return;
-
-    handleUpdateItem(itemId, {
-      acceptanceCriteria: item.acceptanceCriteria.filter((_, idx) => idx !== criteriaIndex),
-    });
+  const pushToCard = async (item: RefinementItem) => {
+    if (!item.cardId) return;
+    setPushingId(item.itemId);
+    try {
+      await cardsApi.update(item.cardId, {
+        acceptanceCriteria: item.acceptanceCriteria.join('\n'),
+        storyPoints: item.estimate,
+      });
+      const updated = items.map(i => i.itemId === item.itemId ? { ...i, criteriaPushed: true } : i);
+      setItems(updated);
+      await save(updated);
+      toast.success('Acceptance criteria pushed to card');
+    } catch (e: any) { toast.error(e.message || 'Failed to push'); }
+    finally { setPushingId(null); }
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/scrum-rooms')}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={() => navigate('/scrum-rooms')} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-3xl">✨</span>
-              <h1 className="text-2xl font-bold text-gray-900">{room.name}</h1>
-            </div>
-            {room.description && <p className="text-gray-600 mt-1">{room.description}</p>}
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-gray-900 truncate">{room.name}</h1>
+            {room.description && <p className="text-sm text-gray-500 truncate">{room.description}</p>}
           </div>
         </div>
+        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 flex-shrink-0">Refinement</span>
+      </div>
 
+      {/* Toolbar */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex flex-col sm:flex-row gap-3">
+        <div className="flex gap-2 flex-1">
+          <input
+            value={newItemTitle}
+            onChange={e => setNewItemTitle(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addManualItem()}
+            placeholder="Add item manually…"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <button onClick={addManualItem} disabled={!newItemTitle.trim()} className="px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-40 transition-colors">Add</button>
+        </div>
         <button
-          onClick={handleSave}
-          disabled={loading}
-          className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+          onClick={importFromBacklog}
+          disabled={loadingBacklog}
+          className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-40 transition-colors flex items-center gap-2"
         >
-          {loading ? 'Saving...' : 'Save Refinement'}
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+          {loadingBacklog ? 'Loading…' : `Import from Backlog (${backlogCards.length})`}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Items List */}
-        <div className="lg:col-span-1 bg-white rounded-lg border border-gray-200">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Stories ({items.length})</h3>
-            <button
-              onClick={handleAddItem}
-              className="px-3 py-1 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm"
-            >
-              + Add
-            </button>
-          </div>
-
-          <div className="overflow-y-auto max-h-[calc(100vh-250px)]">
-            {items.map((item) => (
-              <div
-                key={item.itemId}
-                onClick={() => setSelectedItem(item)}
-                className={`p-4 border-b border-gray-200 cursor-pointer transition-colors ${
-                  selectedItem?.itemId === item.itemId
-                    ? 'bg-primary-50 border-l-4 border-l-primary-600'
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">
-                      {item.title || 'Untitled Story'}
-                    </h4>
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        {item.notes.length} notes
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        {item.acceptanceCriteria.length} AC
-                      </span>
-                      {(item.estimate ?? 0) > 0 && (
-                        <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded font-medium">
-                          {item.estimate} pts
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteItem(item.itemId);
-                    }}
-                    className="text-red-500 hover:text-red-700 ml-2"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {items.length === 0 && (
-              <div className="p-8 text-center text-gray-500">
-                <p className="text-sm">No stories yet. Click "+ Add" to create one.</p>
-              </div>
-            )}
-          </div>
+      {/* Items */}
+      {items.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-300">
+          <svg className="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+          </svg>
+          <p className="text-sm font-medium text-gray-500">No items yet</p>
+          <p className="text-xs text-gray-400 mt-1">Add items manually or import from backlog</p>
         </div>
-
-        {/* Details Panel */}
-        {selectedItem ? (
-          <div className="lg:col-span-2 space-y-6">
-            {/* Title and Estimate */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Story Details</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={selectedItem.title}
-                    onChange={(e) => handleUpdateItem(selectedItem.itemId, { title: e.target.value })}
-                    placeholder="Enter story title..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estimate (Story Points)
-                  </label>
-                  <input
-                    type="number"
-                    value={selectedItem.estimate || 0}
-                    onChange={(e) =>
-                      handleUpdateItem(selectedItem.itemId, { estimate: Number(e.target.value) })
-                    }
-                    min="0"
-                    className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Discussion Notes</h3>
-                <button
-                  onClick={() => handleAddNote(selectedItem.itemId)}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm flex items-center gap-2"
+      ) : (
+        <div className="space-y-3">
+          {items.map(item => {
+            const isExpanded = expandedId === item.itemId;
+            return (
+              <div key={item.itemId} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                {/* Item header */}
+                <div
+                  className="flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setExpandedId(isExpanded ? null : item.itemId)}
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                  Add Note
-                </button>
-              </div>
-              <div className="space-y-2">
-                {selectedItem.notes.map((note, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg"
-                  >
-                    <svg
-                      className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                      <path
-                        fillRule="evenodd"
-                        d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="flex-1 text-sm text-gray-900">{note}</span>
-                    <button
-                      onClick={() => handleRemoveNote(selectedItem.itemId, idx)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-                {selectedItem.notes.length === 0 && (
-                  <p className="text-sm text-gray-500">No notes yet</p>
-                )}
-              </div>
-            </div>
-
-            {/* Acceptance Criteria */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Acceptance Criteria</h3>
-                <button
-                  onClick={() => handleAddAcceptanceCriteria(selectedItem.itemId)}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm flex items-center gap-2"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Criteria
-                </button>
-              </div>
-              <div className="space-y-2">
-                {selectedItem.acceptanceCriteria.map((criteria, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-3 p-3 bg-green-50 border border-green-200 rounded-lg"
-                  >
-                    <svg
-                      className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="flex-1 text-sm text-gray-900">{criteria}</span>
-                    <button
-                      onClick={() => handleRemoveAcceptanceCriteria(selectedItem.itemId, idx)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-                {selectedItem.acceptanceCriteria.length === 0 && (
-                  <p className="text-sm text-gray-500">No acceptance criteria yet</p>
-                )}
-              </div>
-            </div>
-
-            {/* AI Suggestions (Placeholder) */}
-            {selectedItem.aiSuggestions && selectedItem.aiSuggestions.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                  AI Suggestions
-                </h3>
-                <div className="space-y-2">
-                  {selectedItem.aiSuggestions.map((suggestion, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-sm text-gray-900"
-                    >
-                      {suggestion}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{item.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {item.cardId && <span className="text-xs text-primary-600 flex items-center gap-0.5"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>Linked</span>}
+                      {item.acceptanceCriteria.length > 0 && <span className="text-xs text-gray-400">{item.acceptanceCriteria.length} criteria</span>}
+                      {item.notes.length > 0 && <span className="text-xs text-gray-400">{item.notes.length} note{item.notes.length !== 1 ? 's' : ''}</span>}
+                      {item.criteriaPushed && <span className="text-xs text-green-600 font-medium">✓ Pushed</span>}
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                      <input
+                        type="number"
+                        value={item.estimate ?? ''}
+                        onChange={e => updateEstimate(item.itemId, Number(e.target.value))}
+                        onBlur={() => save(items)}
+                        placeholder="pts"
+                        min={0}
+                        className="w-16 text-sm text-right border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      />
+                      <span className="text-xs text-gray-400">pts</span>
+                    </div>
+                    {item.cardId && item.acceptanceCriteria.length > 0 && (
+                      <button
+                        onClick={e => { e.stopPropagation(); pushToCard(item); }}
+                        disabled={pushingId === item.itemId}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${item.criteriaPushed ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-primary-600 text-white hover:bg-primary-700'} disabled:opacity-40`}
+                      >
+                        {pushingId === item.itemId ? '…' : item.criteriaPushed ? '✓ Pushed' : 'Push to Card'}
+                      </button>
+                    )}
+                    <button onClick={e => { e.stopPropagation(); deleteItem(item.itemId); }} className="p-1 text-gray-300 hover:text-red-500 rounded transition-colors">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
+                  </div>
                 </div>
+
+                {/* Expanded content */}
+                {isExpanded && (
+                  <div className="border-t border-gray-100 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
+                    {/* Acceptance Criteria */}
+                    <div className="p-5">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Acceptance Criteria</h4>
+                      <div className="space-y-2 mb-3">
+                        {item.acceptanceCriteria.length === 0 ? (
+                          <p className="text-xs text-gray-400">No criteria yet</p>
+                        ) : item.acceptanceCriteria.map((c, idx) => (
+                          <div key={idx} className="flex items-start gap-2 group">
+                            <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span className="flex-1 text-sm text-gray-700">{c}</span>
+                            <button onClick={() => removeCriteria(item.itemId, idx)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input value={newCriteria} onChange={e => setNewCriteria(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCriteria(item.itemId)} placeholder="Given… When… Then…" className="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500" />
+                        <button onClick={() => addCriteria(item.itemId)} disabled={!newCriteria.trim()} className="px-3 py-1.5 bg-primary-600 text-white text-xs font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-40 transition-colors">Add</button>
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    <div className="p-5">
+                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Notes</h4>
+                      <div className="space-y-2 mb-3">
+                        {item.notes.length === 0 ? (
+                          <p className="text-xs text-gray-400">No notes yet</p>
+                        ) : item.notes.map((n, idx) => (
+                          <div key={idx} className="group">
+                            {editingNoteIdx?.itemId === item.itemId && editingNoteIdx.idx === idx ? (
+                              <div className="flex gap-2">
+                                <input value={editingNoteText} onChange={e => setEditingNoteText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') saveEditedNote(item.itemId, idx); if (e.key === 'Escape') setEditingNoteIdx(null); }} className="flex-1 px-2 py-1 border border-primary-300 rounded text-xs focus:outline-none" autoFocus />
+                                <button onClick={() => saveEditedNote(item.itemId, idx)} className="text-xs text-primary-600 font-medium">Save</button>
+                              </div>
+                            ) : (
+                              <div className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-1.5 flex-shrink-0" />
+                                <span className="flex-1 text-sm text-gray-700 cursor-pointer" onDoubleClick={() => { setEditingNoteIdx({ itemId: item.itemId, idx }); setEditingNoteText(n); }}>{n}</span>
+                                <button onClick={() => removeNote(item.itemId, idx)} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all">
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input value={newNote} onChange={e => setNewNote(e.target.value)} onKeyDown={e => e.key === 'Enter' && addNote(item.itemId)} placeholder="Add a note…" className="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-500" />
+                        <button onClick={() => addNote(item.itemId)} disabled={!newNote.trim()} className="px-3 py-1.5 bg-gray-600 text-white text-xs font-semibold rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors">Add</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 flex items-center justify-center p-12">
-            <div className="text-center text-gray-500">
-              <svg
-                className="h-16 w-16 mx-auto mb-4 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Story Selected</h3>
-              <p className="text-gray-600">Select a story from the list to view and edit details</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Modals */}
-      <AddNoteModal
-        isOpen={showAddNoteModal}
-        onClose={() => setShowAddNoteModal(false)}
-        onAdd={addNote}
-      />
-
-      <AddCriteriaModal
-        isOpen={showAddCriteriaModal}
-        onClose={() => setShowAddCriteriaModal(false)}
-        onAdd={addCriteria}
-      />
-
-      <DeleteConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={confirmDelete}
-        title="Delete Story"
-        message="Are you sure you want to delete this story? This action cannot be undone."
-        confirmText="DELETE"
-      />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

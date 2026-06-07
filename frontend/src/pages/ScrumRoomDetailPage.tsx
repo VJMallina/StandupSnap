@@ -5,7 +5,6 @@ import { scrumRoomsApi } from '../services/api/scrumRooms';
 import { ScrumRoom, RoomType } from '../types/scrumRooms';
 import { PlanningPokerRoom } from '../components/scrum-rooms/PlanningPokerRoom';
 import { RetrospectiveRoom } from '../components/scrum-rooms/RetrospectiveRoom';
-import { MOMRoom } from '../components/scrum-rooms/MOMRoom';
 import { SprintPlanningRoom } from '../components/scrum-rooms/SprintPlanningRoom';
 import { RefinementRoom } from '../components/scrum-rooms/RefinementRoom';
 
@@ -83,8 +82,6 @@ const ScrumRoomDetailPage: React.FC = () => {
         return <PlanningPokerRoom room={room} onUpdate={handleRoomUpdate} />;
       case RoomType.RETROSPECTIVE:
         return <RetrospectiveRoom room={room} onUpdate={handleRoomUpdate} />;
-      case RoomType.MOM:
-        return <MOMRoom room={room} onUpdate={handleRoomUpdate} />;
       case RoomType.SPRINT_PLANNING:
         return <SprintPlanningRoom room={room} onUpdate={handleRoomUpdate} />;
       case RoomType.REFINEMENT:

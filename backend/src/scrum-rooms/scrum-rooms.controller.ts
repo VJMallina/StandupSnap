@@ -96,8 +96,4 @@ export class ScrumRoomsController {
     await this.scrumRoomsService.deleteRoom(id);
   }
 
-  @Post('mom/generate-ai')
-  async generateMOMSummary(@Body() body: { text: string }) {
-    return this.scrumRoomsService.generateMOMSummary(body.text);
-  }
 }

@@ -1,6 +1,10 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useBranding } from '../context/BrandingContext';
 import { PERMISSIONS } from '../constants/permissions';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 interface NavItem {
   name: string;
@@ -18,7 +22,28 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasPermission, hasAnyPermission, isOrgAdmin } = useAuth();
+  const { hasPermission, hasAnyPermission, isOrgAdmin, user, isAuthenticated } = useAuth();
+  const { branding } = useBranding();
+  const [activeIncidentCount, setActiveIncidentCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.organizationId) return;
+    const fetchCount = async () => {
+      try {
+        const res = await fetch(`${API_URL}/incidents/active-count`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+        });
+        if (res.ok) { const d = await res.json(); setActiveIncidentCount(d.count || 0); }
+      } catch {}
+    };
+    fetchCount();
+    const t = setInterval(fetchCount, 30000);
+    return () => clearInterval(t);
+  }, [isAuthenticated, user?.organizationId]);
+
+  const sidebarStyle = branding.brandPrimaryColor
+    ? { background: `linear-gradient(to bottom, ${branding.brandPrimaryColor}dd, ${branding.brandPrimaryColor}ff, #0f172a)` }
+    : undefined;
 
   const navItems: NavItem[] = [
     {
@@ -79,6 +104,23 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </svg>
       ),
       permission: PERMISSIONS.MOM_VIEW,
+    },
+    {
+      name: 'War Room',
+      path: '/war-room',
+      icon: (
+        <div className="relative">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          {activeIncidentCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full">
+              <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-75" />
+            </span>
+          )}
+        </div>
+      ),
+      permission: PERMISSIONS.INCIDENT_VIEW,
     },
     {
       name: 'Scrum Rooms',
@@ -206,19 +248,32 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         className={`${
           isCollapsed ? 'w-20' : 'w-72'
         } bg-gradient-to-b from-primary-800 via-primary-900 to-slate-900 min-h-screen text-white flex flex-col shadow-2xl border-r border-primary-700/50 transition-all duration-300 ease-in-out`}
+        style={sidebarStyle}
       >
         {/* Logo Section */}
         <div className="p-4 border-b border-white/10">
           <div className="flex items-center justify-between">
             <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'space-x-3'}`}>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary-500 to-secondary-600">
+                {branding.logoUrl ? (
+                  <img
+                    src={branding.logoUrl}
+                    alt={branding.orgName || 'Logo'}
+                    className="w-full h-full object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                )}
               </div>
               {!isCollapsed && (
                 <div className="overflow-hidden">
-                  <h1 className="text-xl font-black text-white tracking-tight whitespace-nowrap">StandupSnap<sup className="text-[8px] ml-0.5">™</sup></h1>
+                  <h1 className="text-xl font-black text-white tracking-tight whitespace-nowrap">
+                    {branding.orgName || 'StandupSnap'}
+                    {!branding.orgName && <sup className="text-[8px] ml-0.5">™</sup>}
+                  </h1>
                   <p className="text-xs text-gray-400 font-medium whitespace-nowrap">AI-Powered Manager</p>
                 </div>
               )}

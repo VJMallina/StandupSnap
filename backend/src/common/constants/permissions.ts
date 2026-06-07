@@ -181,6 +181,14 @@ export const PERMISSIONS = {
   BILLING_VIEW: 'billing:view',
   BILLING_MANAGE: 'billing:manage',
   AUDIT_VIEW: 'audit:view',
+
+  // ============================================
+  // WAR ROOM (INCIDENT MANAGEMENT) PERMISSIONS
+  // ============================================
+  INCIDENT_VIEW: 'incident:view',
+  INCIDENT_DECLARE: 'incident:declare',
+  INCIDENT_MANAGE: 'incident:manage',
+  INCIDENT_RESOLVE: 'incident:resolve',
 } as const;
 
 export type PermissionKey = typeof PERMISSIONS[keyof typeof PERMISSIONS];

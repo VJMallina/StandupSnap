@@ -127,21 +127,4 @@ export const scrumRoomsApi = {
       throw new Error(err.message || 'Failed to delete room');
     }
   },
-
-  generateMOMSummary: async (text: string): Promise<{
-    summary: string;
-    decisions: string[];
-    actionItems: Array<{ id: string; description: string; assignee?: string; dueDate?: string }>;
-  }> => {
-    const response = await fetch(`${API_URL}/scrum-rooms/mom/generate-ai`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ text }),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || 'Failed to generate summary');
-    }
-    return response.json();
-  },
 };

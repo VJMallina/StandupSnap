@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { BrandingProvider } from './context/BrandingContext';
 import { ToastProvider } from './contexts/ToastContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -55,11 +56,15 @@ import OrgBillingPage from './pages/org/OrgBillingPage';
 import OrgAuditPage from './pages/org/OrgAuditPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MyWorkPage from './pages/MyWorkPage';
+import WarRoomListPage from './pages/war-room/WarRoomListPage';
+import WarRoomPage from './pages/war-room/WarRoomPage';
+import PostMortemPage from './pages/war-room/PostMortemPage';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <BrandingProvider>
         <ToastProvider>
           <ProjectSelectionProvider>
             <Routes>
@@ -464,10 +469,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/war-room" element={<ProtectedRoute><WarRoomListPage /></ProtectedRoute>} />
+            <Route path="/war-room/:id" element={<ProtectedRoute><WarRoomPage /></ProtectedRoute>} />
+            <Route path="/war-room/:id/post-mortem" element={<ProtectedRoute><PostMortemPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </ProjectSelectionProvider>
         </ToastProvider>
+        </BrandingProvider>
       </AuthProvider>
     </BrowserRouter>
   );

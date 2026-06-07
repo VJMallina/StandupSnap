@@ -8,17 +8,27 @@ import { Project } from '../types/project';
 import { Sprint } from '../types/sprint';
 import { StandaloneMom, StandaloneMomFilter, StandaloneMeetingType } from '../types/standaloneMom';
 import { useProjectSelection } from '../context/ProjectSelectionContext';
-import { FilterDrawer, FilterChip } from '../components/ui';
+import { FilterDrawer } from '../components/ui';
 
 const meetingTypes: StandaloneMeetingType[] = [
-  'Planning',
-  'Grooming',
-  'Retrospective',
-  'Stakeholder Meeting',
-  'General Meeting',
-  'Other',
-  'Custom',
+  'Planning', 'Grooming', 'Retrospective', 'Stakeholder Meeting', 'General Meeting', 'Other', 'Custom',
 ];
+
+const TYPE_CONFIG: Record<string, { dot: string; badge: string; badgeText: string; accent: string }> = {
+  'Planning':            { dot: 'bg-blue-500',    badge: 'bg-blue-50',    badgeText: 'text-blue-700',    accent: 'bg-blue-500' },
+  'Grooming':            { dot: 'bg-violet-500',  badge: 'bg-violet-50',  badgeText: 'text-violet-700',  accent: 'bg-violet-500' },
+  'Retrospective':       { dot: 'bg-orange-500',  badge: 'bg-orange-50',  badgeText: 'text-orange-700',  accent: 'bg-orange-500' },
+  'Stakeholder Meeting': { dot: 'bg-emerald-500', badge: 'bg-emerald-50', badgeText: 'text-emerald-700', accent: 'bg-emerald-500' },
+  'General Meeting':     { dot: 'bg-slate-400',   badge: 'bg-slate-50',   badgeText: 'text-slate-600',   accent: 'bg-slate-400' },
+  'Custom':              { dot: 'bg-teal-500',    badge: 'bg-teal-50',    badgeText: 'text-teal-700',    accent: 'bg-teal-500' },
+  'Other':               { dot: 'bg-teal-500',    badge: 'bg-teal-50',    badgeText: 'text-teal-700',    accent: 'bg-teal-500' },
+};
+
+const getTypeConfig = (type: string) =>
+  TYPE_CONFIG[type] ?? { dot: 'bg-gray-400', badge: 'bg-gray-50', badgeText: 'text-gray-600', accent: 'bg-gray-400' };
+
+const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 export default function StandaloneMomListPage() {
   const navigate = useNavigate();
@@ -29,12 +39,21 @@ export default function StandaloneMomListPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [filter, setFilter] = useState<StandaloneMomFilter>({
-    projectId: selectedProjectId || '',
-  });
-  const [tempFilter, setTempFilter] = useState<StandaloneMomFilter>({
-    projectId: selectedProjectId || '',
-  });
+
+  // Inline controls — update filter directly
+  const [searchValue, setSearchValue] = useState('');
+  const [filter, setFilter] = useState<StandaloneMomFilter>({ projectId: selectedProjectId || '' });
+
+  // Temp state for the advanced filter drawer
+  const [tempFilter, setTempFilter] = useState<StandaloneMomFilter>({ projectId: selectedProjectId || '' });
+
+  // Debounce search into filter
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilter((prev) => ({ ...prev, search: searchValue || undefined }));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchValue]);
 
   useEffect(() => {
     loadProjects();
@@ -48,16 +67,11 @@ export default function StandaloneMomListPage() {
   }, [selectedProjectId]);
 
   useEffect(() => {
-    if (filter.projectId) {
-      loadMoms();
-    }
+    if (filter.projectId) loadMoms();
   }, [filter]);
 
-  // Sync tempFilter when drawer opens
   useEffect(() => {
-    if (isFilterDrawerOpen) {
-      setTempFilter(filter);
-    }
+    if (isFilterDrawerOpen) setTempFilter(filter);
   }, [isFilterDrawerOpen, filter]);
 
   const loadProjects = async () => {
@@ -98,30 +112,33 @@ export default function StandaloneMomListPage() {
   const onProjectChange = (value: string) => {
     setSelectedProjectId(value);
     setFilter({ projectId: value });
-    loadSprints(value);
+    setSearchValue('');
+    if (value) loadSprints(value);
   };
 
-  const applyFilters = () => {
-    setFilter(tempFilter);
+  const setTypeFilter = (type: StandaloneMeetingType | undefined) => {
+    setFilter((prev) => ({ ...prev, meetingType: type }));
   };
 
-  const resetFilters = () => {
-    const resetFilter = { projectId: filter.projectId };
-    setFilter(resetFilter);
-    setTempFilter(resetFilter);
+  const applyAdvancedFilters = () => {
+    setFilter((prev) => ({
+      ...prev,
+      sprintId: tempFilter.sprintId,
+      dateFrom: tempFilter.dateFrom,
+      dateTo: tempFilter.dateTo,
+      createdBy: tempFilter.createdBy,
+      updatedBy: tempFilter.updatedBy,
+    }));
   };
 
-  const removeFilter = (key: keyof StandaloneMomFilter) => {
-    const newFilter = { ...filter };
-    delete newFilter[key];
-    setFilter(newFilter);
-    setTempFilter(newFilter);
+  const resetAdvancedFilters = () => {
+    const base = { projectId: filter.projectId, meetingType: filter.meetingType, search: filter.search };
+    setFilter(base);
+    setTempFilter(base);
   };
 
-  const activeFilterCount = useMemo(() => {
+  const advancedFilterCount = useMemo(() => {
     let count = 0;
-    if (filter.search) count++;
-    if (filter.meetingType) count++;
     if (filter.sprintId) count++;
     if (filter.dateFrom) count++;
     if (filter.dateTo) count++;
@@ -130,211 +147,249 @@ export default function StandaloneMomListPage() {
     return count;
   }, [filter]);
 
-  const getFilterLabel = (key: string, value: any): string => {
-    if (key === 'meetingType') return value;
-    if (key === 'sprintId') {
-      const sprint = sprints.find(s => s.id === value);
-      return sprint ? sprint.name : value;
-    }
-    if (key === 'dateFrom') return `From: ${value}`;
-    if (key === 'dateTo') return `To: ${value}`;
-    if (key === 'createdBy') return `Creator: ${value}`;
-    if (key === 'updatedBy') return `Updater: ${value}`;
-    if (key === 'search') return `"${value}"`;
-    return value;
-  };
+  const hasAnyFilter = !!filter.meetingType || !!searchValue || advancedFilterCount > 0;
 
   return (
     <AppLayout>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50/30">
-        <div className="max-w-7xl mx-auto p-8 space-y-8">
-          <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg shadow-lg">
-                  <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <span className="text-sm font-bold text-primary-600 uppercase tracking-wider">Meeting Minutes</span>
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900">MOM Hub</h1>
-              <p className="text-gray-600 text-base">Create, organize, and manage meeting minutes with AI assistance</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <select
-                value={filter.projectId}
-                onChange={(e) => onProjectChange(e.target.value)}
-                className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 min-w-[220px] font-medium shadow-sm hover:border-primary-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-              >
-                <option value="">Select project</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => setIsFilterDrawerOpen(true)}
-                className="relative px-5 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-primary-300 transition-all font-bold flex items-center gap-2 active:scale-95"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filters
-                {activeFilterCount > 0 && (
-                  <span className="absolute -top-2 -right-2 flex items-center justify-center w-6 h-6 bg-gradient-to-br from-primary-600 to-secondary-600 text-white text-xs font-bold rounded-full shadow-lg">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => navigate('/mom/new')}
-                className="px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-white rounded-xl hover:from-primary-700 hover:to-secondary-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 font-bold active:scale-95"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                </svg>
-                New MOM
-              </button>
-            </div>
-          </header>
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">
 
-          {/* Active Filter Chips */}
-          {activeFilterCount > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-gray-600">Active filters:</span>
-              {filter.search && (
-                <FilterChip label="Search" value={filter.search} onRemove={() => removeFilter('search')} />
-              )}
-              {filter.meetingType && (
-                <FilterChip label="Type" value={filter.meetingType} onRemove={() => removeFilter('meetingType')} />
-              )}
-              {filter.sprintId && (
-                <FilterChip label="Sprint" value={getFilterLabel('sprintId', filter.sprintId)} onRemove={() => removeFilter('sprintId')} />
-              )}
-              {filter.dateFrom && (
-                <FilterChip label="From" value={filter.dateFrom} onRemove={() => removeFilter('dateFrom')} />
-              )}
-              {filter.dateTo && (
-                <FilterChip label="To" value={filter.dateTo} onRemove={() => removeFilter('dateTo')} />
-              )}
-              {filter.createdBy && (
-                <FilterChip label="Creator" value={filter.createdBy} onRemove={() => removeFilter('createdBy')} />
-              )}
-              {filter.updatedBy && (
-                <FilterChip label="Updater" value={filter.updatedBy} onRemove={() => removeFilter('updatedBy')} />
-              )}
-              <button
-                onClick={resetFilters}
-                className="text-sm text-primary-600 hover:text-primary-700 font-semibold underline"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
-
-          {error && <div className="bg-red-50 border-l-4 border-red-500 text-red-800 rounded-xl p-4 shadow-lg font-medium">{error}</div>}
-          {loading ? (
-            <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div></div>
-          ) : moms.length === 0 ? (
-            <div className="text-center py-16 px-6">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center">
-                <svg className="w-10 h-10 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{activeFilterCount > 0 ? 'No MOMs Match Your Filters' : 'No Meeting Minutes Yet'}</h3>
-              <p className="text-gray-600 mb-6">{activeFilterCount > 0 ? 'Try adjusting your search criteria or reset filters' : 'Start documenting your meetings with AI-powered assistance'}</p>
-              {activeFilterCount === 0 && (
-                <button onClick={() => navigate('/mom/new')} className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white rounded-xl transition-all shadow-lg hover:shadow-xl font-bold active:scale-95">
-                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Create Your First MOM
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {moms.map((mom) => (
-                <article key={mom.id} className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-2xl border-2 border-gray-100 hover:border-primary-300 transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => navigate(`/mom/${mom.id}`)} className="p-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg shadow-lg hover:shadow-xl transition-all active:scale-95">
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    <span className="inline-block px-3 py-1 bg-gradient-to-r from-primary-50 to-secondary-50 text-primary-700 text-xs font-bold uppercase tracking-wider rounded-full border border-primary-200">
-                      {mom.customMeetingType || mom.meetingType}
-                    </span>
-                    <h3 className="text-xl font-bold text-gray-900 line-clamp-2 leading-tight">{mom.title}</h3>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span className="font-medium">{mom.meetingDate}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-500 text-xs">
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {new Date(mom.updatedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{mom.agenda || mom.discussionSummary || 'No summary available'}</p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Meeting Minutes</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Create and manage meeting records with AI assistance
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/mom/new')}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold text-sm shadow-sm transition-all active:scale-95 self-start sm:self-auto"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            New MOM
+          </button>
         </div>
-      </div>
 
-      {/* Filter Drawer */}
-      <FilterDrawer
-        isOpen={isFilterDrawerOpen}
-        onClose={() => setIsFilterDrawerOpen(false)}
-        onApply={applyFilters}
-        onReset={resetFilters}
-        title="Filter Meeting Minutes"
-      >
-        {/* Search */}
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-700">Search</label>
-          <div className="relative">
-            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        {/* Toolbar: project + search + filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={filter.projectId}
+            onChange={(e) => onProjectChange(e.target.value)}
+            className="bg-white border border-gray-200 text-gray-700 rounded-lg px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all min-w-[180px]"
+          >
+            <option value="">Select project</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+
+          <div className="relative flex-1 min-w-[200px]">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               type="text"
-              placeholder="Search across all fields..."
-              value={tempFilter.search || ''}
-              onChange={(e) => setTempFilter((prev) => ({ ...prev, search: e.target.value }))}
-              className="w-full bg-white border-2 border-gray-200 text-gray-900 rounded-xl pl-10 pr-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-gray-400 transition-all"
+              placeholder="Search meeting minutes..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="w-full bg-white border border-gray-200 text-gray-900 rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all placeholder-gray-400"
             />
+            {searchValue && (
+              <button
+                onClick={() => setSearchValue('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
-        </div>
 
-        {/* Meeting Type */}
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-gray-700">Meeting Type</label>
-          <select
-            value={tempFilter.meetingType || ''}
-            onChange={(e) => setTempFilter((prev) => ({ ...prev, meetingType: e.target.value as StandaloneMeetingType || undefined }))}
-            className="w-full bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="relative flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium transition-all active:scale-95"
           >
-            <option value="">All Types</option>
-            {meetingTypes.map((type) => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Filters
+            {advancedFilterCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-5 h-5 bg-primary-600 text-white text-xs font-bold rounded-full">
+                {advancedFilterCount}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Sprint */}
+        {/* Type pill tabs */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setTypeFilter(undefined)}
+            className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+              !filter.meetingType
+                ? 'bg-gray-900 text-white'
+                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            All
+          </button>
+          {meetingTypes.map((type) => {
+            const cfg = getTypeConfig(type);
+            const isActive = filter.meetingType === type;
+            return (
+              <button
+                key={type}
+                onClick={() => setTypeFilter(isActive ? undefined : type)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  isActive
+                    ? `${cfg.badge} ${cfg.badgeText} ring-1 ring-inset ring-current`
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? cfg.dot : 'bg-gray-300'}`} />
+                {type}
+              </button>
+            );
+          })}
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        {/* MOM list */}
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-stretch bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
+                <div className="w-1 bg-gray-200 flex-shrink-0" />
+                <div className="flex-1 px-5 py-4 space-y-2">
+                  <div className="h-4 w-20 bg-gray-200 rounded" />
+                  <div className="h-5 w-2/3 bg-gray-200 rounded" />
+                  <div className="h-3 w-full bg-gray-100 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : moms.length === 0 ? (
+          <div className="text-center py-20 px-6">
+            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gray-100 flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              {hasAnyFilter ? 'No MOMs match your filters' : 'No meeting minutes yet'}
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              {hasAnyFilter
+                ? 'Try adjusting or clearing your filters'
+                : 'Start documenting your meetings with AI-powered assistance'}
+            </p>
+            {!hasAnyFilter && (
+              <button
+                onClick={() => navigate('/mom/new')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold text-sm transition-all active:scale-95"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                </svg>
+                Create Your First MOM
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {moms.map((mom) => {
+              const cfg = getTypeConfig(mom.meetingType);
+              const typeLabel = mom.customMeetingType || mom.meetingType;
+              const previewText =
+                mom.agenda || mom.discussionSummary || mom.decisions || mom.actionItems || '';
+
+              return (
+                <div
+                  key={mom.id}
+                  onClick={() => navigate(`/mom/${mom.id}`)}
+                  className="group flex items-stretch bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer overflow-hidden"
+                >
+                  {/* Left accent bar */}
+                  <div className={`w-1 flex-shrink-0 ${cfg.accent}`} />
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 flex items-center gap-4 px-5 py-4">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${cfg.badge} ${cfg.badgeText}`}>
+                          {typeLabel}
+                        </span>
+                        {mom.archived && (
+                          <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-amber-50 text-amber-700">
+                            Archived
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-semibold text-gray-900 truncate">{mom.title}</h3>
+                      {previewText && (
+                        <p className="text-xs text-gray-500 truncate">{previewText}</p>
+                      )}
+                    </div>
+
+                    {/* Meta */}
+                    <div className="hidden sm:flex flex-col items-end gap-0.5 text-xs text-gray-400 flex-shrink-0">
+                      {mom.project && <span className="font-medium text-gray-500">{mom.project.name}</span>}
+                      <span>{formatDate(mom.meetingDate)}</span>
+                    </div>
+                  </div>
+
+                  {/* Hover actions */}
+                  <div
+                    className="flex items-center gap-1 pr-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {!mom.archived && (
+                      <button
+                        onClick={() => navigate(`/mom/${mom.id}/edit`)}
+                        title="Edit"
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate(`/mom/${mom.id}`)}
+                      title="View"
+                      className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Advanced filter drawer — sprint, date range, created/updated by */}
+      <FilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        onApply={applyAdvancedFilters}
+        onReset={resetAdvancedFilters}
+        title="Advanced Filters"
+      >
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-gray-700">Sprint</label>
           <select
@@ -343,37 +398,32 @@ export default function StandaloneMomListPage() {
             className="w-full bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
           >
             <option value="">All Sprints</option>
-            {sprints.map((sprint) => (
-              <option key={sprint.id} value={sprint.id}>{sprint.name}</option>
+            {sprints.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         </div>
 
-        {/* Date Range */}
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-gray-700">Date Range</label>
           <div className="grid grid-cols-2 gap-3">
             <input
               type="date"
               value={tempFilter.dateFrom || ''}
-              onChange={(e) => setTempFilter((prev) => ({ ...prev, dateFrom: e.target.value }))}
-              className="bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-              placeholder="From"
+              onChange={(e) => setTempFilter((prev) => ({ ...prev, dateFrom: e.target.value || undefined }))}
+              className="bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-3 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
             />
             <input
               type="date"
               value={tempFilter.dateTo || ''}
-              onChange={(e) => setTempFilter((prev) => ({ ...prev, dateTo: e.target.value }))}
-              className="bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
-              placeholder="To"
+              onChange={(e) => setTempFilter((prev) => ({ ...prev, dateTo: e.target.value || undefined }))}
+              className="bg-white border-2 border-gray-200 text-gray-700 rounded-xl px-3 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
             />
           </div>
         </div>
 
-        {/* Advanced Filters */}
         <div className="pt-4 border-t border-gray-200 space-y-4">
           <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Advanced</h3>
-
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Created By (ID)</label>
             <input
@@ -384,7 +434,6 @@ export default function StandaloneMomListPage() {
               className="w-full bg-white border-2 border-gray-200 text-gray-900 rounded-xl px-4 py-3 font-medium focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-gray-400 transition-all"
             />
           </div>
-
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Updated By (ID)</label>
             <input

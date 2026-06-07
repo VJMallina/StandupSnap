@@ -21,7 +21,7 @@ export class DashboardController {
     @Request() req,
     @Query('projectId') projectId?: string,
   ): Promise<DashboardData> {
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const organizationId = req.user.organizationId;
     const orgRole = req.user.orgRole as string | undefined;
     return this.dashboardService.getDashboardData(userId, projectId, organizationId, orgRole);
@@ -35,8 +35,9 @@ export class DashboardController {
   @Get('projects')
   @RequirePermissions(PERMISSIONS.PROJECT_VIEW)
   async getUserProjects(@Request() req) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
+    const organizationId = req.user.organizationId;
     const orgRole = req.user.orgRole as string | undefined;
-    return this.dashboardService.getUserProjects(userId, orgRole);
+    return this.dashboardService.getUserProjects(userId, orgRole, organizationId);
   }
 }

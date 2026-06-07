@@ -1,136 +1,88 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-  useDraggable,
-  useDroppable,
+  DndContext, DragEndEvent, PointerSensor,
+  useSensor, useSensors, closestCenter, useDraggable, useDroppable,
 } from '@dnd-kit/core';
 import { scrumRoomsApi } from '../../services/api/scrumRooms';
+import { cardsApi } from '../../services/api/cards';
+import { sprintsApi } from '../../services/api/sprints';
 import { ScrumRoom, RetrospectiveData, RetroColumn, RetroItem } from '../../types/scrumRooms';
+import { Sprint, SprintStatus } from '../../types/sprint';
 import { useToast } from '../../hooks/useToast';
-import DeleteConfirmationModal from '../DeleteConfirmationModal';
+import { useProjectSelection } from '../../context/ProjectSelectionContext';
+import { useAuth } from '../../context/AuthContext';
 
-interface RetrospectiveRoomProps {
-  room: ScrumRoom;
-  onUpdate: () => void;
-}
+interface Props { room: ScrumRoom; onUpdate: () => void; }
 
-// Draggable Item Component
-interface DraggableRetroItemProps {
-  item: RetroItem;
-  columnId: string;
-  currentUserId: string;
-  votingEnabled: boolean;
-  loading: boolean;
-  onDelete: (columnId: string, itemId: string) => void;
-  onVote: (columnId: string, itemId: string) => void;
+const COLUMN_COLORS: Record<number, { header: string; dot: string }> = {
+  0: { header: 'border-green-300 bg-green-50', dot: 'bg-green-500' },
+  1: { header: 'border-red-300 bg-red-50', dot: 'bg-red-500' },
+  2: { header: 'border-blue-300 bg-blue-50', dot: 'bg-blue-500' },
+  3: { header: 'border-yellow-300 bg-yellow-50', dot: 'bg-yellow-500' },
+};
+
+const DraggableItem = ({ item, colId, currentUserId, votingEnabled, maxVotes, loading, onDelete, onVote, onConvertToCard, onClick }: {
+  item: RetroItem; colId: string; currentUserId: string; votingEnabled: boolean; maxVotes: number;
+  loading: boolean; onDelete: (colId: string, itemId: string) => void;
+  onVote: (colId: string, itemId: string) => void;
+  onConvertToCard: (colId: string, item: RetroItem) => void;
   onClick: (item: RetroItem) => void;
-}
-
-const DraggableRetroItem: React.FC<DraggableRetroItemProps> = ({
-  item,
-  columnId,
-  currentUserId,
-  votingEnabled,
-  loading,
-  onDelete,
-  onVote,
-  onClick,
 }) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: item.itemId,
-  });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        opacity: isDragging ? 0.5 : 1,
-      }
-    : undefined;
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.itemId });
+  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, opacity: isDragging ? 0.5 : 1 } : undefined;
+  const hasVoted = item.votes.includes(currentUserId);
+  const userVoteCount = item.votes.filter(v => v === currentUserId).length;
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
-      onClick={() => {
-        // Only trigger onClick if not dragging
-        if (!isDragging) {
-          onClick(item);
-        }
-      }}
+      ref={setNodeRef} style={style} {...attributes} {...listeners}
+      onClick={() => !isDragging && onClick(item)}
+      className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing group"
     >
-      <div className="flex items-start justify-between mb-2">
-        <p className="text-sm text-gray-900 flex-1">{item.content}</p>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <p className="text-sm text-gray-800 flex-1 leading-relaxed">{item.content}</p>
         {item.createdBy === currentUserId && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(columnId, item.itemId);
-            }}
-            className="text-red-500 hover:text-red-700 ml-2"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+          <button onClick={e => { e.stopPropagation(); onDelete(colId, item.itemId); }} className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 transition-all flex-shrink-0">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         )}
       </div>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-600">
-            {item.createdBy === currentUserId ? 'You' : item.createdByName}
-          </span>
-          {votingEnabled && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onVote(columnId, item.itemId);
-              }}
-              disabled={loading}
-              className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                item.votes.includes(currentUserId)
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-              </svg>
-              {item.votes.length}
-            </button>
+          {item.actionItem && (
+            <span className="px-1.5 py-0.5 bg-orange-50 text-orange-600 border border-orange-200 text-xs rounded font-medium">Action</span>
+          )}
+          {item.convertedCardId && (
+            <span className="px-1.5 py-0.5 bg-green-50 text-green-600 border border-green-200 text-xs rounded font-medium flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              Card created
+            </span>
           )}
         </div>
-
-        <div className="flex items-center gap-2">
-          {item.discussion && (
-            <svg className="h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                clipRule="evenodd"
-              />
-            </svg>
+        <div className="flex items-center gap-1.5">
+          {item.actionItem && !item.convertedCardId && (
+            <button
+              onClick={e => { e.stopPropagation(); onConvertToCard(colId, item); }}
+              disabled={loading}
+              className="opacity-0 group-hover:opacity-100 px-2 py-0.5 bg-primary-50 text-primary-600 text-xs rounded border border-primary-200 hover:bg-primary-100 transition-all"
+              title="Convert to card"
+            >
+              → Card
+            </button>
           )}
-          {item.actionItem && (
-            <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">
-              Action
-            </span>
+          {votingEnabled && (
+            <button
+              onClick={e => { e.stopPropagation(); onVote(colId, item.itemId); }}
+              disabled={loading || (!hasVoted && userVoteCount >= maxVotes)}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-colors ${
+                hasVoted ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              } disabled:opacity-40`}
+            >
+              <svg className="w-3 h-3" fill={hasVoted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+              {item.votes.length}
+            </button>
           )}
         </div>
       </div>
@@ -138,636 +90,264 @@ const DraggableRetroItem: React.FC<DraggableRetroItemProps> = ({
   );
 };
 
-// Droppable Column Component
-interface DroppableColumnProps {
-  column: RetroColumn;
-  children: React.ReactNode;
-}
-
-const DroppableColumn: React.FC<DroppableColumnProps> = ({ column, children }) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id: column.columnId,
-  });
-
+const DroppableColumn = ({ colId, children }: { colId: string; children: React.ReactNode }) => {
+  const { setNodeRef, isOver } = useDroppable({ id: colId });
   return (
-    <div
-      ref={setNodeRef}
-      className={`bg-white rounded-lg border ${
-        isOver ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
-      } flex flex-col h-[600px] transition-colors`}
-    >
+    <div ref={setNodeRef} className={`flex-1 space-y-2 min-h-24 rounded-lg transition-colors ${isOver ? 'bg-primary-50' : ''}`}>
       {children}
     </div>
   );
 };
 
-export const RetrospectiveRoom: React.FC<RetrospectiveRoomProps> = ({ room, onUpdate }) => {
+export const RetrospectiveRoom = ({ room, onUpdate }: Props) => {
   const navigate = useNavigate();
   const toast = useToast();
+  const { user } = useAuth();
+  const { selectedProjectId } = useProjectSelection();
   const data = room.data as RetrospectiveData;
 
-  const [newItemContent, setNewItemContent] = useState<Record<string, string>>({});
-  const [selectedItem, setSelectedItem] = useState<RetroItem | null>(null);
-  const [discussion, setDiscussion] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [newColumnTitle, setNewColumnTitle] = useState('');
-  const [showAddColumn, setShowAddColumn] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ columnId: string; itemId: string } | null>(null);
-  const [activeItem, setActiveItem] = useState<RetroItem | null>(null);
+  const [columns, setColumns] = useState<RetroColumn[]>(data?.columns || []);
+  const [votingEnabled, setVotingEnabled] = useState(data?.votingEnabled ?? true);
+  const [maxVotes] = useState(data?.maxVotesPerPerson || 3);
+  const [converting, setConverting] = useState<string | null>(null);
+  const [addingTo, setAddingTo] = useState<string | null>(null);
+  const [newItemText, setNewItemText] = useState('');
+  const [activeSprint, setActiveSprint] = useState<Sprint | null>(null);
+  const [sprintStats, setSprintStats] = useState<{ completed: number; total: number; velocity: number } | null>(null);
 
-  const currentUserId = localStorage.getItem('userId') || 'anonymous';
-  const currentUserEmail = localStorage.getItem('userEmail') || 'Anonymous';
+  const currentUserId = user?.id || localStorage.getItem('userId') || 'anonymous';
+  const currentUserName = user?.name || user?.username || 'You';
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 8px movement required to start drag
-      },
-    })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-  const getRemainingVotes = () => {
-    if (!data?.votingEnabled || !data.maxVotesPerPerson) return 0;
-    const totalVotesUsed = data.columns.reduce((sum, col) => {
-      return (
-        sum +
-        col.items.reduce((itemSum, item) => {
-          return itemSum + (item.votes.includes(currentUserId) ? 1 : 0);
-        }, 0)
-      );
-    }, 0);
-    return data.maxVotesPerPerson - totalVotesUsed;
-  };
+  useEffect(() => {
+    if (selectedProjectId) loadSprintContext();
+  }, [selectedProjectId]);
 
-  const handleAddItem = async (columnId: string) => {
-    const content = newItemContent[columnId]?.trim();
-    if (!content) return;
-
+  const loadSprintContext = async () => {
+    if (!selectedProjectId) return;
     try {
-      setLoading(true);
-
-      const newItem: RetroItem = {
-        itemId: `item-${Date.now()}`,
-        content,
-        createdBy: currentUserId,
-        createdByName: currentUserEmail,
-        votes: [],
-        timestamp: new Date().toISOString(),
-      };
-
-      const updatedColumns = data.columns.map((col) =>
-        col.columnId === columnId ? { ...col, items: [...col.items, newItem] } : col
-      );
-
-      const updatedData: RetrospectiveData = {
-        ...data,
-        columns: updatedColumns,
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      setNewItemContent({ ...newItemContent, [columnId]: '' });
-      onUpdate();
-      toast.success('Item added successfully');
-    } catch (err: any) {
-      console.error('Error adding item:', err);
-      toast.error(err.message || 'Failed to add item');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVote = async (columnId: string, itemId: string) => {
-    if (!data.votingEnabled) return;
-    if (data.maxVotesPerPerson && getRemainingVotes() <= 0) {
-      toast.warning('You have used all your votes');
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const updatedColumns = data.columns.map((col) => {
-        if (col.columnId !== columnId) return col;
-        return {
-          ...col,
-          items: col.items.map((item) => {
-            if (item.itemId !== itemId) return item;
-            const hasVoted = item.votes.includes(currentUserId);
-            return {
-              ...item,
-              votes: hasVoted
-                ? item.votes.filter((v) => v !== currentUserId)
-                : [...item.votes, currentUserId],
-            };
-          }),
-        };
-      });
-
-      const updatedData: RetrospectiveData = {
-        ...data,
-        columns: updatedColumns,
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      onUpdate();
-    } catch (err: any) {
-      console.error('Error voting:', err);
-      toast.error(err.message || 'Failed to vote');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteItem = (columnId: string, itemId: string) => {
-    setItemToDelete({ columnId, itemId });
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-
-    try {
-      setLoading(true);
-
-      const updatedColumns = data.columns.map((col) => {
-        if (col.columnId !== itemToDelete.columnId) return col;
-        return {
-          ...col,
-          items: col.items.filter((item) => item.itemId !== itemToDelete.itemId),
-        };
-      });
-
-      const updatedData: RetrospectiveData = {
-        ...data,
-        columns: updatedColumns,
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      if (selectedItem?.itemId === itemToDelete.itemId) setSelectedItem(null);
-      onUpdate();
-      toast.success('Item deleted successfully');
-      setShowDeleteModal(false);
-      setItemToDelete(null);
-    } catch (err: any) {
-      console.error('Error deleting item:', err);
-      toast.error(err.message || 'Failed to delete item');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleActionItem = async (columnId: string, itemId: string) => {
-    try {
-      setLoading(true);
-
-      const updatedColumns = data.columns.map((col) => {
-        if (col.columnId !== columnId) return col;
-        return {
-          ...col,
-          items: col.items.map((item) => {
-            if (item.itemId !== itemId) return item;
-            return { ...item, actionItem: !item.actionItem };
-          }),
-        };
-      });
-
-      const updatedData: RetrospectiveData = {
-        ...data,
-        columns: updatedColumns,
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      onUpdate();
-    } catch (err: any) {
-      console.error('Error toggling action item:', err);
-      toast.error(err.message || 'Failed to toggle action item');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveDiscussion = async () => {
-    if (!selectedItem) return;
-
-    try {
-      setLoading(true);
-
-      const updatedColumns = data.columns.map((col) => ({
-        ...col,
-        items: col.items.map((item) => {
-          if (item.itemId !== selectedItem.itemId) return item;
-          return { ...item, discussion: discussion.trim() || undefined };
-        }),
-      }));
-
-      const updatedData: RetrospectiveData = {
-        ...data,
-        columns: updatedColumns,
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      setSelectedItem(null);
-      setDiscussion('');
-      onUpdate();
-      toast.success('Discussion saved successfully');
-    } catch (err: any) {
-      console.error('Error saving discussion:', err);
-      toast.error(err.message || 'Failed to save discussion');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleVoting = async () => {
-    try {
-      setLoading(true);
-
-      const updatedData: RetrospectiveData = {
-        ...data,
-        votingEnabled: !data.votingEnabled,
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      onUpdate();
-    } catch (err: any) {
-      console.error('Error toggling voting:', err);
-      toast.error(err.message || 'Failed to toggle voting');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddColumn = async () => {
-    if (!newColumnTitle.trim()) return;
-
-    try {
-      setLoading(true);
-
-      const newColumn: RetroColumn = {
-        columnId: `col-${Date.now()}`,
-        title: newColumnTitle.trim(),
-        order: data.columns.length,
-        items: [],
-      };
-
-      const updatedData: RetrospectiveData = {
-        ...data,
-        columns: [...data.columns, newColumn],
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      setNewColumnTitle('');
-      setShowAddColumn(false);
-      onUpdate();
-      toast.success('Column added successfully');
-    } catch (err: any) {
-      console.error('Error adding column:', err);
-      toast.error(err.message || 'Failed to add column');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const openDiscussion = (item: RetroItem) => {
-    setSelectedItem(item);
-    setDiscussion(item.discussion || '');
-  };
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const itemId = event.active.id as string;
-    // Find the item across all columns
-    for (const column of data.columns) {
-      const item = column.items.find((i) => i.itemId === itemId);
-      if (item) {
-        setActiveItem(item);
-        break;
+      const [activeSprints, cards] = await Promise.all([
+        sprintsApi.getAll({ projectId: selectedProjectId, status: SprintStatus.ACTIVE }),
+        cardsApi.getAll({ projectId: selectedProjectId }),
+      ]);
+      if (activeSprints.length > 0) {
+        const sprint = activeSprints[0];
+        setActiveSprint(sprint);
+        const sprintCards = cards.filter(c => c.sprint?.id === sprint.id);
+        const completed = sprintCards.filter(c => c.status === 'completed').length;
+        setSprintStats({ completed, total: sprintCards.length, velocity: sprintCards.filter(c => c.status === 'completed').reduce((s, c) => s + (c.storyPoints || 0), 0) });
       }
-    }
+    } catch { /* non-fatal */ }
+  };
+
+  const save = async (updatedColumns: RetroColumn[], updatedVoting?: boolean) => {
+    try {
+      await scrumRoomsApi.updateData(room.id, {
+        data: { columns: updatedColumns, votingEnabled: updatedVoting ?? votingEnabled, maxVotesPerPerson: maxVotes },
+      });
+      onUpdate();
+    } catch (e: any) { toast.error(e.message || 'Failed to save'); }
+  };
+
+  const addItem = async (colId: string) => {
+    if (!newItemText.trim()) return;
+    const newItem: RetroItem = {
+      itemId: `item-${Date.now()}`,
+      content: newItemText.trim(),
+      createdBy: currentUserId,
+      createdByName: currentUserName,
+      votes: [],
+      timestamp: new Date().toISOString(),
+    };
+    const updated = columns.map(c => c.columnId === colId ? { ...c, items: [...c.items, newItem] } : c);
+    setColumns(updated);
+    setNewItemText('');
+    setAddingTo(null);
+    await save(updated);
+    toast.success('Item added');
+  };
+
+  const deleteItem = async (colId: string, itemId: string) => {
+    const updated = columns.map(c => c.columnId === colId ? { ...c, items: c.items.filter(i => i.itemId !== itemId) } : c);
+    setColumns(updated);
+    await save(updated);
+  };
+
+  const handleVote = async (colId: string, itemId: string) => {
+    const updated = columns.map(c => {
+      if (c.columnId !== colId) return c;
+      return {
+        ...c, items: c.items.map(i => {
+          if (i.itemId !== itemId) return i;
+          const hasVoted = i.votes.includes(currentUserId);
+          return { ...i, votes: hasVoted ? i.votes.filter(v => v !== currentUserId) : [...i.votes, currentUserId] };
+        }),
+      };
+    });
+    setColumns(updated);
+    await save(updated);
+  };
+
+  const toggleActionItem = async (colId: string, itemId: string) => {
+    const updated = columns.map(c => c.columnId === colId ? { ...c, items: c.items.map(i => i.itemId === itemId ? { ...i, actionItem: !i.actionItem } : i) } : c);
+    setColumns(updated);
+    await save(updated);
+  };
+
+  const convertToCard = async (colId: string, item: RetroItem) => {
+    if (!selectedProjectId) { toast.warning('No project selected'); return; }
+    setConverting(item.itemId);
+    try {
+      const card = await cardsApi.create({ title: item.content, projectId: selectedProjectId, estimatedTime: 0 });
+      const updated = columns.map(c => c.columnId === colId ? { ...c, items: c.items.map(i => i.itemId === item.itemId ? { ...i, convertedCardId: card.id } : i) } : c);
+      setColumns(updated);
+      await save(updated);
+      toast.success('Card created in backlog');
+    } catch (e: any) { toast.error(e.message || 'Failed to create card'); }
+    finally { setConverting(null); }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveItem(null);
-
-    if (!over) return;
-
-    const itemId = active.id as string;
-    const targetColumnId = over.id as string;
-
-    // Find source column and item
-    let sourceColumnId: string | null = null;
-    let item: RetroItem | null = null;
-
-    for (const column of data.columns) {
-      const foundItem = column.items.find((i) => i.itemId === itemId);
-      if (foundItem) {
-        sourceColumnId = column.columnId;
-        item = foundItem;
-        break;
-      }
-    }
-
-    if (!sourceColumnId || !item || sourceColumnId === targetColumnId) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      // Remove item from source column and add to target column
-      const updatedColumns = data.columns.map((col) => {
-        if (col.columnId === sourceColumnId) {
-          return {
-            ...col,
-            items: col.items.filter((i) => i.itemId !== itemId),
-          };
-        } else if (col.columnId === targetColumnId) {
-          return {
-            ...col,
-            items: [...col.items, item],
-          };
-        }
-        return col;
-      });
-
-      const updatedData: RetrospectiveData = {
-        ...data,
-        columns: updatedColumns,
-      };
-
-      await scrumRoomsApi.updateData(room.id, { data: updatedData });
-      onUpdate();
-      toast.success('Item moved successfully');
-    } catch (err: any) {
-      console.error('Error moving item:', err);
-      toast.error(err.message || 'Failed to move item');
-    } finally {
-      setLoading(false);
-    }
+    if (!over || active.id === over.id) return;
+    const sourceColId = columns.find(c => c.items.some(i => i.itemId === active.id))?.columnId;
+    const targetColId = over.id as string;
+    if (!sourceColId || sourceColId === targetColId) return;
+    const item = columns.find(c => c.columnId === sourceColId)?.items.find(i => i.itemId === active.id);
+    if (!item) return;
+    const updated = columns.map(c => {
+      if (c.columnId === sourceColId) return { ...c, items: c.items.filter(i => i.itemId !== active.id) };
+      if (c.columnId === targetColId) return { ...c, items: [...c.items, item] };
+      return c;
+    });
+    setColumns(updated);
+    await save(updated);
   };
 
+  const toggleVoting = async () => {
+    const next = !votingEnabled;
+    setVotingEnabled(next);
+    await save(columns, next);
+  };
+
+  const totalActionItems = columns.reduce((s, c) => s + c.items.filter(i => i.actionItem).length, 0);
+  const convertedCount = columns.reduce((s, c) => s + c.items.filter(i => i.convertedCardId).length, 0);
+
   return (
-    <div className="p-6 max-w-[1920px] mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/scrum-rooms')}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={() => navigate('/scrum-rooms')} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-gray-900 truncate">{room.name}</h1>
+            {room.description && <p className="text-sm text-gray-500 truncate">{room.description}</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button onClick={toggleVoting} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${votingEnabled ? 'bg-primary-50 text-primary-700 border-primary-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+            {votingEnabled ? 'Voting On' : 'Voting Off'}
+          </button>
+          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700">Retrospective</span>
+        </div>
+      </div>
+
+      {/* Sprint stats banner */}
+      {activeSprint && sprintStats && (
+        <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 p-4 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-3xl">🔄</span>
-              <h1 className="text-2xl font-bold text-gray-900">{room.name}</h1>
-            </div>
-            {room.description && <p className="text-gray-600 mt-1">{room.description}</p>}
+            <p className="text-xs text-gray-500 mb-0.5">Active Sprint</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">{activeSprint.name}</p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {data?.votingEnabled && data.maxVotesPerPerson && (
-            <div className="px-4 py-2 bg-primary-50 border border-primary-200 rounded-lg">
-              <span className="text-sm font-medium text-primary-700">
-                Votes remaining: {getRemainingVotes()} / {data.maxVotesPerPerson}
-              </span>
-            </div>
-          )}
-          <button
-            onClick={handleToggleVoting}
-            disabled={loading}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              data?.votingEnabled
-                ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                : 'bg-primary-600 text-white hover:bg-primary-700'
-            } disabled:opacity-50`}
-          >
-            {data?.votingEnabled ? 'Disable Voting' : 'Enable Voting'}
-          </button>
-        </div>
-      </div>
-
-      {/* Columns Grid */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {data?.columns
-            .sort((a, b) => a.order - b.order)
-            .map((column) => (
-              <DroppableColumn key={column.columnId} column={column}>
-              {/* Column Header */}
-              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-primary-50 to-secondary-50">
-                <h3 className="font-semibold text-gray-900">{column.title}</h3>
-                <p className="text-xs text-gray-600 mt-1">{column.items.length} items</p>
-              </div>
-
-              {/* Items List */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {column.items.map((item) => (
-                  <DraggableRetroItem
-                    key={item.itemId}
-                    item={item}
-                    columnId={column.columnId}
-                    currentUserId={currentUserId}
-                    votingEnabled={data.votingEnabled}
-                    loading={loading}
-                    onDelete={handleDeleteItem}
-                    onVote={handleVote}
-                    onClick={openDiscussion}
-                  />
-                ))}
-              </div>
-
-              {/* Add Item Form */}
-              <div className="p-3 border-t border-gray-200 bg-gray-50">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newItemContent[column.columnId] || ''}
-                    onChange={(e) =>
-                      setNewItemContent({ ...newItemContent, [column.columnId]: e.target.value })
-                    }
-                    onKeyPress={(e) =>
-                      e.key === 'Enter' && handleAddItem(column.columnId)
-                    }
-                    placeholder="Add item..."
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    disabled={loading}
-                  />
-                  <button
-                    onClick={() => handleAddItem(column.columnId)}
-                    disabled={loading || !newItemContent[column.columnId]?.trim()}
-                    className="px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              </DroppableColumn>
-          ))}
-
-        {/* Add Column Button */}
-        {!showAddColumn ? (
-          <button
-            onClick={() => setShowAddColumn(true)}
-            className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-primary-400 hover:bg-primary-50 transition-all flex flex-col items-center justify-center gap-2 text-gray-500 hover:text-primary-600 h-[600px]"
-          >
-            <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span className="font-medium">Add Column</span>
-          </button>
-        ) : (
-          <div className="bg-white rounded-lg border border-gray-200 flex flex-col h-[600px] p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">New Column</h3>
-            <input
-              type="text"
-              value={newColumnTitle}
-              onChange={(e) => setNewColumnTitle(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddColumn()}
-              placeholder="Column title (e.g., Kudos)"
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent mb-4"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddColumn}
-                disabled={loading || !newColumnTitle.trim()}
-                className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => {
-                  setShowAddColumn(false);
-                  setNewColumnTitle('');
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-0.5">Completed</p>
+            <p className="text-sm font-semibold text-gray-900">{sprintStats.completed} / {sprintStats.total} cards</p>
           </div>
-        )}
-      </div>
-
-        {/* Drag Overlay */}
-        <DragOverlay>
-          {activeItem ? (
-            <div className="bg-yellow-50 border-2 border-primary-500 rounded-lg p-3 shadow-xl opacity-90">
-              <p className="text-sm text-gray-900">{activeItem.content}</p>
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-
-      {/* Discussion Modal */}
-      {selectedItem && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          onClick={() => setSelectedItem(null)}
-        >
-          <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Item Discussion</h3>
-                <button
-                  onClick={() => setSelectedItem(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-gray-900">{selectedItem.content}</p>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-sm text-gray-600">By {selectedItem.createdByName}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {selectedItem.votes.length} votes
-                    </span>
-                    <button
-                      onClick={() =>
-                        handleToggleActionItem(
-                          data.columns.find((c) => c.items.some((i) => i.itemId === selectedItem.itemId))?.columnId || '',
-                          selectedItem.itemId
-                        )
-                      }
-                      className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
-                        selectedItem.actionItem
-                          ? 'bg-red-600 text-white hover:bg-red-700'
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      {selectedItem.actionItem ? 'Remove Action' : 'Mark as Action'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Discussion Notes
-                </label>
-                <textarea
-                  value={discussion}
-                  onChange={(e) => setDiscussion(e.target.value)}
-                  placeholder="Add discussion notes or outcomes..."
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4">
-                <button
-                  onClick={() => setSelectedItem(null)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveDiscussion}
-                  disabled={loading}
-                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
-                >
-                  Save Discussion
-                </button>
-              </div>
-            </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-0.5">Velocity</p>
+            <p className="text-sm font-semibold text-gray-900">{sprintStats.velocity} pts</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-0.5">Action Items</p>
+            <p className="text-sm font-semibold text-gray-900">{totalActionItems} ({convertedCount} → cards)</p>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setItemToDelete(null);
-        }}
-        onConfirm={confirmDelete}
-        title="Delete Retrospective Item"
-        message="Are you sure you want to delete this item? This action cannot be undone."
-        confirmText="DELETE"
-      />
+      {/* Kanban board */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {columns.map((col, idx) => {
+            const colors = COLUMN_COLORS[idx % 4];
+            const sorted = [...col.items].sort((a, b) => b.votes.length - a.votes.length);
+            return (
+              <div key={col.columnId} className="bg-white rounded-xl border border-gray-200 flex flex-col min-h-96">
+                {/* Column header */}
+                <div className={`px-4 py-3 border-b-2 ${colors.header} rounded-t-xl flex items-center gap-2`}>
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${colors.dot}`} />
+                  <h3 className="text-sm font-semibold text-gray-900 flex-1 truncate">{col.title}</h3>
+                  <span className="text-xs text-gray-400 font-medium">{col.items.length}</span>
+                </div>
+
+                {/* Items */}
+                <div className="flex-1 p-3">
+                  <DroppableColumn colId={col.columnId}>
+                    {sorted.map(item => (
+                      <DraggableItem
+                        key={item.itemId}
+                        item={item}
+                        colId={col.columnId}
+                        currentUserId={currentUserId}
+                        votingEnabled={votingEnabled}
+                        maxVotes={maxVotes}
+                        loading={converting === item.itemId}
+                        onDelete={deleteItem}
+                        onVote={handleVote}
+                        onConvertToCard={convertToCard}
+                        onClick={item => toggleActionItem(col.columnId, item.itemId)}
+                      />
+                    ))}
+                  </DroppableColumn>
+                </div>
+
+                {/* Add item */}
+                <div className="p-3 border-t border-gray-100">
+                  {addingTo === col.columnId ? (
+                    <div className="space-y-2">
+                      <textarea
+                        autoFocus
+                        value={newItemText}
+                        onChange={e => setNewItemText(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addItem(col.columnId); } if (e.key === 'Escape') { setAddingTo(null); setNewItemText(''); } }}
+                        placeholder="Type and press Enter…"
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <button onClick={() => addItem(col.columnId)} className="flex-1 px-3 py-1.5 bg-primary-600 text-white text-xs font-semibold rounded-lg hover:bg-primary-700 transition-colors">Add</button>
+                        <button onClick={() => { setAddingTo(null); setNewItemText(''); }} className="flex-1 px-3 py-1.5 border border-gray-300 text-gray-600 text-xs font-semibold rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setAddingTo(col.columnId)} className="w-full flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                      Add item
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </DndContext>
+
+      {/* Instructions */}
+      <p className="text-xs text-gray-400 text-center mt-4">
+        Click an item to toggle as action item · Drag items between columns · Action items can be converted to backlog cards
+      </p>
     </div>
   );
 };

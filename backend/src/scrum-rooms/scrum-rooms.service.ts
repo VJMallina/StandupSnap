@@ -3,8 +3,6 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
 import {
   ScrumRoom,
   RoomType,
@@ -12,7 +10,6 @@ import {
   DeckType,
   PlanningPokerData,
   RetrospectiveData,
-  MOMData,
   SprintPlanningData,
   RefinementData,
 } from '../entities/scrum-room.entity';
@@ -25,16 +22,7 @@ import { TenantService } from '../tenant/tenant.service';
 
 @Injectable()
 export class ScrumRoomsService {
-  private groqApiKey: string;
-  private groqModel: string;
-
-  constructor(
-    private readonly tenantService: TenantService,
-    private readonly configService: ConfigService,
-  ) {
-    this.groqApiKey = this.configService.get<string>('GROQ_API_KEY') || '';
-    this.groqModel = this.configService.get<string>('GROQ_MODEL') || 'llama-3.3-70b-versatile';
-  }
+  constructor(private readonly tenantService: TenantService) {}
 
   // ========== ROOM MANAGEMENT ==========
 
@@ -63,9 +51,6 @@ export class ScrumRoomsService {
           votingEnabled: true,
           maxVotesPerPerson: 3,
         } as RetrospectiveData;
-        break;
-      case RoomType.MOM:
-        initialData = { rawInput: '', summary: '', decisions: [], actionItems: [], attendees: [], aiGenerated: false } as MOMData;
         break;
       case RoomType.SPRINT_PLANNING:
         initialData = { capacity: 0, items: [], sprintGoals: [], actualWorkload: 0 } as SprintPlanningData;
@@ -218,83 +203,4 @@ export class ScrumRoomsService {
     return { mean: Math.round(mean * 10) / 10, median, mode };
   }
 
-  // ========== MOM AI GENERATION ==========
-
-  async generateMOMSummary(text: string): Promise<{
-    summary: string;
-    decisions: string[];
-    actionItems: Array<{ id: string; description: string; assignee?: string; dueDate?: string }>;
-  }> {
-    if (!this.groqApiKey) throw new BadRequestException('AI service not configured');
-
-    const systemPrompt = `You are an expert meeting minutes assistant. Parse meeting notes and extract:
-1. Summary: A concise overview of the main discussions and topics
-2. Decisions: All decisions made, agreements, or conclusions
-3. Action Items: Tasks with owners and deadlines (if mentioned)
-
-Return ONLY a JSON object with this structure:
-{
-  "summary": "Brief meeting summary",
-  "decisions": ["Decision 1", "Decision 2"],
-  "actionItems": [{"description": "Task description", "assignee": "Person name", "dueDate": "YYYY-MM-DD"}]
-}
-
-If a field is not found, use empty strings or arrays. Extract as much detail as possible.`;
-
-    try {
-      const response = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: this.groqModel,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: text },
-          ],
-          temperature: 0.3,
-          max_tokens: 2000,
-          response_format: { type: 'json_object' },
-        },
-        {
-          headers: { Authorization: `Bearer ${this.groqApiKey}`, 'Content-Type': 'application/json' },
-          timeout: 30000,
-        },
-      );
-
-      const content = response.data?.choices?.[0]?.message?.content || '';
-      let parsed: any;
-      try {
-        parsed = JSON.parse(content);
-      } catch {
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) return this.fallbackMOMParse(text);
-        parsed = JSON.parse(jsonMatch[0]);
-      }
-
-      const actionItems = (parsed.actionItems || parsed.action_items || []).map(
-        (item: any, idx: number) => ({
-          id: `action-${Date.now()}-${idx}`,
-          description: item.description || item.task || String(item),
-          assignee: item.assignee || item.owner,
-          dueDate: item.dueDate || item.due_date || item.deadline,
-        }),
-      );
-
-      return {
-        summary: parsed.summary || 'Meeting discussion',
-        decisions: Array.isArray(parsed.decisions)
-          ? parsed.decisions
-          : parsed.decisions
-          ? [parsed.decisions]
-          : [],
-        actionItems,
-      };
-    } catch (error) {
-      console.error('AI generation error:', error.response?.data || error.message);
-      return this.fallbackMOMParse(text);
-    }
-  }
-
-  private fallbackMOMParse(text: string) {
-    return { summary: text.substring(0, 500), decisions: [], actionItems: [] };
-  }
 }

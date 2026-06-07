@@ -154,6 +154,12 @@ export const PERMISSIONS = {
 
   // Audit
   AUDIT_VIEW: 'audit:view',
+
+  // War Room
+  INCIDENT_VIEW: 'incident:view',
+  INCIDENT_DECLARE: 'incident:declare',
+  INCIDENT_MANAGE: 'incident:manage',
+  INCIDENT_RESOLVE: 'incident:resolve',
 } as const;
 
 export type PermissionKey = typeof PERMISSIONS[keyof typeof PERMISSIONS];

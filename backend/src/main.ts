@@ -1,4 +1,5 @@
 import { NestFactory, Reflector } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -7,6 +8,8 @@ import { DataSource } from 'typeorm';
 import { runSeeders } from './database/seed';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { join } from 'path';
+import * as fs from 'fs';
 
 const execAsync = promisify(exec);
 
@@ -45,9 +48,15 @@ async function killPortProcess(port: number): Promise<void> {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const uploadsDir = join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: true,
   });
+
+  // Serve uploaded files (org logos, favicons) at /uploads/*
+  app.useStaticAssets(uploadsDir, { prefix: '/uploads' });
 
   // Increase body size limit to handle rich text content with images
   app.use(require('express').json({ limit: '50mb' }));

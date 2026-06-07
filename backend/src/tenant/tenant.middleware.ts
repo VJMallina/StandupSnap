@@ -17,10 +17,13 @@ function decodeTokenPayload(token: string): any {
  * (without re-verifying — JwtGuard still verifies on protected routes) and
  * stores them in AsyncLocalStorage so any downstream code can call
  * getCurrentTenant() to find the current request's tenant.
+ *
+ * If a Bearer token is present but lacks org context, the request is rejected
+ * with 401 so the client is forced to re-authenticate and get a fresh token.
  */
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
-  use(req: Request, _res: Response, next: NextFunction): void {
+  use(req: Request, res: Response, next: NextFunction): void {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
       return next();
@@ -35,7 +38,10 @@ export class TenantMiddleware implements NestMiddleware {
         next,
       );
     } else {
-      next();
+      res.status(401).json({
+        statusCode: 401,
+        message: 'Session expired. Please log in again.',
+      });
     }
   }
 }

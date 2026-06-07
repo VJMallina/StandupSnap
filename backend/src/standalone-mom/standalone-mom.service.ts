@@ -12,7 +12,7 @@ import { GenerateStandaloneMomDto } from './dto/generate-ai.dto';
 import { ConfigService } from '@nestjs/config';
 import * as pdfParse from 'pdf-parse';
 import * as mammoth from 'mammoth';
-import { Document, Packer, Paragraph, HeadingLevel } from 'docx';
+import { Document, Packer, Paragraph, HeadingLevel, Table, TableRow, TableCell, WidthType, TextRun } from 'docx';
 import { TenantService } from '../tenant/tenant.service';
 
 @Injectable()
@@ -125,7 +125,7 @@ export class StandaloneMomService {
   async findOne(id: string, organizationId?: string): Promise<StandaloneMom> {
     const repo = await this.tenantService.getRepository(StandaloneMom);
     const mom = await repo.findOne({
-      where: { id, archived: false },
+      where: { id, archived: false, ...(organizationId ? { organizationId } : {}) },
       relations: ['project', 'sprint', 'createdBy', 'updatedBy'],
     });
     if (!mom) throw new NotFoundException('MOM not found');
@@ -146,6 +146,8 @@ export class StandaloneMomService {
       .leftJoinAndSelect('mom.updatedBy', 'updatedBy')
       .where('mom.project = :projectId', { projectId: filter.projectId })
       .andWhere('mom.archived = false');
+
+    if (organizationId) qb.andWhere('mom.organizationId = :organizationId', { organizationId });
 
     if (filter.sprintId) qb.andWhere('mom.sprint = :sprintId', { sprintId: filter.sprintId });
     if (filter.meetingType) qb.andWhere('mom.meetingType = :meetingType', { meetingType: filter.meetingType });
@@ -181,22 +183,26 @@ export class StandaloneMomService {
   }
 
   async generateWithAI(dto: GenerateStandaloneMomDto) {
-    const systemPrompt = `You are an expert meeting minutes assistant. Your task is to analyze raw meeting notes and extract structured information into a JSON format.
+    const systemPrompt = `You are an expert meeting minutes assistant. Analyze the raw meeting notes and return a single valid JSON object with exactly these fields:
 
-IMPORTANT: You must return ONLY a valid JSON object with these exact fields:
-- agenda: The main topics/agenda items discussed (bullet points or paragraph)
-- discussionSummary: Key discussion points, context, and what was talked about
-- decisions: Final decisions or conclusions reached (clearly state each decision)
-- actionItems: Action items with owner and due date (format: "Task description - Owner: Name, Due: Date")
+- agenda: string — topics/agenda items discussed (bullet points or paragraph)
+- discussionSummary: string — key discussion points and context
+- decisions: string — final decisions or conclusions reached
+- actionItems: array — list of action item objects, each with:
+    { "task": "what needs to be done", "owner": "person responsible (empty string if unknown)", "dueDate": "YYYY-MM-DD (empty string if not mentioned)" }
 
-INSTRUCTIONS:
-1. Extract the agenda from meeting topics, objectives, or discussion points
-2. Summarize the main discussion, conversations, and context
-3. Identify explicit decisions, agreements, or conclusions
-4. List all action items with owners and deadlines when mentioned
-5. If a section is not found in the notes, use "Not mentioned" or "No [section] recorded"
-6. Use clear, concise language and bullet points where appropriate
-7. For action items, always try to identify who is responsible and when it's due
+RULES:
+1. actionItems MUST be a JSON array, never a string.
+2. If no action items are found, return an empty array: [].
+3. If a section has no content, use an empty string "".
+4. Extract due dates into YYYY-MM-DD format when possible; otherwise use "".
+5. Use clear, concise language.
+
+Example of correct actionItems format:
+[
+  { "task": "Update the deployment pipeline", "owner": "Alice", "dueDate": "2024-06-15" },
+  { "task": "Send meeting summary to stakeholders", "owner": "Bob", "dueDate": "" }
+]
 
 Now parse the following meeting notes:`;
 
@@ -229,11 +235,28 @@ Now parse the following meeting notes:`;
         parsed = JSON.parse(jsonMatch[0]);
       }
 
+      const rawActions = parsed.actionItems ?? parsed.action_items ?? parsed.actions ?? [];
+      let actionItems: string;
+      if (Array.isArray(rawActions)) {
+        const normalized = rawActions
+          .map((i: any) => ({
+            task: String(i.task || i.description || i.item || '').trim(),
+            owner: String(i.owner || i.assignee || i.responsible || '').trim(),
+            dueDate: String(i.dueDate || i.due_date || i.date || '').trim(),
+          }))
+          .filter((i) => i.task);
+        actionItems = normalized.length ? JSON.stringify(normalized) : '';
+      } else {
+        // Model returned a string despite instructions — store as-is so the
+        // frontend's line-split fallback can still render something useful
+        actionItems = String(rawActions || '');
+      }
+
       return {
-        agenda: parsed.agenda || parsed.Agenda || 'No agenda specified',
-        discussionSummary: parsed.discussionSummary || parsed.discussion_summary || parsed.discussion || parsed.summary || 'No discussion summary',
-        decisions: parsed.decisions || parsed.Decisions || parsed.decisionsTaken || 'No decisions recorded',
-        actionItems: parsed.actionItems || parsed.action_items || parsed.actions || 'No action items',
+        agenda: String(parsed.agenda || parsed.Agenda || ''),
+        discussionSummary: String(parsed.discussionSummary || parsed.discussion_summary || parsed.discussion || parsed.summary || ''),
+        decisions: String(parsed.decisions || parsed.Decisions || parsed.decisionsTaken || ''),
+        actionItems,
       };
     } catch (error) {
       console.error('AI generation error:', error.response?.data || error.message);
@@ -242,7 +265,7 @@ Now parse the following meeting notes:`;
   }
 
   private fallbackParse(text: string) {
-    return { agenda: 'Meeting discussion', discussionSummary: text, decisions: 'To be reviewed', actionItems: 'To be determined' };
+    return { agenda: '', discussionSummary: text, decisions: '', actionItems: '' };
   }
 
   async extractTranscript(file: any): Promise<string> {
@@ -270,20 +293,91 @@ Now parse the following meeting notes:`;
     throw new BadRequestException('Unsupported file format. Upload TXT, PDF, or DOCX.');
   }
 
+  private parseActionItemsForExport(raw: string | null): Array<{ task: string; owner: string; dueDate: string }> {
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((i: any) => ({
+            task: String(i.task || ''),
+            owner: String(i.owner || ''),
+            dueDate: String(i.dueDate || ''),
+          }))
+          .filter((i) => i.task);
+      }
+    } catch {}
+    // Plain-text fallback — one line per task
+    return raw.split('\n').filter((l) => l.trim()).map((l) => ({ task: l.trim(), owner: '', dueDate: '' }));
+  }
+
   async download(id: string, format: 'txt' | 'docx') {
     const mom = await this.findOne(id);
-    const titleLine = `Title: ${mom.title}`;
-    const meetingDateString = mom.meetingDate instanceof Date ? mom.meetingDate.toISOString().slice(0, 10) : String(mom.meetingDate);
-    const dateLine = `Date: ${meetingDateString}`;
-    const typeLine = `Meeting Type: ${mom.customMeetingType || mom.meetingType}`;
-    const projectLine = `Project: ${mom.project?.name || mom.project?.id}`;
-    const sprintLine = mom.sprint ? `Sprint: ${mom.sprint.name}` : 'Sprint: N/A';
+    const meetingDateString = mom.meetingDate instanceof Date
+      ? mom.meetingDate.toISOString().slice(0, 10)
+      : String(mom.meetingDate);
 
-    const textBody = [titleLine, dateLine, typeLine, projectLine, sprintLine, '', 'Agenda:', mom.agenda || '', '', 'Discussion Summary:', mom.discussionSummary || '', '', 'Decisions:', mom.decisions || '', '', 'Action Items:', mom.actionItems || ''].join('\n');
+    const titleLine   = `Title: ${mom.title}`;
+    const dateLine    = `Date: ${meetingDateString}`;
+    const typeLine    = `Meeting Type: ${mom.customMeetingType || mom.meetingType}`;
+    const projectLine = `Project: ${mom.project?.name || mom.project?.id}`;
+    const sprintLine  = mom.sprint ? `Sprint: ${mom.sprint.name}` : 'Sprint: N/A';
+
+    const actionItems = this.parseActionItemsForExport(mom.actionItems);
 
     if (format === 'txt') {
+      const actionItemsTxt = actionItems.length
+        ? [
+            'Task                                          | Owner            | Due Date',
+            '----------------------------------------------|------------------|----------',
+            ...actionItems.map((i) =>
+              `${i.task.padEnd(46)}| ${(i.owner || '—').padEnd(17)}| ${i.dueDate || '—'}`
+            ),
+          ].join('\n')
+        : 'No action items';
+
+      const textBody = [
+        titleLine, dateLine, typeLine, projectLine, sprintLine,
+        '', 'Agenda:', mom.agenda || '',
+        '', 'Discussion Summary:', mom.discussionSummary || '',
+        '', 'Decisions:', mom.decisions || '',
+        '', 'Action Items:', actionItemsTxt,
+      ].join('\n');
+
       return { buffer: Buffer.from(textBody, 'utf-8'), fileName: `MOM_${mom.id}.txt`, contentType: 'text/plain' };
     }
+
+    // Build action items table for DOCX
+    const headerCell = (text: string) =>
+      new TableCell({
+        children: [new Paragraph({ children: [new TextRun({ text, bold: true })] })],
+        width: { size: text === 'Task' ? 60 : 20, type: WidthType.PERCENTAGE },
+      });
+
+    const dataCell = (text: string) =>
+      new TableCell({ children: [new Paragraph({ text })] });
+
+    const actionItemsSection = actionItems.length
+      ? new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({
+              tableHeader: true,
+              children: [headerCell('Task'), headerCell('Owner'), headerCell('Due Date')],
+            }),
+            ...actionItems.map(
+              (i) =>
+                new TableRow({
+                  children: [
+                    dataCell(i.task),
+                    dataCell(i.owner || '—'),
+                    dataCell(i.dueDate || '—'),
+                  ],
+                }),
+            ),
+          ],
+        })
+      : new Paragraph({ text: 'No action items' });
 
     const doc = new Document({
       sections: [{
@@ -296,15 +390,19 @@ Now parse the following meeting notes:`;
           new Paragraph({ text: '' }),
           new Paragraph({ text: 'Agenda', heading: HeadingLevel.HEADING_2 }),
           new Paragraph({ text: mom.agenda || '' }),
+          new Paragraph({ text: '' }),
           new Paragraph({ text: 'Discussion Summary', heading: HeadingLevel.HEADING_2 }),
           new Paragraph({ text: mom.discussionSummary || '' }),
+          new Paragraph({ text: '' }),
           new Paragraph({ text: 'Decisions', heading: HeadingLevel.HEADING_2 }),
           new Paragraph({ text: mom.decisions || '' }),
+          new Paragraph({ text: '' }),
           new Paragraph({ text: 'Action Items', heading: HeadingLevel.HEADING_2 }),
-          new Paragraph({ text: mom.actionItems || '' }),
+          actionItemsSection,
         ],
       }],
     });
+
     const buffer = await Packer.toBuffer(doc);
     return { buffer, fileName: `MOM_${mom.id}.docx`, contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
   }

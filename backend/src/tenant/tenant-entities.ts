@@ -69,6 +69,10 @@ import { ResourceWorkload } from '../entities/resource-workload.entity';
 import { WorkflowLane } from '../entities/workflow-lane.entity';
 import { WorkflowTemplate } from '../entities/workflow-template.entity';
 import { AuditLog } from '../entities/audit-log.entity';
+import { Incident } from '../entities/incident.entity';
+import { IncidentRole } from '../entities/incident-role.entity';
+import { IncidentTimelineEntry } from '../entities/incident-timeline-entry.entity';
+import { IncidentRunbookStep } from '../entities/incident-runbook-step.entity';
 
 /**
  * All entity classes that live in the per-org tenant schema.
@@ -113,6 +117,10 @@ export const TENANT_ENTITIES = [
   WorkflowLane,
   WorkflowTemplate,
   AuditLog,
+  Incident,
+  IncidentRole,
+  IncidentTimelineEntry,
+  IncidentRunbookStep,
 ];
 
 /**

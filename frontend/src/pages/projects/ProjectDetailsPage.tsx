@@ -8,6 +8,7 @@ import { PERMISSIONS } from '../../constants/permissions';
 import AppLayout from '../../components/AppLayout';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 import WorkflowSettings from '../../components/projects/WorkflowSettings';
+import DeclareIncidentModal from '../war-room/components/DeclareIncidentModal';
 
 export default function ProjectDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,12 +21,14 @@ export default function ProjectDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeclareIncident, setShowDeclareIncident] = useState(false);
   const [isInfoExpanded, setIsInfoExpanded] = useState(true);
   const [isTeamExpanded, setIsTeamExpanded] = useState(true);
   const [isWorkflowExpanded, setIsWorkflowExpanded] = useState(false);
 
   const canEdit = hasPermission(PERMISSIONS.PROJECT_EDIT);
   const canDelete = hasPermission(PERMISSIONS.PROJECT_DELETE);
+  const canDeclareIncident = hasPermission(PERMISSIONS.INCIDENT_DECLARE);
 
   // Reload project when id changes or when navigating back (location.key changes)
   useEffect(() => {
@@ -138,6 +141,17 @@ export default function ProjectDetailsPage() {
               </svg>
               Manage Team
             </button>
+            {canDeclareIncident && !project.isArchived && (
+              <button
+                onClick={() => setShowDeclareIncident(true)}
+                className="px-3 py-1.5 text-sm leading-tight bg-red-600 text-white rounded-md hover:bg-red-700 font-semibold transition-colors inline-flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Declare Incident
+              </button>
+            )}
             {canEdit && !project.isArchived && (
               <button
                 onClick={() => navigate(`/projects/${id}/edit`)}
@@ -525,6 +539,13 @@ export default function ProjectDetailsPage() {
           title="Delete Project"
           message={`Are you sure you want to permanently delete "${project.name}"? This action cannot be undone and all associated data will be lost.`}
         />
+
+        {showDeclareIncident && (
+          <DeclareIncidentModal
+            projectId={project.id}
+            onClose={() => setShowDeclareIncident(false)}
+          />
+        )}
       </div>
     </AppLayout>
   );

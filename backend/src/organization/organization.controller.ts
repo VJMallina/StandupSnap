@@ -12,7 +12,14 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import * as fs from 'fs';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 import { OrganizationService } from './organization.service';
@@ -22,6 +29,7 @@ import {
   InviteMemberDto,
   UpdateMemberRoleDto,
 } from './dto';
+import { UpdateBrandingDto } from './dto/update-branding.dto';
 
 @Controller('organizations')
 @UseGuards(JwtAuthGuard)
@@ -355,6 +363,60 @@ export class OrganizationController {
     @Request() req: any,
   ) {
     await this.orgService.deleteCustomRole(id, roleId, req.user.id);
+  }
+
+  // ==================== Branding ====================
+
+  /**
+   * Update brand colors / logo URL / favicon URL
+   * PATCH /organizations/:id/branding
+   */
+  @Patch(':id/branding')
+  async updateBranding(
+    @Param('id') id: string,
+    @Body() dto: UpdateBrandingDto,
+    @Request() req: any,
+  ) {
+    const organization = await this.orgService.updateBranding(id, dto, req.user.id);
+    return { message: 'Branding updated successfully', organization };
+  }
+
+  /**
+   * Upload logo file — stores to disk, saves URL in org.logoUrl
+   * POST /organizations/:id/branding/logo
+   */
+  @Post(':id/branding/logo')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (req, _file, cb) => {
+          const dir = join(process.cwd(), 'uploads', 'branding', req.params.id);
+          fs.mkdirSync(dir, { recursive: true });
+          cb(null, dir);
+        },
+        filename: (_req, file, cb) => {
+          cb(null, `logo${extname(file.originalname).toLowerCase()}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        const allowed = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
+        if (!allowed.includes(extname(file.originalname).toLowerCase())) {
+          return cb(new BadRequestException('Only PNG, JPG, SVG, and WEBP files are allowed'), false);
+        }
+        cb(null, true);
+      },
+      limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+    }),
+  )
+  async uploadLogo(
+    @Param('id') id: string,
+    @UploadedFile() file: any,
+    @Request() req: any,
+  ) {
+    if (!file) throw new BadRequestException('No file uploaded');
+    const logoUrl = `/uploads/branding/${id}/${file.filename}`;
+    const organization = await this.orgService.updateBranding(id, { logoUrl }, req.user.id);
+    return { message: 'Logo uploaded successfully', organization };
   }
 
   // ==================== Audit Logs ====================

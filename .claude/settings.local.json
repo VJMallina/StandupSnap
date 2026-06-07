@@ -117,7 +117,9 @@
       "Bash(PGPASSWORD=npg_Y7B4NlcMiuDm psql \"postgresql://neondb_owner@ep-silent-credit-afkini0o-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require\" -c \"SELECT id, name, slug FROM public.organizations LIMIT 10;\")",
       "Bash(where psql *)",
       "Bash(where pg_dump)",
-      "Bash(echo \"EXIT:$?\"0)"
+      "Bash(echo \"EXIT:$?\"0)",
+      "Bash(Get-ChildItem -Path \"F:\\\\StandupSnap\\\\backend\\\\src\" -Directory)",
+      "PowerShell(New-Item *)"
     ],
     "deny": [],
     "ask": []

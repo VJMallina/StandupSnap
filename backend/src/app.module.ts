@@ -24,6 +24,7 @@ import { WorkflowModule } from './workflow/workflow.module';
 import { TenantModule } from './tenant/tenant.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 import { CanvasReportModule } from './canvas-report/canvas-report.module';
+import { IncidentModule } from './incident/incident.module';
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { CanvasReportModule } from './canvas-report/canvas-report.module';
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: true, // Enable for initial deployment, disable later
+            synchronize: process.env.NODE_ENV !== 'production',
             logging: process.env.NODE_ENV === 'development',
             // Connection pooling for better performance with remote database
             extra: {
@@ -98,6 +99,7 @@ import { CanvasReportModule } from './canvas-report/canvas-report.module';
     OrganizationModule,
     WorkflowModule,
     CanvasReportModule,
+    IncidentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

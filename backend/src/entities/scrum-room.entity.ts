@@ -17,7 +17,6 @@ export enum RoomType {
   RETROSPECTIVE = 'retrospective',
   SPRINT_PLANNING = 'sprint_planning',
   REFINEMENT = 'refinement',
-  MOM = 'mom',
 }
 
 export enum RoomStatus {
@@ -84,21 +83,6 @@ export interface RetrospectiveData {
   maxVotesPerPerson?: number;
 }
 
-// MOM specific types
-export interface MOMData {
-  rawInput: string;
-  summary: string;
-  decisions: string[];
-  actionItems: Array<{
-    id: string;
-    description: string;
-    assignee?: string;
-    dueDate?: string;
-  }>;
-  attendees: string[];
-  aiGenerated: boolean;
-}
-
 // Sprint Planning specific types
 export interface SprintPlanningItem {
   itemId: string;
@@ -156,7 +140,6 @@ export class ScrumRoom {
   data:
     | PlanningPokerData
     | RetrospectiveData
-    | MOMData
     | SprintPlanningData
     | RefinementData
     | null;

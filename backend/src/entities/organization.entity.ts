@@ -49,6 +49,18 @@ export class Organization {
   @Column({ nullable: true })
   logoUrl: string;
 
+  @Column({ nullable: true })
+  brandPrimaryColor: string;
+
+  @Column({ nullable: true })
+  brandSecondaryColor: string;
+
+  @Column({ nullable: true })
+  brandAccentColor: string;
+
+  @Column({ nullable: true })
+  brandFaviconUrl: string;
+
   @Column({
     type: 'enum',
     enum: OrganizationStatus,
