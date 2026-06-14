@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { projectsApi } from '../../../services/api/projects';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -11,8 +12,10 @@ const SEV_LABELS: Record<Severity, { label: string; desc: string; color: string 
   P4: { label: 'P4 — Low', desc: 'Minor issue, minimal user impact', color: 'border-blue-400 bg-blue-50' },
 };
 
+interface Project { id: string; name: string; key?: string; }
+
 interface Props {
-  projectId: string;
+  projectId?: string;
   onClose: () => void;
 }
 
@@ -21,8 +24,21 @@ export default function DeclareIncidentModal({ projectId, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<Severity>('P2');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(projectId || '');
+  const [projects, setProjects] = useState<Project[]>([]);
   const [declaring, setDeclaring] = useState(false);
   const [error, setError] = useState('');
+
+  const authHeaders = () => ({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+  });
+
+  useEffect(() => {
+    projectsApi.getAll()
+      .then((data: Project[]) => setProjects(data.filter((p: any) => !p.isArchived)))
+      .catch(() => {});
+  }, []);
 
   const handleDeclare = async () => {
     if (!title.trim()) { setError('Title is required.'); return; }
@@ -31,11 +47,13 @@ export default function DeclareIncidentModal({ projectId, onClose }: Props) {
     try {
       const res = await fetch(`${API_URL}/incidents`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        body: JSON.stringify({ title: title.trim(), description: description.trim() || undefined, severity, projectId }),
+        headers: authHeaders(),
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim() || undefined,
+          severity,
+          projectId: selectedProjectId || undefined,
+        }),
       });
       if (!res.ok) throw new Error((await res.json()).message || 'Failed to declare incident');
       const incident = await res.json();
@@ -76,6 +94,22 @@ export default function DeclareIncidentModal({ projectId, onClose }: Props) {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
               autoFocus
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Affected Project <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <select
+              value={selectedProjectId}
+              onChange={e => setSelectedProjectId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            >
+              <option value="">— No specific project / org-wide —</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.key ? `[${p.key}] ` : ''}{p.name}</option>
+              ))}
+            </select>
           </div>
 
           <div>

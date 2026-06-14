@@ -76,6 +76,13 @@ export class TenantService implements OnModuleDestroy {
     return ds.getRepository(entity);
   }
 
+  /** Returns a repository backed by the main (public-schema) DataSource. */
+  getMainRepository<T extends ObjectLiteral>(
+    entity: EntityTarget<T>,
+  ): Repository<T> {
+    return this.mainDataSource.getRepository(entity);
+  }
+
   /**
    * Returns (and caches) a ready DataSource for the given org slug.
    * The DataSource is configured so all queries automatically hit the
@@ -124,6 +131,14 @@ export class TenantService implements OnModuleDestroy {
     return new DataSource({
       ...baseOptions,
       schema: schemaName,
+      // ALL_TENANT_DS_ENTITIES is used for both sync and query DataSources.
+      // SHARED_ENTITIES (User, Organization, etc.) carry @Entity({ schema: 'public' })
+      // so TypeORM knows they live in public and will not try to recreate them in the
+      // org schema. They must be included so TypeORM can resolve inverse back-references
+      // (e.g. StandupUpdate → user.standupUpdates, ProjectMember → user.projectMemberships).
+      // Cross-schema FK constraints that could violate referential integrity are
+      // suppressed with createForeignKeyConstraints: false on the relevant @ManyToOne
+      // decorators (Card.assignee, Card.reporter) and cleaned up on startup.
       entities: ALL_TENANT_DS_ENTITIES,
       synchronize,
       logging: false,

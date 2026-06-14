@@ -4,17 +4,28 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { Not, In } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { TeamMember } from '../entities/team-member.entity';
 import { Project } from '../entities/project.entity';
+import { ProjectMember } from '../entities/project-member.entity';
+import { OrgUser } from '../entities/org-user.entity';
+import { User } from '../entities/user.entity';
 import { CreateTeamMemberDto } from './dto/create-team-member.dto';
 import { UpdateTeamMemberDto } from './dto/update-team-member.dto';
 import { AddToProjectDto } from './dto/add-to-project.dto';
 import { TenantService } from '../tenant/tenant.service';
+import { getCurrentTenant } from '../tenant/tenant.context';
 
 @Injectable()
 export class TeamMemberService {
-  constructor(private tenantService: TenantService) {}
+  constructor(
+    private tenantService: TenantService,
+    @InjectRepository(OrgUser)
+    private orgUserRepository: Repository<OrgUser>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
 
   async create(createTeamMemberDto: CreateTeamMemberDto): Promise<TeamMember> {
     const repo = await this.tenantService.getRepository(TeamMember);
@@ -49,141 +60,87 @@ export class TeamMemberService {
     await repo.remove(teamMember);
   }
 
+  /**
+   * Returns all ProjectMembers for a project (real org users assigned to this project).
+   * PO and PMO are shown separately in the Project Leads section, not here.
+   */
   async getProjectTeam(projectId: string): Promise<any[]> {
     const projectRepo = await this.tenantService.getRepository(Project);
     const project = await projectRepo.findOne({
       where: { id: projectId },
-      relations: ['teamMembers', 'productOwner', 'pmo', 'members', 'members.user'],
+      relations: ['members', 'members.user'],
     });
 
     if (!project) {
       throw new NotFoundException(`Project with ID ${projectId} not found`);
     }
 
-    const teamMembers: any[] = [];
+    if (!project.members) return [];
 
-    if (project.teamMembers) {
-      teamMembers.push(
-        ...project.teamMembers.map((tm) => ({
-          id: tm.id,
-          fullName: tm.fullName,
-          displayName: tm.displayName,
-          designationRole: tm.designationRole,
-          type: 'team_member',
-        })),
-      );
-    }
-
-    if (project.productOwner) {
-      teamMembers.push({
-        id: `user-${project.productOwner.id}`,
-        fullName: project.productOwner.name,
-        displayName: project.productOwner.name,
-        designationRole: 'Product Owner',
-        type: 'special_role',
-        userId: project.productOwner.id,
-      });
-    }
-
-    if (project.pmo) {
-      teamMembers.push({
-        id: `user-${project.pmo.id}`,
-        fullName: project.pmo.name,
-        displayName: project.pmo.name,
-        designationRole: 'PMO',
-        type: 'special_role',
-        userId: project.pmo.id,
-      });
-    }
-
-    if (project.members) {
-      const scrumMasters = project.members.filter(
-        (member) => member.role.toLowerCase().includes('scrum') && member.isActive,
-      );
-      for (const sm of scrumMasters) {
-        if (sm.user) {
-          teamMembers.push({
-            id: `user-${sm.user.id}`,
-            fullName: sm.user.name,
-            displayName: sm.user.name,
-            designationRole: 'Scrum Master',
-            type: 'special_role',
-            userId: sm.user.id,
-          });
-        }
-      }
-    }
-
-    return teamMembers;
+    return project.members
+      .filter((m) => m.isActive && m.user)
+      .map((m) => ({
+        id: m.id,
+        fullName: m.user.name,
+        displayName: m.user.email,
+        designationRole: m.role,
+        type: 'project_member',
+        userId: m.user.id,
+      }))
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
   }
 
-  async getAvailableTeamMembers(projectId: string): Promise<TeamMember[]> {
-    const [teamMemberRepo, projectRepo] = await Promise.all([
-      this.tenantService.getRepository(TeamMember),
-      this.tenantService.getRepository(Project),
-    ]);
+  /**
+   * Returns active org members NOT already assigned to this project.
+   * Source of truth: public.org_users (accepted org members).
+   */
+  async getAvailableTeamMembers(projectId: string): Promise<any[]> {
+    const tenant = getCurrentTenant();
+    if (!tenant) return [];
 
-    const project = await projectRepo.findOne({
-      where: { id: projectId },
-      relations: ['teamMembers'],
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Project with ID ${projectId} not found`);
-    }
-
-    const assignedIds = project.teamMembers.map((tm) => tm.id);
-    if (assignedIds.length === 0) {
-      return teamMemberRepo.find({ order: { fullName: 'ASC' } });
-    }
-
-    return teamMemberRepo.find({
-      where: { id: Not(In(assignedIds)) },
-      order: { fullName: 'ASC' },
-    });
-  }
-
-  async addToProject(projectId: string, addToProjectDto: AddToProjectDto): Promise<Project> {
-    const [teamMemberRepo, projectRepo] = await Promise.all([
-      this.tenantService.getRepository(TeamMember),
-      this.tenantService.getRepository(Project),
-    ]);
-
-    const project = await projectRepo.findOne({
-      where: { id: projectId },
-      relations: ['teamMembers'],
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Project with ID ${projectId} not found`);
-    }
-    if (project.isArchived) {
-      throw new BadRequestException('Cannot modify team in archived project');
-    }
-
-    const teamMembers = await teamMemberRepo.findBy({ id: In(addToProjectDto.teamMemberIds) });
-    if (teamMembers.length !== addToProjectDto.teamMemberIds.length) {
-      throw new NotFoundException('One or more team members not found');
-    }
-
-    const existingIds = new Set(project.teamMembers.map((tm) => tm.id));
-    const duplicates = teamMembers.filter((tm) => existingIds.has(tm.id));
-    if (duplicates.length > 0) {
-      throw new ConflictException(
-        `Team member(s) already assigned to project: ${duplicates.map((d) => d.fullName).join(', ')}`,
-      );
-    }
-
-    project.teamMembers = [...project.teamMembers, ...teamMembers];
-    return projectRepo.save(project);
-  }
-
-  async removeFromProject(projectId: string, teamMemberId: string): Promise<Project> {
     const projectRepo = await this.tenantService.getRepository(Project);
+    const project = await projectRepo.findOne({
+      where: { id: projectId },
+      relations: ['members', 'members.user', 'productOwner', 'pmo'],
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${projectId} not found`);
+    }
+
+    const assignedUserIds = new Set<string>();
+    project.members?.forEach((m) => m.user?.id && assignedUserIds.add(m.user.id));
+    if (project.productOwner?.id) assignedUserIds.add(project.productOwner.id);
+    if (project.pmo?.id) assignedUserIds.add(project.pmo.id);
+
+    const orgUsers = await this.orgUserRepository.find({
+      where: { organizationId: tenant.orgId, isActive: true, deletedAt: IsNull() },
+      relations: ['user'],
+    });
+
+    return orgUsers
+      .filter((ou) => ou.user?.isActive && !assignedUserIds.has(ou.user.id))
+      .map((ou) => ({
+        id: ou.user.id,
+        fullName: ou.user.name,
+        displayName: ou.user.email,
+        designationRole: null,
+      }))
+      .sort((a, b) => a.fullName.localeCompare(b.fullName));
+  }
+
+  /**
+   * Adds org members to a project by creating ProjectMember records.
+   */
+  async addToProject(projectId: string, addToProjectDto: AddToProjectDto): Promise<any[]> {
+    const [projectRepo, projectMemberRepo] = await Promise.all([
+      this.tenantService.getRepository(Project),
+      this.tenantService.getRepository(ProjectMember),
+    ]);
 
     const project = await projectRepo.findOne({
       where: { id: projectId },
-      relations: ['teamMembers'],
+      relations: ['members', 'members.user'],
     });
 
     if (!project) {
@@ -193,12 +150,58 @@ export class TeamMemberService {
       throw new BadRequestException('Cannot modify team in archived project');
     }
 
-    const memberIndex = project.teamMembers.findIndex((tm) => tm.id === teamMemberId);
-    if (memberIndex === -1) {
-      throw new NotFoundException('Team member not found in this project');
+    const existingUserIds = new Set(
+      (project.members ?? []).map((m) => m.user?.id).filter(Boolean),
+    );
+
+    const results: ProjectMember[] = [];
+    for (const userId of addToProjectDto.userIds) {
+      if (existingUserIds.has(userId)) {
+        throw new ConflictException(`User is already a member of this project`);
+      }
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      if (!user) throw new NotFoundException(`User with ID ${userId} not found`);
+
+      const member = projectMemberRepo.create({
+        project,
+        user,
+        role: addToProjectDto.designationRole || 'Team Member',
+        organizationId: project.organizationId,
+        startDate: new Date(),
+        isActive: true,
+      });
+      results.push(await projectMemberRepo.save(member));
     }
 
-    project.teamMembers.splice(memberIndex, 1);
-    return projectRepo.save(project);
+    return results;
+  }
+
+  /**
+   * Updates the designation role of a project team member.
+   */
+  async updateTeamMemberRole(
+    projectId: string,
+    memberId: string,
+    role: string,
+  ): Promise<ProjectMember> {
+    const projectMemberRepo = await this.tenantService.getRepository(ProjectMember);
+    const member = await projectMemberRepo.findOne({
+      where: { id: memberId, project: { id: projectId } },
+    });
+    if (!member) throw new NotFoundException('Team member not found in this project');
+    member.role = role;
+    return projectMemberRepo.save(member);
+  }
+
+  /**
+   * Removes a ProjectMember from a project.
+   */
+  async removeFromProject(projectId: string, memberId: string): Promise<void> {
+    const projectMemberRepo = await this.tenantService.getRepository(ProjectMember);
+    const member = await projectMemberRepo.findOne({
+      where: { id: memberId, project: { id: projectId } },
+    });
+    if (!member) throw new NotFoundException('Team member not found in this project');
+    await projectMemberRepo.remove(member);
   }
 }

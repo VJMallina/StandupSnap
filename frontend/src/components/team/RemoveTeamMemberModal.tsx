@@ -66,7 +66,7 @@ export default function RemoveTeamMemberModal({ isOpen, onClose, onConfirm, memb
             </div>
 
             <p className="text-sm text-gray-600 mt-4">
-              Note: The team member profile will remain in the system and can be added to other projects.
+              Note: This removes the member from the project only. Their org account remains active.
             </p>
           </div>
 

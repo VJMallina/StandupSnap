@@ -1,5 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
-import { Card, WorkflowLane, TransitionMode } from '../../types/card';
+import { Card } from '../../types/card';
 import { KanbanCard } from './KanbanCard';
 
 interface KanbanColumnProps {
@@ -8,63 +8,44 @@ interface KanbanColumnProps {
   color: string;
   count: number;
   cards: Card[];
-  lanes: WorkflowLane[];
   onCardClick: (card: Card) => void;
   onDelete: (card: Card) => void;
-  onLaneChange: (cardId: string, laneId: string) => void;
   isHighlighted: boolean;
-  transitionMode?: TransitionMode;
 }
 
-export function KanbanColumn({
-  id,
-  title,
-  color,
-  count,
-  cards,
-  lanes,
-  onCardClick,
-  onDelete,
-  onLaneChange,
-  isHighlighted,
-  transitionMode,
-}: KanbanColumnProps) {
+export function KanbanColumn({ id, title, color, count, cards, onCardClick, onDelete, isHighlighted }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
   return (
-    <div
-      className={`flex flex-col rounded-xl border-2 transition-all duration-200 ${
-        isOver ? 'ring-4 ring-primary-300 shadow-xl scale-[1.02] border-primary-300' : 'border-gray-200'
-      } ${isHighlighted ? 'ring-2 ring-primary-200' : ''}`}
-    >
-      {/* Column Header */}
-      <div
-        className="p-4 rounded-t-lg"
-        style={{ backgroundColor: color }}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-white font-bold text-base truncate">{title}</h3>
-          <span className="bg-white/30 text-white px-3 py-1 rounded-full text-sm font-semibold backdrop-blur-sm ml-2 flex-shrink-0">
-            {count}
-          </span>
-        </div>
+    <div className="flex flex-col w-[272px] flex-shrink-0">
+
+      {/* Column header */}
+      <div className="flex items-center gap-2 px-1 mb-2.5">
+        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 ring-2 ring-white shadow-sm"
+          style={{ backgroundColor: color }} />
+        <h3 className="text-sm font-semibold text-gray-700 flex-1 truncate">{title}</h3>
+        <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full min-w-[24px] text-center">
+          {count}
+        </span>
       </div>
 
-      {/* Cards Container */}
+      {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex-1 p-3 space-y-3 min-h-[500px] max-h-[calc(100vh-300px)] overflow-y-auto bg-gray-50 ${
-          isOver ? 'bg-primary-50' : ''
-        } transition-colors duration-200 rounded-b-lg`}
+        className={`flex-1 rounded-xl p-2 space-y-2 min-h-[120px] max-h-[calc(100vh-230px)] overflow-y-auto
+          transition-colors duration-150
+          ${isOver
+            ? 'bg-primary-50 ring-2 ring-inset ring-primary-300'
+            : isHighlighted
+            ? 'bg-gray-50 ring-1 ring-inset ring-gray-200'
+            : 'bg-gray-50/60'
+          }`}
       >
         {cards.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 text-gray-400">
-            <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              />
-            </svg>
-            <p className="text-sm font-medium">No cards</p>
+          <div className="flex items-center justify-center h-20">
+            <p className="text-xs text-gray-300 font-medium select-none">
+              {isOver ? 'Drop here' : 'No cards'}
+            </p>
           </div>
         ) : (
           cards.map((card) => (
@@ -73,13 +54,11 @@ export function KanbanColumn({
               card={card}
               onClick={onCardClick}
               onDelete={onDelete}
-              lanes={lanes}
-              onLaneChange={onLaneChange}
-              transitionMode={transitionMode}
             />
           ))
         )}
       </div>
+
     </div>
   );
 }

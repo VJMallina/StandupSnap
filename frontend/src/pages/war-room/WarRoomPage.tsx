@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from '../../context/AuthContext';
 import AppLayout from '../../components/AppLayout';
 import ResolveIncidentModal from './components/ResolveIncidentModal';
+import CreateCardFromIncidentModal from './components/CreateCardFromIncidentModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const WS_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace('/api', '');
@@ -19,7 +20,8 @@ interface RunbookStep { id: string; phase: Phase; title: string; description?: s
 interface IncidentRole { id: string; role: RoleType; userId: string; userName: string; }
 interface Incident {
   id: string; title: string; severity: Severity; status: Status;
-  projectId: string; declaredByName: string; declaredAt: string; resolvedAt?: string;
+  projectId: string | null; externalId: string | null;
+  declaredByName: string; declaredAt: string; resolvedAt?: string;
   postMortem?: string; raidPushed: boolean;
   roles: IncidentRole[]; timeline: TimelineEntry[]; runbook: RunbookStep[];
 }
@@ -60,6 +62,8 @@ export default function WarRoomPage() {
   const [content, setContent] = useState('');
   const [posting, setPosting] = useState(false);
   const [showResolve, setShowResolve] = useState(false);
+  const [showCreateCard, setShowCreateCard] = useState(false);
+  const [createdCardId, setCreatedCardId] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState('');
   const timelineEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -184,6 +188,9 @@ export default function WarRoomPage() {
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
             <span className={`px-2 py-0.5 rounded-md text-xs font-bold flex-shrink-0 ${SEV_COLORS[incident.severity]}`}>{incident.severity}</span>
+            {incident.externalId && (
+              <span className="text-xs font-mono font-bold text-gray-400 flex-shrink-0">{incident.externalId}</span>
+            )}
             <h1 className="text-lg font-bold text-gray-900 truncate">{incident.title}</h1>
             <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${incident.status === 'RESOLVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
               {incident.status}
@@ -200,6 +207,12 @@ export default function WarRoomPage() {
                 >
                   {(['P1','P2','P3','P4'] as Severity[]).map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
+                <button
+                  onClick={() => setShowCreateCard(true)}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Create Card
+                </button>
                 <button
                   onClick={() => setShowResolve(true)}
                   className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors"
@@ -355,6 +368,32 @@ export default function WarRoomPage() {
           onClose={() => setShowResolve(false)}
           onResolved={() => { setShowResolve(false); navigate(`/war-room/${id}/post-mortem`); }}
         />
+      )}
+
+      {showCreateCard && incident && (
+        <CreateCardFromIncidentModal
+          incident={incident}
+          onClose={() => setShowCreateCard(false)}
+          onCreated={(externalId) => {
+            setShowCreateCard(false);
+            setCreatedCardId(externalId);
+            setTimeout(() => setCreatedCardId(null), 5000);
+          }}
+        />
+      )}
+
+      {createdCardId && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium">
+          <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
+          Card <span className="font-mono font-bold text-green-400">{createdCardId}</span> created from this incident
+          <button onClick={() => setCreatedCardId(null)} className="ml-1 text-gray-400 hover:text-white">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       )}
     </AppLayout>
   );

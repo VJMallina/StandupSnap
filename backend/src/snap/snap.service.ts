@@ -550,7 +550,7 @@ export class SnapService {
 
     for (const snap of snaps) {
       const assigneeName = snap.card.assignee
-        ? snap.card.assignee.fullName
+        ? snap.card.assignee.name
         : 'Unassigned';
 
       if (!byAssignee.has(assigneeName)) {

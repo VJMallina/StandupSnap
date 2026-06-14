@@ -171,9 +171,9 @@ export default function EditCardModal({ card, onClose, onSuccess }: EditCardModa
               className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               {teamMembers.map((member) => (
-                <option key={member.id} value={member.id}>
+                <option key={member.id} value={member.userId || member.id}>
                   {member.fullName} - {member.designationRole}
-                  {member.id === card.assignee?.id && ' (Current)'}
+                  {(member.userId || member.id) === card.assignee?.id && ' (Current)'}
                 </option>
               ))}
             </select>

@@ -37,6 +37,10 @@ export class Project {
   @Column()
   name: string;
 
+  // Short uppercase key used as card ID prefix, e.g. "STDN" → card IDs become STDN-1, STDN-2
+  @Column({ type: 'varchar', length: 6, nullable: true })
+  key: string | null;
+
   @Column({ type: 'text', nullable: true })
   description: string;
 

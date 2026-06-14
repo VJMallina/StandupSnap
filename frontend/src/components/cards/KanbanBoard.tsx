@@ -20,14 +20,15 @@ interface KanbanBoardProps {
   onCardClick: (card: Card) => void;
   onDelete: (card: Card) => void;
   transitionMode?: TransitionMode;
+  trailingSlot?: JSX.Element;
 }
 
-export function KanbanBoard({ cards, lanes, onLaneChange, onCardClick, onDelete, transitionMode = TransitionMode.FREE }: KanbanBoardProps) {
+export function KanbanBoard({ cards, lanes, onLaneChange, onCardClick, onDelete, trailingSlot }: KanbanBoardProps) {
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [dragStartLaneId, setDragStartLaneId] = useState<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   );
 
   const sortedLanes = [...lanes].sort((a, b) => a.order - b.order);
@@ -42,21 +43,13 @@ export function KanbanBoard({ cards, lanes, onLaneChange, onCardClick, onDelete,
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
-    // Clear drag state immediately so the overlay disappears at once
     setActiveCard(null);
     setDragStartLaneId(null);
 
     if (!over) return;
-
-    const cardId = active.id as string;
-    const newLaneId = over.id as string;
-    const card = cards.find((c) => c.id === cardId);
-
-    if (card && card.laneId !== newLaneId) {
-      onLaneChange(cardId, newLaneId).catch((err) => {
-        console.error('Failed to move card:', err);
-      });
+    const card = cards.find((c) => c.id === active.id);
+    if (card && card.laneId !== over.id) {
+      onLaneChange(active.id as string, over.id as string).catch(console.error);
     }
   };
 
@@ -65,24 +58,16 @@ export function KanbanBoard({ cards, lanes, onLaneChange, onCardClick, onDelete,
     setDragStartLaneId(null);
   };
 
-  const getCardsForLane = (laneId: string) =>
-    cards.filter((card) => card.laneId === laneId);
-
-  const unassignedCards = cards.filter((card) => !card.laneId);
+  const getCardsForLane = (laneId: string) => cards.filter((c) => c.laneId === laneId);
+  const unassignedCards = cards.filter((c) => !c.laneId);
 
   if (sortedLanes.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
-        <p className="text-gray-500">No workflow lanes configured for this project.</p>
+      <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+        <p className="text-gray-400 text-sm">No workflow lanes configured for this project.</p>
       </div>
     );
   }
-
-  const gridCols =
-    sortedLanes.length <= 2 ? 'grid-cols-2' :
-    sortedLanes.length === 3 ? 'grid-cols-3' :
-    sortedLanes.length === 4 ? 'grid-cols-4' :
-    'grid-cols-4';
 
   return (
     <DndContext
@@ -91,7 +76,8 @@ export function KanbanBoard({ cards, lanes, onLaneChange, onCardClick, onDelete,
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className={`grid grid-cols-1 md:grid-cols-2 lg:${gridCols} gap-4 mb-8`}>
+      {/* Horizontally scrollable lane container */}
+      <div className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1 items-start">
         {sortedLanes.map((lane) => {
           const laneCards = getCardsForLane(lane.id);
           return (
@@ -107,18 +93,14 @@ export function KanbanBoard({ cards, lanes, onLaneChange, onCardClick, onDelete,
                 color={lane.color}
                 count={laneCards.length}
                 cards={laneCards}
-                lanes={sortedLanes}
                 onCardClick={onCardClick}
                 onDelete={onDelete}
-                onLaneChange={onLaneChange}
                 isHighlighted={dragStartLaneId !== null && dragStartLaneId !== lane.id}
-                transitionMode={transitionMode}
               />
             </SortableContext>
           );
         })}
 
-        {/* Unassigned column shown only if cards lack a lane */}
         {unassignedCards.length > 0 && (
           <SortableContext
             id="unassigned"
@@ -128,23 +110,22 @@ export function KanbanBoard({ cards, lanes, onLaneChange, onCardClick, onDelete,
             <KanbanColumn
               id="unassigned"
               title="Unassigned"
-              color="#6B7280"
+              color="#9ca3af"
               count={unassignedCards.length}
               cards={unassignedCards}
-              lanes={sortedLanes}
               onCardClick={onCardClick}
               onDelete={onDelete}
-              onLaneChange={onLaneChange}
               isHighlighted={dragStartLaneId !== null}
-              transitionMode={transitionMode}
             />
           </SortableContext>
         )}
+
+        {trailingSlot}
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeCard ? (
-          <div className="rotate-3 scale-105 opacity-90">
+          <div className="rotate-1 scale-105 shadow-2xl opacity-95 w-[272px]">
             <KanbanCard card={activeCard} onClick={() => {}} onDelete={() => {}} isDragging />
           </div>
         ) : null}

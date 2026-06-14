@@ -138,6 +138,16 @@ export class ProjectController {
     return this.teamMemberService.addToProject(id, addToProjectDto);
   }
 
+  @Patch(':id/team/:memberId')
+  @RequirePermissions(PERMISSIONS.TEAM_MEMBER_EDIT)
+  updateTeamMemberRole(
+    @Param('id') id: string,
+    @Param('memberId') memberId: string,
+    @Body() body: { designationRole: string },
+  ) {
+    return this.teamMemberService.updateTeamMemberRole(id, memberId, body.designationRole);
+  }
+
   @Delete(':id/team/:teamMemberId')
   @RequirePermissions(PERMISSIONS.TEAM_MEMBER_REMOVE)
   @HttpCode(HttpStatus.NO_CONTENT)

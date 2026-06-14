@@ -11,7 +11,6 @@ import {
   Index,
 } from 'typeorm';
 import { Sprint } from './sprint.entity';
-import { TeamMember } from './team-member.entity';
 import { Project } from './project.entity';
 import { Snap } from './snap.entity';
 import { Organization } from './organization.entity';
@@ -97,15 +96,22 @@ export class Card {
   lane: WorkflowLane | null;
 
   // ── Assignee ─────────────────────────────────────────────────
-  @ManyToOne(() => TeamMember, { nullable: true, onDelete: 'SET NULL' })
+  // createForeignKeyConstraints: false — assignee is a cross-schema reference
+  // (tenant card → public.users); DB-level FK would violate on old TeamMember UUIDs.
+  // Referential integrity is enforced at the application layer.
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL', createForeignKeyConstraints: false })
   @JoinColumn({ name: 'assignee_id' })
-  assignee: TeamMember | null;
+  assignee: User | null;
 
   // Reporter — who raised the card
   @Column({ type: 'uuid', nullable: true })
   reporterId: string | null;
 
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  // Optional link back to the War Room incident that spawned this card
+  @Column({ type: 'uuid', nullable: true })
+  sourceIncidentId: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL', createForeignKeyConstraints: false })
   @JoinColumn({ name: 'reporter_id' })
   reporter: User | null;
 
@@ -116,6 +122,11 @@ export class Card {
   @Column({ type: 'text', nullable: true })
   description: string;
 
+  // Auto-generated sequential number per project, e.g. 1, 2, 3 …
+  @Column({ type: 'int', nullable: true })
+  cardNumber: number | null;
+
+  // Human-readable ID composed as {project.key}-{cardNumber}, e.g. "STDN-42"
   @Column({ nullable: true })
   externalId: string;
 

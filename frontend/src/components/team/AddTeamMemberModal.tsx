@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
-import { TeamMember, CreateTeamMemberDto, DesignationRole } from '../../types/teamMember';
+import { DesignationRole } from '../../types/teamMember';
 import { teamMembersApi } from '../../services/api/teamMembers';
+
+interface OrgMember {
+  id: string;
+  fullName: string;
+  displayName?: string;
+}
 
 interface AddTeamMemberModalProps {
   isOpen: boolean;
@@ -10,21 +16,17 @@ interface AddTeamMemberModalProps {
 }
 
 export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, projectId }: AddTeamMemberModalProps) {
-  const [mode, setMode] = useState<'select' | 'create'>('select');
-  const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
-  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [availableMembers, setAvailableMembers] = useState<OrgMember[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [designationRole, setDesignationRole] = useState<string>(DesignationRole.DEVELOPER);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form state for creating new member
-  const [formData, setFormData] = useState<CreateTeamMemberDto>({
-    fullName: '',
-    designationRole: DesignationRole.DEVELOPER,
-    displayName: '',
-  });
-
   useEffect(() => {
     if (isOpen) {
+      setLoading(false);
+      setSelectedUserIds([]);
+      setError(null);
       loadAvailableMembers();
     }
   }, [isOpen, projectId]);
@@ -32,25 +34,22 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
   const loadAvailableMembers = async () => {
     try {
       const members = await teamMembersApi.getAvailableForProject(projectId);
-      setAvailableMembers(members);
-      if (members.length === 0) {
-        setMode('create');
-      }
+      setAvailableMembers(members as unknown as OrgMember[]);
     } catch (err: any) {
       console.error('Failed to load available members:', err);
     }
   };
 
-  const handleSelectMember = (memberId: string) => {
-    setSelectedMemberIds(prev =>
-      prev.includes(memberId)
-        ? prev.filter(id => id !== memberId)
-        : [...prev, memberId]
+  const handleSelectMember = (userId: string) => {
+    setSelectedUserIds(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
     );
   };
 
-  const handleAddExisting = async () => {
-    if (selectedMemberIds.length === 0) {
+  const handleAdd = async () => {
+    if (selectedUserIds.length === 0) {
       setError('Please select at least one team member');
       return;
     }
@@ -59,7 +58,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
     setError(null);
 
     try {
-      await teamMembersApi.addToProject(projectId, selectedMemberIds);
+      await teamMembersApi.addToProject(projectId, selectedUserIds, designationRole);
       await onSuccess();
       handleClose();
     } catch (err: any) {
@@ -68,31 +67,11 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
     }
   };
 
-  const handleCreateNew = async () => {
-    if (!formData.fullName.trim()) {
-      setError('Full name is required');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const newMember = await teamMembersApi.create(formData);
-      await teamMembersApi.addToProject(projectId, [newMember.id]);
-      await onSuccess();
-      handleClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to create team member');
-      setLoading(false);
-    }
-  };
-
   const handleClose = () => {
-    setMode('select');
-    setSelectedMemberIds([]);
-    setFormData({ fullName: '', designationRole: DesignationRole.DEVELOPER, displayName: '' });
+    setSelectedUserIds([]);
+    setDesignationRole(DesignationRole.DEVELOPER);
     setError(null);
+    setLoading(false);
     onClose();
   };
 
@@ -104,10 +83,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
         <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-white">Add Team Member</h3>
-            <button
-              onClick={handleClose}
-              className="text-primary-100 hover:text-white transition-colors"
-            >
+            <button onClick={handleClose} className="text-primary-100 hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -122,108 +98,63 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
             </div>
           )}
 
-          {availableMembers.length > 0 && (
-            <div className="flex gap-2 mb-6">
-              <button
-                onClick={() => setMode('select')}
-                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-                  mode === 'select'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Select Existing
-              </button>
-              <button
-                onClick={() => setMode('create')}
-                className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
-                  mode === 'create'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Create New
-              </button>
-            </div>
-          )}
-
-          {mode === 'select' && availableMembers.length > 0 ? (
-            <div>
-              <p className="text-sm text-gray-600 mb-4">
-                Select one or more team members to add to this project:
-              </p>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {availableMembers.map(member => (
-                  <label
-                    key={member.id}
-                    className="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedMemberIds.includes(member.id)}
-                      onChange={() => handleSelectMember(member.id)}
-                      className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
-                    />
-                    <div className="ml-3">
-                      <p className="font-medium text-gray-900">{member.fullName}</p>
-                      <p className="text-sm text-gray-600">{member.designationRole}</p>
-                      {member.displayName && (
-                        <p className="text-xs text-gray-500">aka {member.displayName}</p>
-                      )}
-                    </div>
-                  </label>
-                ))}
-              </div>
+          {availableMembers.length === 0 ? (
+            <div className="text-center py-8">
+              <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p className="text-gray-500 font-medium">No available org members</p>
+              <p className="text-gray-400 text-sm mt-1">All org members are already assigned to this project, or no one has joined yet.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {availableMembers.length === 0 && mode === 'create' && (
-                <p className="text-sm text-gray-600 mb-4">
-                  No existing team members available. Create a new team member profile:
-                </p>
-              )}
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Enter full name"
-                />
-              </div>
-
-              <div>
+            <>
+              <div className="mb-5">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Designation Role <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={formData.designationRole}
-                  onChange={(e) => setFormData({ ...formData, designationRole: e.target.value as DesignationRole })}
+                  value={designationRole}
+                  onChange={(e) => setDesignationRole(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   {Object.values(DesignationRole).map(role => (
                     <option key={role} value={role}>{role}</option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">This role applies to all selected members.</p>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Display Name / Nickname (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.displayName}
-                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Enter nickname or display name"
-                />
+                <p className="text-sm font-semibold text-gray-700 mb-3">
+                  Select org members to add ({availableMembers.length} available):
+                </p>
+                <div className="space-y-2 max-h-72 overflow-y-auto">
+                  {availableMembers.map(member => (
+                    <label
+                      key={member.id}
+                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedUserIds.includes(member.id)
+                          ? 'border-primary-400 bg-primary-50'
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedUserIds.includes(member.id)}
+                        onChange={() => handleSelectMember(member.id)}
+                        className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                      />
+                      <div className="ml-3">
+                        <p className="font-medium text-gray-900">{member.fullName}</p>
+                        {member.displayName && (
+                          <p className="text-sm text-gray-500">{member.displayName}</p>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
 
@@ -235,11 +166,11 @@ export default function AddTeamMemberModal({ isOpen, onClose, onSuccess, project
             Cancel
           </button>
           <button
-            onClick={mode === 'select' ? handleAddExisting : handleCreateNew}
-            disabled={loading}
+            onClick={handleAdd}
+            disabled={loading || availableMembers.length === 0}
             className="flex-1 bg-gradient-to-r from-primary-600 to-secondary-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-primary-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
           >
-            {loading ? 'Adding...' : mode === 'select' ? `Add Selected (${selectedMemberIds.length})` : 'Create & Add'}
+            {loading ? 'Adding...' : `Add Selected (${selectedUserIds.length})`}
           </button>
         </div>
       </div>

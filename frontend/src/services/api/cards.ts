@@ -133,8 +133,8 @@ export const cardsApi = {
     return response.json();
   },
 
-  updateComment: async (cardId: string, commentId: string, body: string): Promise<CardComment> => {
-    const response = await fetch(`${API_URL}/cards/${cardId}/comments/${commentId}`, {
+  updateComment: async (_cardId: string, commentId: string, body: string): Promise<CardComment> => {
+    const response = await fetch(`${API_URL}/cards/comments/${commentId}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ body }),
@@ -146,8 +146,8 @@ export const cardsApi = {
     return response.json();
   },
 
-  deleteComment: async (cardId: string, commentId: string): Promise<void> => {
-    const response = await fetch(`${API_URL}/cards/${cardId}/comments/${commentId}`, {
+  deleteComment: async (_cardId: string, commentId: string): Promise<void> => {
+    const response = await fetch(`${API_URL}/cards/comments/${commentId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });

@@ -134,6 +134,21 @@ export default function SprintDetailsPage() {
     return days;
   };
 
+  const getSprintProgress = (startDate: string, endDate: string, status: SprintStatus): number => {
+    if (status === SprintStatus.COMPLETED || status === SprintStatus.CLOSED) return 100;
+    if (status !== SprintStatus.ACTIVE) return 0;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const total = end.getTime() - start.getTime();
+    const elapsed = today.getTime() - start.getTime();
+    if (total <= 0) return 0;
+    return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+  };
+
   const getStatusBadgeColor = (status: SprintStatus) => {
     switch (status) {
       case SprintStatus.ACTIVE:
@@ -336,8 +351,7 @@ export default function SprintDetailsPage() {
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-gray-600">Sprint Progress</span>
                   <span className="font-medium">
-                    {sprint.status === SprintStatus.COMPLETED || sprint.status === SprintStatus.CLOSED ? '100%' :
-                     sprint.status === SprintStatus.ACTIVE ? '50%' : '0%'}
+                    {getSprintProgress(sprint.startDate, sprint.endDate, sprint.status)}%
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -350,8 +364,7 @@ export default function SprintDetailsPage() {
                         : 'bg-yellow-600'
                     }`}
                     style={{
-                      width: sprint.status === SprintStatus.COMPLETED || sprint.status === SprintStatus.CLOSED ? '100%' :
-                             sprint.status === SprintStatus.ACTIVE ? '50%' : '0%'
+                      width: `${getSprintProgress(sprint.startDate, sprint.endDate, sprint.status)}%`
                     }}
                   ></div>
                 </div>

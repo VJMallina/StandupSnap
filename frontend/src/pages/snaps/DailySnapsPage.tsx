@@ -164,7 +164,7 @@ Assignee Level:
   // Group cards by assignee
   const cardsByAssignee = cards.reduce((acc, card) => {
     const assigneeName = card.assignee
-      ? card.assignee.fullName
+      ? card.assignee.name
       : 'Unassigned';
 
     if (!acc[assigneeName]) {

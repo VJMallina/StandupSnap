@@ -119,7 +119,11 @@
       "Bash(where pg_dump)",
       "Bash(echo \"EXIT:$?\"0)",
       "Bash(Get-ChildItem -Path \"F:\\\\StandupSnap\\\\backend\\\\src\" -Directory)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "Bash(git *)",
+      "Bash(psql *)",
+      "Bash(echo \"EXIT:$?\")",
+      "PowerShell(Get-Process *)"
     ],
     "deny": [],
     "ask": []

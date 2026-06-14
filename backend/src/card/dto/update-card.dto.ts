@@ -1,8 +1,8 @@
 import {
   IsString, IsOptional, IsUUID, IsInt, Min, IsEnum,
-  IsArray, IsDateString,
+  IsArray, IsDateString, ValidateIf,
 } from 'class-validator';
-import { CardPriority, CardStatus } from '../../entities/card.entity';
+import { CardPriority, CardRAG, CardStatus } from '../../entities/card.entity';
 
 export class UpdateCardDto {
   @IsString()
@@ -61,6 +61,11 @@ export class UpdateCardDto {
   @IsUUID()
   @IsOptional()
   parentId?: string;
+
+  @ValidateIf((o) => o.ragStatus !== null)
+  @IsEnum(CardRAG)
+  @IsOptional()
+  ragStatus?: CardRAG | null;
 
   @IsDateString()
   @IsOptional()

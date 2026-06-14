@@ -52,9 +52,19 @@ export class IncidentService {
       this.tenantService.getRepository(IncidentRunbookStep),
     ]);
 
+    const maxResult = await incidentRepo
+      .createQueryBuilder('inc')
+      .select('MAX(inc.incidentNumber)', 'max')
+      .where('inc.organizationId = :orgId', { orgId })
+      .getRawOne();
+    const incidentNumber = ((maxResult?.max as number | null) ?? 0) + 1;
+    const externalId = `INC-${String(incidentNumber).padStart(3, '0')}`;
+
     const incident = incidentRepo.create({
       organizationId: orgId,
-      projectId: dto.projectId,
+      projectId: dto.projectId || null,
+      incidentNumber,
+      externalId,
       title: dto.title,
       description: dto.description || null,
       severity: dto.severity,
@@ -318,6 +328,7 @@ Return ONLY a valid JSON object with these exact fields:
     const incident = await incidentRepo.findOne({ where: { id, organizationId: orgId } });
     if (!incident) throw new NotFoundException('Incident not found');
     if (incident.raidPushed) throw new BadRequestException('This incident has already been pushed to the RAID register');
+    if (!incident.projectId) throw new BadRequestException('Incident must be linked to a project before pushing to RAID');
 
     const [issueRepo, riskRepo, teamMemberRepo, userRepo] = await Promise.all([
       this.tenantService.getRepository(Issue),

@@ -29,8 +29,14 @@ export class Incident {
   @Column({ type: 'uuid' })
   organizationId: string;
 
-  @Column({ type: 'uuid' })
-  projectId: string;
+  @Column({ type: 'uuid', nullable: true })
+  projectId: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  incidentNumber: number | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  externalId: string | null;
 
   @Column({ type: 'varchar', length: 255 })
   title: string;

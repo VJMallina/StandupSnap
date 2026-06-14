@@ -1,6 +1,7 @@
 export interface Project {
   id: string;
   name: string;
+  key?: string;
   description?: string;
   startDate: string;
   endDate?: string;
@@ -44,6 +45,7 @@ export interface ProjectMember {
 
 export interface CreateProjectData {
   name: string;
+  key?: string;
   description?: string;
   startDate: string;
   endDate?: string;

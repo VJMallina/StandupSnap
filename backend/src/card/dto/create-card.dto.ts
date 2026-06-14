@@ -70,4 +70,8 @@ export class CreateCardDto {
   @IsDateString()
   @IsOptional()
   dueDate?: string;
+
+  @IsUUID()
+  @IsOptional()
+  sourceIncidentId?: string;
 }

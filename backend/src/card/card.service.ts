@@ -3,10 +3,11 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { IsNull } from 'typeorm';
+import { In, IsNull } from 'typeorm';
 import { Card, CardStatus, CardRAG, CardPriority, CardType } from '../entities/card.entity';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
-import { TeamMember } from '../entities/team-member.entity';
+import { User } from '../entities/user.entity';
+import { ProjectMember } from '../entities/project-member.entity';
 import { Project } from '../entities/project.entity';
 import { WorkflowLane, LaneType } from '../entities/workflow-lane.entity';
 import { WorkflowTemplate } from '../entities/workflow-template.entity';
@@ -59,10 +60,10 @@ export class CardService {
   // ─── Create ─────────────────────────────────────────────────────────────────
 
   async create(dto: CreateCardDto, actorId?: string): Promise<Card> {
-    const [projectRepo, sprintRepo, teamMemberRepo, cardRepo, laneRepo, historyRepo] = await Promise.all([
+    const [projectRepo, sprintRepo, projectMemberRepo, cardRepo, laneRepo, historyRepo] = await Promise.all([
       this.tenantService.getRepository(Project),
       this.tenantService.getRepository(Sprint),
-      this.tenantService.getRepository(TeamMember),
+      this.tenantService.getRepository(ProjectMember),
       this.tenantService.getRepository(Card),
       this.tenantService.getRepository(WorkflowLane),
       this.tenantService.getRepository(CardAssignmentHistory),
@@ -80,13 +81,13 @@ export class CardService {
       if (sprint.isClosed) throw new BadRequestException('Cannot add cards to a closed sprint');
     }
 
-    let assignee: TeamMember | null = null;
+    let assignee: User | null = null;
     if (dto.assigneeId) {
-      assignee = await teamMemberRepo.findOne({ where: { id: dto.assigneeId }, relations: ['projects'] });
-      if (!assignee) throw new NotFoundException(`Team member ${dto.assigneeId} not found`);
-      if (!assignee.projects.some((p) => p.id === dto.projectId)) {
-        throw new BadRequestException('Assignee must be a member of the project team');
-      }
+      const member = await projectMemberRepo.findOne({
+        where: { user: { id: dto.assigneeId }, project: { id: dto.projectId } },
+      });
+      if (!member) throw new BadRequestException('Assignee must be a member of the project team');
+      assignee = { id: dto.assigneeId } as User;
     }
 
     if (dto.parentId) {
@@ -109,6 +110,19 @@ export class CardService {
       lane = await this.getDefaultFirstLane(dto.projectId);
     }
 
+    // Auto-generate sequential card number and project-key-prefixed ID
+    let cardNumber: number | null = null;
+    let externalId: string | undefined = dto.externalId;
+    if (project.key) {
+      const maxResult = await cardRepo
+        .createQueryBuilder('card')
+        .select('MAX(card.cardNumber)', 'max')
+        .where('card.project = :projectId', { projectId: project.id })
+        .getRawOne();
+      cardNumber = ((maxResult?.max as number | null) ?? 0) + 1;
+      externalId = externalId || `${project.key}-${cardNumber}`;
+    }
+
     const card = cardRepo.create({
       project,
       organizationId: project.organizationId,
@@ -122,13 +136,15 @@ export class CardService {
       description: dto.description,
       acceptanceCriteria: dto.acceptanceCriteria || null,
       labels: dto.labels || null,
-      externalId: dto.externalId,
+      cardNumber,
+      externalId,
       priority: dto.priority || CardPriority.MEDIUM,
       storyPoints: dto.storyPoints || null,
       estimatedTime: dto.estimatedTime || null,
       dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
       status: lane ? this.laneTypeToStatus(lane.laneType) : CardStatus.NOT_STARTED,
       ragStatus: null,
+      sourceIncidentId: dto.sourceIncidentId || null,
     });
 
     const savedCard = await cardRepo.save(card) as Card;
@@ -137,7 +153,7 @@ export class CardService {
       await historyRepo.save(
         historyRepo.create({
           cardId: savedCard.id,
-          userId: assignee.id as unknown as string,
+          userId: assignee.id,
           laneId: lane?.id || null,
           assignedById: actorId || null,
         }),
@@ -223,28 +239,53 @@ export class CardService {
       this.tenantService.getRepository(CardAssignmentHistory),
     ]);
 
+    // Load tenant records without cross-schema user relations to avoid
+    // eager-loading User.roles (whose junction table has no schema qualifier)
+    // potentially failing in the tenant DataSource context.
     const [comments, assignmentHistory] = await Promise.all([
       commentRepo.find({
         where: { cardId, deletedAt: IsNull() },
-        relations: ['author'],
         order: { createdAt: 'ASC' },
       }),
       historyRepo.find({
         where: { cardId },
-        relations: ['user', 'lane', 'assignedBy'],
+        relations: ['lane'],
         order: { assignedAt: 'ASC' },
       }),
     ]);
+
+    // Collect all User IDs referenced by comments and history entries.
+    const userIds = new Set<string>();
+    for (const c of comments) { if (c.authorId) userIds.add(c.authorId); }
+    for (const h of assignmentHistory) {
+      if (h.userId) userIds.add(h.userId);
+      if (h.assignedById) userIds.add(h.assignedById);
+    }
+
+    // Fetch those users from the public schema via the main DataSource.
+    if (userIds.size > 0) {
+      const userRepo = this.tenantService.getMainRepository(User);
+      const users = await userRepo.find({ where: { id: In([...userIds]) } });
+      const userMap = new Map(users.map((u) => [u.id, u]));
+
+      for (const c of comments) {
+        (c as any).author = c.authorId ? (userMap.get(c.authorId) ?? null) : null;
+      }
+      for (const h of assignmentHistory) {
+        (h as any).user = h.userId ? (userMap.get(h.userId) ?? null) : null;
+        (h as any).assignedBy = h.assignedById ? (userMap.get(h.assignedById) ?? null) : null;
+      }
+    }
+
     return { comments, assignmentHistory };
   }
 
   // ─── Update ──────────────────────────────────────────────────────────────────
 
   async update(id: string, dto: UpdateCardDto, actorId?: string): Promise<Card> {
-    const [cardRepo, laneRepo, teamMemberRepo, sprintRepo, historyRepo] = await Promise.all([
+    const [cardRepo, laneRepo, sprintRepo, historyRepo] = await Promise.all([
       this.tenantService.getRepository(Card),
       this.tenantService.getRepository(WorkflowLane),
-      this.tenantService.getRepository(TeamMember),
       this.tenantService.getRepository(Sprint),
       this.tenantService.getRepository(CardAssignmentHistory),
     ]);
@@ -281,26 +322,26 @@ export class CardService {
         }
         card.assignee = null;
         await this.addActivity(card.id, 'Assignee removed', actorId);
-      } else if (dto.assigneeId !== (oldAssigneeId as unknown as string)) {
-        const newAssignee = await teamMemberRepo.findOne({ where: { id: dto.assigneeId }, relations: ['projects'] });
-        if (!newAssignee) throw new NotFoundException('Team member not found');
-        if (!newAssignee.projects.some((p) => p.id === card.project.id)) {
-          throw new BadRequestException('Assignee must be a member of the project team');
-        }
+      } else if (dto.assigneeId !== oldAssigneeId) {
+        const projectMemberRepo = await this.tenantService.getRepository(ProjectMember);
+        const member = await projectMemberRepo.findOne({
+          where: { user: { id: dto.assigneeId }, project: { id: card.project.id } },
+        });
+        if (!member) throw new BadRequestException('Assignee must be a member of the project team');
 
         await historyRepo.update({ cardId: card.id, unassignedAt: IsNull() }, { unassignedAt: new Date() });
         await historyRepo.save(
           historyRepo.create({
             cardId: card.id,
-            userId: newAssignee.id as unknown as string,
+            userId: dto.assigneeId,
             laneId: card.laneId,
             assignedById: actorId || null,
           }),
         );
 
-        const oldName = card.assignee ? (card.assignee as any).name || 'previous assignee' : 'nobody';
-        card.assignee = newAssignee;
-        await this.addActivity(card.id, `Reassigned from ${oldName} to ${(newAssignee as any).name || 'new assignee'}`, actorId);
+        const oldName = card.assignee?.name || 'nobody';
+        card.assignee = { id: dto.assigneeId } as User;
+        await this.addActivity(card.id, `Assignee changed from ${oldName} to new assignee`, actorId);
       }
     }
 
@@ -326,7 +367,7 @@ export class CardService {
     // ── Simple field updates ──
     const fields: Array<keyof UpdateCardDto> = [
       'title', 'description', 'acceptanceCriteria', 'labels',
-      'externalId', 'priority', 'storyPoints', 'estimatedTime', 'parentId',
+      'externalId', 'priority', 'ragStatus', 'storyPoints', 'estimatedTime', 'parentId',
     ];
     for (const f of fields) {
       if (dto[f] !== undefined) (card as any)[f] = dto[f];

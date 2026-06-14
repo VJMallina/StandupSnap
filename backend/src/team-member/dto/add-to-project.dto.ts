@@ -1,7 +1,11 @@
-import { IsArray, IsUUID } from 'class-validator';
+import { IsArray, IsUUID, IsString, IsOptional } from 'class-validator';
 
 export class AddToProjectDto {
   @IsArray()
   @IsUUID('4', { each: true })
-  teamMemberIds: string[];
+  userIds: string[];
+
+  @IsString()
+  @IsOptional()
+  designationRole?: string;
 }

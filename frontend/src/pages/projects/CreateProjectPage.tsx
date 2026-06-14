@@ -9,6 +9,7 @@ export default function CreateProjectPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
+    key: '',
     description: '',
     startDate: '',
     endDate: '',
@@ -16,6 +17,7 @@ export default function CreateProjectPage() {
     productOwnerId: '',
     pmoId: '',
   });
+  const [keyEdited, setKeyEdited] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,17 @@ export default function CreateProjectPage() {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  // Auto-derive project key from name (unless user has manually edited it)
+  useEffect(() => {
+    if (keyEdited) return;
+    const words = formData.name.trim().split(/[\s\-_]+/).filter(Boolean);
+    if (words.length === 0) { setFormData(p => ({ ...p, key: '' })); return; }
+    const raw = words.length === 1
+      ? words[0].slice(0, 4)
+      : words.map(w => w[0]).join('').slice(0, 6);
+    setFormData(p => ({ ...p, key: raw.toUpperCase().replace(/[^A-Z0-9]/g, '') }));
+  }, [formData.name, keyEdited]);
 
   // Debounced name uniqueness check
   useEffect(() => {
@@ -138,6 +151,7 @@ export default function CreateProjectPage() {
       // Create project first
       const project = await projectsApi.create({
         name: formData.name.trim(),
+        key: formData.key || undefined,
         description: formData.description.trim() || undefined,
         startDate: formData.startDate,
         endDate: formData.endDate,
@@ -263,6 +277,48 @@ export default function CreateProjectPage() {
                       {errors.name}
                     </p>
                   )}
+                </div>
+
+                {/* Project Key */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Project Key <span className="text-red-500">*</span>
+                  </label>
+                  <p className="text-xs text-gray-400 mb-2">Short uppercase identifier used as card ID prefix (e.g. STDN → STDN-1, STDN-2)</p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={formData.key}
+                      onChange={(e) => {
+                        setKeyEdited(true);
+                        setFormData({ ...formData, key: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) });
+                        if (errors.key) setErrors({ ...errors, key: '' });
+                      }}
+                      maxLength={6}
+                      className={`w-32 border-2 rounded-xl px-4 py-3 font-mono font-bold text-sm tracking-widest focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all ${
+                        errors.key ? 'border-red-300 bg-red-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      placeholder="STDN"
+                    />
+                    {!keyEdited && formData.key && (
+                      <span className="text-xs text-gray-400 italic">auto-generated from name</span>
+                    )}
+                    {keyEdited && (
+                      <button
+                        type="button"
+                        onClick={() => setKeyEdited(false)}
+                        className="text-xs text-primary-600 hover:text-primary-800"
+                      >
+                        Reset to auto
+                      </button>
+                    )}
+                    {formData.key && (
+                      <span className="text-xs text-gray-500">
+                        Cards will be: <span className="font-mono font-semibold text-gray-700">{formData.key}-1</span>, <span className="font-mono font-semibold text-gray-700">{formData.key}-2</span> …
+                      </span>
+                    )}
+                  </div>
+                  {errors.key && <p className="mt-1 text-sm text-red-600">{errors.key}</p>}
                 </div>
 
                 <div>

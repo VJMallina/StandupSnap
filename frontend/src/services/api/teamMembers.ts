@@ -1,4 +1,4 @@
-import { TeamMember, CreateTeamMemberDto, UpdateTeamMemberDto } from '../../types/teamMember';
+import { TeamMember, UpdateTeamMemberDto } from '../../types/teamMember';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -11,20 +11,6 @@ const getAuthHeaders = () => {
 };
 
 export const teamMembersApi = {
-  // Team Member CRUD
-  create: async (data: CreateTeamMemberDto): Promise<TeamMember> => {
-    const response = await fetch(`${API_URL}/team-members`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create team member');
-    }
-    return response.json();
-  },
-
   getAll: async (): Promise<TeamMember[]> => {
     const response = await fetch(`${API_URL}/team-members`, {
       headers: getAuthHeaders(),
@@ -76,17 +62,28 @@ export const teamMembersApi = {
     return response.json();
   },
 
-  addToProject: async (projectId: string, teamMemberIds: string[]): Promise<void> => {
+  addToProject: async (projectId: string, userIds: string[], designationRole?: string): Promise<void> => {
     const response = await fetch(`${API_URL}/projects/${projectId}/team`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ teamMemberIds }),
+      body: JSON.stringify({ userIds, designationRole }),
     });
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Failed to add team members to project');
     }
-    return response.json();
+  },
+
+  updateProjectMember: async (projectId: string, memberId: string, designationRole: string): Promise<void> => {
+    const response = await fetch(`${API_URL}/projects/${projectId}/team/${memberId}`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ designationRole }),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update team member role');
+    }
   },
 
   removeFromProject: async (projectId: string, teamMemberId: string): Promise<void> => {

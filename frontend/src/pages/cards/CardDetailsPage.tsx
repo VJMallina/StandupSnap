@@ -19,6 +19,7 @@ import { TeamMember } from '../../types/teamMember';
 import { Sprint } from '../../types/sprint';
 import AppLayout from '../../components/AppLayout';
 import SnapsList from '../../components/snaps/SnapsList';
+import CreateCardModal from '../../components/cards/CreateCardModal';
 
 const PRIORITY_CONFIG: Record<CardPriority, { label: string; color: string; dot: string }> = {
   [CardPriority.LOW]: { label: 'Low', color: 'text-gray-600', dot: 'bg-gray-400' },
@@ -48,6 +49,8 @@ export default function CardDetailsPage() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [activity, setActivity] = useState<CardActivity | null>(null);
+  const [epics, setEpics] = useState<Card[]>([]);
+  const [showSubCardModal, setShowSubCardModal] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,8 +75,8 @@ export default function CardDetailsPage() {
   const loadAll = async () => {
     try {
       setLoading(true);
+      // Load card first (need projectId for secondary calls), then fire everything else in parallel.
       const cardData = await cardsApi.getById(id!);
-      setCard(cardData);
       setFieldValues({
         title: cardData.title,
         description: cardData.description || '',
@@ -85,19 +88,28 @@ export default function CardDetailsPage() {
         labels: (cardData.labels || []).join(', '),
       });
 
-      if (cardData.project?.id) {
-        const [wf, members, sprintList] = await Promise.all([
-          workflowApi.getDefaultWorkflow(cardData.project.id).catch(() => null),
-          teamMembersApi.getProjectTeam(cardData.project.id).catch(() => []),
-          sprintsApi.getAll({ projectId: cardData.project.id }).catch(() => []),
-        ]);
-        setWorkflow(wf);
-        setTeamMembers(members);
-        setSprints(sprintList);
-      }
+      const [wf, members, sprintList, act, epicList] = await Promise.all([
+        cardData.project?.id
+          ? workflowApi.getDefaultWorkflow(cardData.project.id).catch(() => null)
+          : Promise.resolve(null),
+        cardData.project?.id
+          ? teamMembersApi.getProjectTeam(cardData.project.id).catch(() => [])
+          : Promise.resolve([]),
+        cardData.project?.id
+          ? sprintsApi.getAll({ projectId: cardData.project.id }).catch(() => [])
+          : Promise.resolve([]),
+        cardsApi.getActivity(cardData.id).catch(() => null),
+        cardData.project?.id && cardData.cardType === CardType.CARD
+          ? cardsApi.getAll({ projectId: cardData.project.id, cardType: CardType.EPIC }).catch(() => [])
+          : Promise.resolve([]),
+      ]);
 
-      const act = await cardsApi.getActivity(id!).catch(() => null);
+      setWorkflow(wf);
+      setTeamMembers(members);
+      setSprints(sprintList);
       setActivity(act);
+      setEpics(epicList);
+      setCard(cardData);  // set card last so page renders complete in one pass
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -159,6 +171,19 @@ export default function CardDetailsPage() {
       setActivity(act);
     } catch (err: any) {
       alert('Failed to update assignee: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEpicChange = async (epicId: string) => {
+    if (!card) return;
+    setSaving(true);
+    try {
+      await cardsApi.update(card.id, { parentId: epicId || null });
+      await loadAll();
+    } catch (err: any) {
+      alert('Failed to update epic: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -244,7 +269,7 @@ export default function CardDetailsPage() {
 
   const sortedLanes = workflow ? [...workflow.lanes].sort((a, b) => a.order - b.order) : [];
 
-  if (loading && !card) {
+  if (loading) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center py-20">
@@ -268,15 +293,15 @@ export default function CardDetailsPage() {
 
   const typeCfg = TYPE_CONFIG[card.cardType] ?? TYPE_CONFIG[CardType.CARD];
 
-  const ragCfg = card.ragStatus ? RAG_CONFIG[card.ragStatus] : null;
   const isLocked = (card.sprint?.isClosed ?? false) || card.status === CardStatus.CLOSED;
   const canEdit = !isLocked && !card.project?.isArchived;
 
   return (
+    <>
     <AppLayout>
       <div className="p-4 md:p-6 max-w-7xl mx-auto">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 flex-wrap">
           <button onClick={() => navigate(-1)} className="hover:text-primary-600 flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -285,8 +310,26 @@ export default function CardDetailsPage() {
           </button>
           <span>/</span>
           <span className="text-gray-400">{card.project?.name}</span>
+          {card.parent?.cardType === CardType.EPIC && (
+            <>
+              <span>/</span>
+              <button
+                onClick={() => navigate(`/cards/${card.parent!.id}`)}
+                className="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+                {card.parent.externalId || card.parent.title}
+              </button>
+            </>
+          )}
           <span>/</span>
-          <span className="text-gray-700 truncate max-w-xs">{card.title}</span>
+          {card.externalId ? (
+            <span className="font-mono font-semibold text-primary-600">{card.externalId}</span>
+          ) : (
+            <span className="text-gray-700 truncate max-w-xs">{card.title}</span>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -295,13 +338,25 @@ export default function CardDetailsPage() {
 
             {/* Title + type */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-              <div className="flex items-start gap-3 mb-3">
-                <span className={`text-xs font-bold px-2 py-1 rounded ${typeCfg.bg} ${typeCfg.text} flex-shrink-0 mt-0.5`}>
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                {card.externalId && (() => {
+                  const dash = card.externalId.lastIndexOf('-');
+                  return (
+                    <span className="inline-flex items-baseline gap-0 font-mono font-bold text-sm bg-primary-50 border border-primary-200 px-2.5 py-1 rounded-lg select-all">
+                      {dash === -1 ? (
+                        <span className="text-primary-700">{card.externalId}</span>
+                      ) : (
+                        <>
+                          <span className="text-primary-700">{card.externalId.slice(0, dash)}</span>
+                          <span className="text-primary-400">{card.externalId.slice(dash)}</span>
+                        </>
+                      )}
+                    </span>
+                  );
+                })()}
+                <span className={`text-xs font-bold px-2 py-1 rounded ${typeCfg.bg} ${typeCfg.text} flex-shrink-0`}>
                   {typeCfg.label}
                 </span>
-                {card.externalId && (
-                  <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded">{card.externalId}</span>
-                )}
                 {isLocked && (
                   <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Locked</span>
                 )}
@@ -488,23 +543,24 @@ export default function CardDetailsPage() {
                             const comment = item.data as CardComment;
                             const isSystem = comment.commentType === CardCommentType.SYSTEM;
                             const isEditing = editingCommentId === comment.id;
+                            const authorName = comment.author?.name;
                             return (
                               <div key={comment.id} className={`flex gap-3 ${isSystem ? 'opacity-70' : ''}`}>
-                                <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${isSystem ? 'bg-gray-100' : 'bg-primary-100'}`}>
-                                  {isSystem ? (
+                                <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${authorName ? 'bg-primary-100' : 'bg-gray-100'}`}>
+                                  {authorName ? (
+                                    <span className="text-xs font-bold text-primary-600">
+                                      {authorName[0].toUpperCase()}
+                                    </span>
+                                  ) : (
                                     <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                  ) : (
-                                    <span className="text-xs font-bold text-primary-600">
-                                      {comment.author ? `${comment.author.firstName[0]}${comment.author.lastName[0]}` : '?'}
-                                    </span>
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-xs font-semibold text-gray-700">
-                                      {isSystem ? 'System' : (comment.author ? `${comment.author.firstName} ${comment.author.lastName}` : 'Unknown')}
+                                      {authorName || (isSystem ? 'System' : 'Unknown')}
                                     </span>
                                     <span className="text-xs text-gray-400">{formatDateTime(comment.createdAt)}</span>
                                     {comment.isEdited && <span className="text-xs text-gray-400">(edited)</span>}
@@ -544,7 +600,7 @@ export default function CardDetailsPage() {
                             );
                           } else {
                             const hist = item.data as any;
-                            const assigneeName = hist.user ? `${hist.user.firstName} ${hist.user.lastName}` : 'Unassigned';
+                            const assigneeName = hist.user?.name || 'Unassigned';
                             return (
                               <div key={`hist-${i}`} className="flex gap-3 opacity-70">
                                 <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -621,17 +677,60 @@ export default function CardDetailsPage() {
                 <div className="text-xs text-gray-400 italic">No workflow configured</div>
               )}
 
-              {/* RAG badge */}
-              {ragCfg && (
-                <div className={`mt-3 px-3 py-1.5 rounded-lg text-center text-sm font-bold ${ragCfg.bg} ${ragCfg.text}`}>
-                  RAG: {ragCfg.label}
-                </div>
-              )}
+              {/* RAG status selector */}
+              <div className="mt-3 grid grid-cols-3 gap-1.5">
+                {(Object.entries(RAG_CONFIG) as [CardRAG, typeof RAG_CONFIG[CardRAG]][]).map(([rag, cfg]) => (
+                  <button
+                    key={rag}
+                    disabled={!canEdit || saving}
+                    onClick={() => canEdit && saveField('ragStatus', card.ragStatus === rag ? null : rag)}
+                    className={`px-2 py-1.5 rounded-lg text-xs font-bold transition-all disabled:cursor-not-allowed ${
+                      card.ragStatus === rag
+                        ? `${cfg.bg} ${cfg.text} ring-2 ring-offset-1 ring-current`
+                        : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                    }`}
+                  >
+                    {cfg.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Details sidebar */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Details</h3>
+
+              {/* Epic selector — shown for CARD type */}
+              {card.cardType === CardType.CARD && (
+                <SidebarField label="Epic">
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={card.parentId || ''}
+                      onChange={e => handleEpicChange(e.target.value)}
+                      disabled={!canEdit || saving}
+                      className="flex-1 text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:bg-gray-50"
+                    >
+                      <option value="">No Epic</option>
+                      {epics.map(ep => (
+                        <option key={ep.id} value={ep.id}>
+                          {ep.externalId ? `${ep.externalId} · ${ep.title}` : ep.title}
+                        </option>
+                      ))}
+                    </select>
+                    {card.parentId && (
+                      <button
+                        onClick={() => navigate(`/cards/${card.parentId}`)}
+                        title="Open epic"
+                        className="flex-shrink-0 p-1.5 rounded-lg text-purple-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </SidebarField>
+              )}
 
               {/* Assignee */}
               <SidebarField label="Assignee">
@@ -643,7 +742,7 @@ export default function CardDetailsPage() {
                 >
                   <option value="">Unassigned</option>
                   {teamMembers.map((m) => (
-                    <option key={m.id} value={m.id}>{m.fullName}</option>
+                    <option key={m.id} value={m.userId || m.id}>{m.fullName}</option>
                   ))}
                 </select>
               </SidebarField>
@@ -736,6 +835,88 @@ export default function CardDetailsPage() {
               )}
             </div>
 
+            {/* Child cards — shown when this card IS an epic */}
+            {card.cardType === CardType.EPIC && card.children && card.children.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  Child Cards
+                  <span className="ml-2 text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full font-bold">
+                    {card.children.length}
+                  </span>
+                </h3>
+                <div className="space-y-1.5">
+                  {card.children.map(child => (
+                    <button
+                      key={child.id}
+                      onClick={() => navigate(`/cards/${child.id}`)}
+                      className="flex items-center gap-2 w-full text-left px-2.5 py-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <span className="font-mono text-[10px] text-primary-600 font-bold flex-shrink-0 bg-primary-50 px-1.5 py-0.5 rounded">
+                        {child.externalId || child.id.slice(0, 6)}
+                      </span>
+                      <span className="text-xs text-gray-700 truncate flex-1">{child.title}</span>
+                      <svg className="w-3 h-3 text-gray-300 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sub-tasks — shown when this card is a CARD (not epic, not sub_card) */}
+            {card.cardType === CardType.CARD && (() => {
+              const subCards = card.children?.filter(c => c.cardType === CardType.SUB_CARD) ?? [];
+              return (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      Sub-tasks
+                      {subCards.length > 0 && (
+                        <span className="ml-2 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-bold">
+                          {subCards.length}
+                        </span>
+                      )}
+                    </h3>
+                    {canEdit && (
+                      <button
+                        onClick={() => setShowSubCardModal(true)}
+                        className="flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add
+                      </button>
+                    )}
+                  </div>
+                  {subCards.length > 0 ? (
+                    <div className="space-y-1">
+                      {subCards.map(sub => (
+                        <button
+                          key={sub.id}
+                          onClick={() => navigate(`/cards/${sub.id}`)}
+                          className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                        >
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            sub.status === 'completed' ? 'bg-green-400' : 'bg-gray-300'
+                          }`} />
+                          <span className="flex-1 text-xs text-gray-700 truncate group-hover:text-gray-900">
+                            {sub.title}
+                          </span>
+                          {sub.externalId && (
+                            <span className="text-[10px] font-mono text-gray-400 flex-shrink-0">{sub.externalId}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400 italic">No sub-tasks yet</p>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Assignment History */}
             {activity && activity.assignmentHistory.length > 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
@@ -744,7 +925,7 @@ export default function CardDetailsPage() {
                   {[...activity.assignmentHistory]
                     .sort((a, b) => new Date(b.assignedAt).getTime() - new Date(a.assignedAt).getTime())
                     .map((h) => {
-                      const name = h.user ? `${(h as any).user.firstName} ${(h as any).user.lastName}` : 'Unassigned';
+                      const name = (h as any).user?.name || 'Unassigned';
                       const isCurrent = !h.unassignedAt;
                       return (
                         <div key={h.id} className="flex items-start gap-2 text-xs">
@@ -769,6 +950,17 @@ export default function CardDetailsPage() {
         </div>
       </div>
     </AppLayout>
+
+    {showSubCardModal && card && (
+      <CreateCardModal
+        projectId={card.project.id}
+        parentId={card.id}
+        preSelectedCardType={CardType.SUB_CARD}
+        onClose={() => setShowSubCardModal(false)}
+        onSuccess={() => { setShowSubCardModal(false); loadAll(); }}
+      />
+    )}
+    </>
   );
 }
 

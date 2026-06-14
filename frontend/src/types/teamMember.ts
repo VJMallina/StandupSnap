@@ -15,6 +15,7 @@ export interface TeamMember {
   fullName: string;
   designationRole: DesignationRole;
   displayName?: string;
+  userId?: string;
   createdAt: string;
   updatedAt: string;
 }

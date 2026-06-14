@@ -15,5 +15,6 @@ export class DeclareIncidentDto {
   severity: IncidentSeverity;
 
   @IsUUID()
-  projectId: string;
+  @IsOptional()
+  projectId?: string;
 }

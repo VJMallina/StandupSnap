@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Project } from '../entities/project.entity';
 import { Sprint, SprintStatus } from '../entities/sprint.entity';
 import { Card, CardRAG } from '../entities/card.entity';
-import { TeamMember } from '../entities/team-member.entity';
 import { Snap } from '../entities/snap.entity';
 import { ProjectMember } from '../entities/project-member.entity';
 import { TenantService } from '../tenant/tenant.service';
@@ -142,10 +141,10 @@ export class DashboardService {
     const ORG_WIDE_ROLES = ['ORG_ADMIN', 'PMO'];
     if (orgRole && ORG_WIDE_ROLES.includes(orgRole)) {
       const projectRepo = await this.tenantService.getRepository(Project);
-      const where: any = { isArchived: false };
-      if (organizationId) where.organizationId = organizationId;
+      // No organizationId filter — the tenant schema already isolates per org,
+      // and legacy projects may have organization_id = NULL.
       return projectRepo.find({
-        where,
+        where: { isArchived: false },
         order: { createdAt: 'DESC' },
       });
     }
@@ -216,16 +215,16 @@ export class DashboardService {
 
     const project = await projectRepo.findOne({
       where: { id: projectId },
-      relations: ['teamMembers'],
+      relations: ['members', 'members.user'],
     });
 
-    if (!project || !project.teamMembers) return [];
+    if (!project || !project.members) return [];
 
     const result: TeamMemberSummary[] = [];
 
-    for (const tm of project.teamMembers) {
+    for (const pm of project.members.filter((m) => m.isActive && m.user)) {
       const cards = await cardRepo.find({
-        where: { assignee: { id: tm.id }, sprint: { id: sprintId } },
+        where: { assignee: { id: pm.user.id }, sprint: { id: sprintId } },
       });
 
       let assigneeRAG: CardRAG | null = null;
@@ -238,10 +237,10 @@ export class DashboardService {
       }
 
       result.push({
-        id: tm.id,
-        fullName: tm.fullName,
-        displayName: tm.displayName,
-        designationRole: tm.designationRole,
+        id: pm.user.id,
+        fullName: pm.user.name,
+        displayName: pm.user.email,
+        designationRole: pm.role,
         activeCardsCount: cards.length,
         assigneeRAG,
       });

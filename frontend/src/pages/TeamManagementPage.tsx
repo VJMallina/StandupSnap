@@ -347,9 +347,9 @@ export default function TeamManagementPage() {
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">Full Name</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">Name</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">Designation / Role</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">Display Name</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">Email</th>
                     <th className="px-6 py-4 text-right text-sm font-semibold">Actions</th>
                   </tr>
                 </thead>
@@ -439,6 +439,7 @@ export default function TeamManagementPage() {
         }}
         onSuccess={handleEditSuccess}
         member={selectedMember}
+        projectId={projectId!}
       />
     </div>
   );

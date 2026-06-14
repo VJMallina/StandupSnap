@@ -268,7 +268,7 @@ export default function SnapsPage() {
 
     snaps.forEach((snap, index) => {
       const rag = getRAGLabel(snap.finalRAG || snap.suggestedRAG);
-      const assignee = snap.card?.assignee?.fullName || snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'Unassigned';
+      const assignee = snap.card?.assignee?.name || 'Unassigned';
 
       summary += `${index + 1}. ${snap.card?.title || 'Unknown Card'}\n`;
       summary += `   Assignee: ${assignee}\n`;
@@ -458,7 +458,7 @@ export default function SnapsPage() {
       const rag = snap.finalRAG || snap.suggestedRAG;
       const ragColor = rag === SnapRAG.GREEN ? '059669' : rag === SnapRAG.AMBER ? 'D97706' : rag === SnapRAG.RED ? 'DC2626' : '6B7280';
       const ragLabel = rag === SnapRAG.GREEN ? 'GREEN' : rag === SnapRAG.AMBER ? 'AMBER' : rag === SnapRAG.RED ? 'RED' : 'N/A';
-      const assignee = snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'Unassigned';
+      const assignee = snap.card?.assignee?.name || 'Unassigned';
       const rowShading = index % 2 === 0 ? 'F9FAFB' : 'FFFFFF';
 
       tableRows.push(
@@ -814,11 +814,11 @@ export default function SnapsPage() {
                               rag === SnapRAG.RED ? 'bg-gradient-to-br from-red-500 to-rose-600' :
                               'bg-gray-400'
                             }`}>
-                              {(snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'U').charAt(0).toUpperCase()}
+                              {(snap.card?.assignee?.name || 'U').charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <p className="font-semibold text-gray-900">{snap.card?.title || 'Unknown Card'}</p>
-                              <p className="text-sm text-gray-500">{snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'Unassigned'}</p>
+                              <p className="text-sm text-gray-500">{snap.card?.assignee?.name || 'Unassigned'}</p>
                             </div>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -984,11 +984,11 @@ export default function SnapsPage() {
                               rag === SnapRAG.RED ? 'bg-gradient-to-br from-red-500 to-rose-600' :
                               'bg-gray-400'
                             }`}>
-                              {(snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'U').charAt(0).toUpperCase()}
+                              {(snap.card?.assignee?.name || 'U').charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <h3 className="text-lg font-semibold text-gray-900">{snap.card?.title || 'Unknown Card'}</h3>
-                              <p className="text-sm text-gray-500">{snap.card?.assignee?.fullName || snap.card?.assignee?.displayName || 'Unassigned'}</p>
+                              <p className="text-sm text-gray-500">{snap.card?.assignee?.name || 'Unassigned'}</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
@@ -1133,7 +1133,7 @@ export default function SnapsPage() {
                       <div className="flex items-start gap-3">
                         {/* Avatar */}
                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow">
-                          {card.assignee ? (card.assignee.fullName || card.assignee.displayName || 'U').charAt(0).toUpperCase() : '?'}
+                          {card.assignee ? (card.assignee.name || 'U').charAt(0).toUpperCase() : '?'}
                         </div>
 
                         {/* Content */}
@@ -1145,7 +1145,7 @@ export default function SnapsPage() {
                           </div>
                           <div className="flex items-center gap-2 text-sm">
                             <span className="text-gray-500">
-                              {card.assignee ? (card.assignee.fullName || card.assignee.displayName) : 'Unassigned'}
+                              {card.assignee ? card.assignee.name : 'Unassigned'}
                             </span>
                             {card.externalId && (
                               <>

@@ -24,14 +24,36 @@ export class ProjectService {
     private workflowService: WorkflowService,
   ) {}
 
+  private deriveKey(name: string): string {
+    const words = name.trim().split(/[\s\-_]+/).filter(Boolean);
+    const raw = words.length === 1
+      ? words[0].slice(0, 4)
+      : words.map((w) => w[0]).join('').slice(0, 6);
+    return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  }
+
   async create(createProjectDto: CreateProjectDto, creatorUserId: string, orgId?: string): Promise<Project> {
     const [projectRepo, projectMemberRepo] = await Promise.all([
       this.tenantService.getRepository(Project),
       this.tenantService.getRepository(ProjectMember),
     ]);
 
-    const { productOwnerId, pmoId, ...projectData } = createProjectDto;
-    const project = projectRepo.create({ ...projectData, ...(orgId ? { organizationId: orgId } : {}) });
+    const { productOwnerId, pmoId, key: rawKey, ...projectData } = createProjectDto as any;
+
+    // Derive key from name if not supplied
+    const key = (rawKey as string | undefined)?.toUpperCase() || this.deriveKey(createProjectDto.name);
+
+    // Unique per org
+    const existing = await projectRepo.findOne({
+      where: { key, ...(orgId ? { organizationId: orgId } : {}) },
+    });
+    if (existing) throw new ConflictException(`Project key "${key}" is already in use in this organisation`);
+
+    const project = projectRepo.create({
+      ...projectData,
+      key,
+      ...(orgId ? { organizationId: orgId } : {}),
+    } as any) as unknown as Project;
 
     if (productOwnerId) {
       const productOwner = await this.userRepository.findOne({ where: { id: productOwnerId } });

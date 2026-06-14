@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AppLayout from '../../components/AppLayout';
+import DeclareIncidentModal from './components/DeclareIncidentModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -13,7 +14,8 @@ interface Incident {
   title: string;
   severity: Severity;
   status: Status;
-  projectId: string;
+  projectId: string | null;
+  externalId: string | null;
   declaredByName: string;
   declaredAt: string;
   resolvedAt?: string;
@@ -45,6 +47,7 @@ export default function WarRoomListPage() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<Status | ''>('');
+  const [declaring, setDeclaring] = useState(false);
 
   const authHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
@@ -70,6 +73,7 @@ export default function WarRoomListPage() {
   const resolved = incidents.filter(i => i.status === 'RESOLVED');
 
   return (
+    <>
     <AppLayout>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center justify-between mb-6">
@@ -96,6 +100,15 @@ export default function WarRoomListPage() {
               <option value="MONITORING">Monitoring</option>
               <option value="RESOLVED">Resolved</option>
             </select>
+            <button
+              onClick={() => setDeclaring(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-sm shadow-red-200"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Declare Incident
+            </button>
           </div>
         </div>
 
@@ -140,6 +153,13 @@ export default function WarRoomListPage() {
         )}
       </div>
     </AppLayout>
+
+    {declaring && (
+      <DeclareIncidentModal
+        onClose={() => { setDeclaring(false); fetchIncidents(); }}
+      />
+    )}
+    </>
   );
 }
 
@@ -154,6 +174,11 @@ function IncidentRow({ incident, onClick }: { incident: Incident; onClick: () =>
           <span className={`px-2 py-0.5 rounded-md text-xs font-bold flex-shrink-0 ${SEVERITY_STYLES[incident.severity]}`}>
             {incident.severity}
           </span>
+          {incident.externalId && (
+            <span className="text-[10px] font-mono font-bold text-gray-400 flex-shrink-0">
+              {incident.externalId}
+            </span>
+          )}
           <span className="font-semibold text-gray-900 truncate">{incident.title}</span>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">

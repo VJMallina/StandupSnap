@@ -1,6 +1,11 @@
 import { Sprint } from './sprint';
-import { TeamMember } from './teamMember';
 import { Project } from './project';
+
+export interface CardUser {
+  id: string;
+  name: string;
+  email?: string;
+}
 
 export enum CardStatus {
   NOT_STARTED = 'not_started',
@@ -76,9 +81,9 @@ export interface CardAssignmentHistory {
   assignedById: string | null;
   unassignedAt: string | null;
   assignedAt: string;
-  user?: { id: string; firstName: string; lastName: string; email: string };
+  user?: { id: string; name: string; email: string };
   lane?: WorkflowLane;
-  assignedBy?: { id: string; firstName: string; lastName: string };
+  assignedBy?: { id: string; name: string };
 }
 
 export interface CardComment {
@@ -90,7 +95,7 @@ export interface CardComment {
   isEdited: boolean;
   createdAt: string;
   updatedAt: string;
-  author?: { id: string; firstName: string; lastName: string; email: string };
+  author?: { id: string; name: string; email: string };
 }
 
 export interface CardActivity {
@@ -102,7 +107,7 @@ export interface Card {
   id: string;
   project: Project;
   sprint: Sprint | null;
-  assignee: TeamMember | null;
+  assignee: CardUser | null;
   title: string;
   description?: string;
   externalId?: string;
@@ -120,6 +125,7 @@ export interface Card {
   startedAt?: string;
   completedAt?: string;
   parentId?: string;
+  parent?: Card;
   reporterId?: string;
   createdAt: string;
   updatedAt: string;
@@ -136,7 +142,7 @@ export interface CreateCardRequest {
   externalId?: string;
   cardType?: CardType;
   priority?: CardPriority;
-  estimatedTime: number;
+  estimatedTime?: number;
   storyPoints?: number;
   laneId?: string;
   parentId?: string;
@@ -150,6 +156,7 @@ export interface UpdateCardRequest {
   description?: string;
   externalId?: string;
   priority?: CardPriority;
+  ragStatus?: CardRAG | null;
   status?: CardStatus;
   estimatedTime?: number;
   storyPoints?: number;

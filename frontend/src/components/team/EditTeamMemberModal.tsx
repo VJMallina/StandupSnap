@@ -7,44 +7,32 @@ interface EditTeamMemberModalProps {
   onClose: () => void;
   onSuccess: () => void;
   member: TeamMember | null;
+  projectId: string;
 }
 
-export default function EditTeamMemberModal({ isOpen, onClose, onSuccess, member }: EditTeamMemberModalProps) {
+export default function EditTeamMemberModal({ isOpen, onClose, onSuccess, member, projectId }: EditTeamMemberModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    fullName: '',
-    designationRole: DesignationRole.DEVELOPER,
-    displayName: '',
-  });
+  const [designationRole, setDesignationRole] = useState<string>(DesignationRole.DEVELOPER);
 
   useEffect(() => {
     if (member && isOpen) {
-      setFormData({
-        fullName: member.fullName,
-        designationRole: member.designationRole as DesignationRole,
-        displayName: member.displayName || '',
-      });
+      setDesignationRole(member.designationRole as string || DesignationRole.DEVELOPER);
     }
   }, [member, isOpen]);
 
   const handleSave = async () => {
     if (!member) return;
 
-    if (!formData.fullName.trim()) {
-      setError('Full name is required');
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
     try {
-      await teamMembersApi.update(member.id, formData);
+      await teamMembersApi.updateProjectMember(projectId, member.id, designationRole);
       await onSuccess();
       handleClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to update team member');
+      setError(err.message || 'Failed to update team member role');
       setLoading(false);
     }
   };
@@ -62,10 +50,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, onSuccess, member
         <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-white">Edit Team Member</h3>
-            <button
-              onClick={handleClose}
-              className="text-primary-100 hover:text-white transition-colors"
-            >
+            <button onClick={handleClose} className="text-primary-100 hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -82,16 +67,11 @@ export default function EditTeamMemberModal({ isOpen, onClose, onSuccess, member
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter full name"
-              />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Member</label>
+              <p className="text-gray-900 font-medium px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg">{member.fullName}</p>
+              {member.displayName && (
+                <p className="text-xs text-gray-500 mt-1 px-1">{member.displayName}</p>
+              )}
             </div>
 
             <div>
@@ -99,27 +79,14 @@ export default function EditTeamMemberModal({ isOpen, onClose, onSuccess, member
                 Designation Role <span className="text-red-500">*</span>
               </label>
               <select
-                value={formData.designationRole}
-                onChange={(e) => setFormData({ ...formData, designationRole: e.target.value as DesignationRole })}
+                value={designationRole}
+                onChange={(e) => setDesignationRole(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {Object.values(DesignationRole).map(role => (
                   <option key={role} value={role}>{role}</option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Display Name / Nickname (Optional)
-              </label>
-              <input
-                type="text"
-                value={formData.displayName}
-                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter nickname or display name"
-              />
             </div>
           </div>
         </div>
